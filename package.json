@@ -10,16 +10,27 @@
     "format": "biome format --write"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^2.0.56",
+    "@ai-sdk/openai": "^2.0.86",
+    "@clerk/nextjs": "^6.36.2",
+    "@supabase/supabase-js": "^2.87.1",
+    "ai": "^5.0.113",
     "next": "16.0.10",
     "react": "19.2.1",
-    "react-dom": "19.2.1"
+    "react-dom": "19.2.1",
+    "react-email": "^5.0.8",
+    "resend": "^6.6.0",
+    "zod": "^4.1.13"
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.0",
+    "@commitlint/cli": "^20.2.0",
+    "@commitlint/config-conventional": "^20.2.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "lefthook": "^2.0.11",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
