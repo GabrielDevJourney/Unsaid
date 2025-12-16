@@ -43,3 +43,6 @@ next-env.d.ts
 # claude
 CLAUDE_USAGE.md
 CLAUDE.md
+
+#docs since are more early stage focus
+/docs
