@@ -10,11 +10,11 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
  */
 export const createSupabaseServer = async () => {
     if (!supabaseUrl) {
-        throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL for admin client");
+        throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL for server client");
     }
     if (!supabaseAnonKey) {
         throw new Error(
-            "Missing NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY for admin client",
+            "Missing NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY for server client",
         );
     }
     const { getToken } = await auth();
