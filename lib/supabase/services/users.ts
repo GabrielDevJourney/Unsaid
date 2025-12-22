@@ -1,15 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { CreateWithProgressPayload } from "@/types";
 
-export interface CreateWithProgressPayload {
-    id: string;
-    email: string;
-}
 export const userService = {
     async createWithProgress(
         supabase: SupabaseClient,
         user: CreateWithProgressPayload,
     ) {
-        // 1. Insert User
         const { error: userError } = await supabase.from("users").insert({
             user_id: user.id,
             email: user.email,
@@ -18,7 +14,6 @@ export const userService = {
 
         if (userError && userError.code !== "23505") throw userError;
 
-        // 2. Insert Progress
         const { error: progressError } = await supabase
             .from("user_progress")
             .insert({
@@ -27,7 +22,6 @@ export const userService = {
             });
 
         if (progressError) {
-            // Rollback
             await supabase.from("users").delete().eq("user_id", user.id);
             throw progressError;
         }
@@ -36,7 +30,7 @@ export const userService = {
     },
 
     async handleDeletion(supabase: SupabaseClient, userId: string) {
-        // This is where you'll eventually choose between Hard or Soft delete
+        //TODO: to choose between hard or soft deletes
         return await supabase.from("users").delete().eq("user_id", userId);
     },
 };

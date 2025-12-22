@@ -2,10 +2,8 @@ import type { EmailAddressJSON } from "@clerk/backend";
 import { verifyWebhook } from "@clerk/nextjs/webhooks";
 import type { NextRequest } from "next/server";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
-import {
-    type CreateWithProgressPayload,
-    userService,
-} from "@/lib/supabase/services/users";
+import { userService } from "@/lib/supabase/services/users";
+import type { CreateWithProgressPayload } from "@/types";
 
 export async function POST(req: NextRequest) {
     try {
@@ -39,7 +37,6 @@ export async function POST(req: NextRequest) {
                 break;
             }
             case "user.deleted": {
-                //TODO: this is still in discussion to understand what makes sense for user delete action flow and what happens when cascading their data
                 // await userService.handleDeletion(supabase, clerkId);
                 break;
             }
