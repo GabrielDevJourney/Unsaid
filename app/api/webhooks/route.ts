@@ -1,57 +1,51 @@
+import type { EmailAddressJSON } from "@clerk/backend";
 import { verifyWebhook } from "@clerk/nextjs/webhooks";
 import type { NextRequest } from "next/server";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
+import {
+    type CreateWithProgressPayload,
+    userService,
+} from "@/lib/supabase/services/users";
 
 export async function POST(req: NextRequest) {
     try {
         const evt = await verifyWebhook(req);
         const supabaseAdmin = createSupabaseAdmin();
+        const { id: clerkId } = evt.data;
 
-        if (evt.type === "user.created") {
-            const userId = evt.data.id;
+        if (!clerkId) {
+            return new Response("No user ID provided", { status: 400 });
+        }
 
-            const email = evt.data.email_addresses?.find(
-                (e) => e.id === evt.data.primary_email_address_id,
-            )?.email_address;
+        switch (evt.type) {
+            case "user.created": {
+                const email = evt.data.email_addresses?.find(
+                    (e: EmailAddressJSON) =>
+                        e.id === evt.data.primary_email_address_id,
+                )?.email_address;
 
-            if (!email) {
-                console.error("No primary email found for user:", userId);
-                return new Response("Missing email", { status: 400 });
+                if (!email) {
+                    console.error("No primary email found for user:", clerkId);
+                    return new Response("Missing email", { status: 400 });
+                }
+
+                const user: CreateWithProgressPayload = {
+                    id: clerkId,
+                    email: email,
+                };
+
+                await userService.createWithProgress(supabaseAdmin, user);
+
+                break;
+            }
+            case "user.deleted": {
+                //TODO: this is still in discussion to understand what makes sense for user delete action flow and what happens when cascading their data
+                // await userService.handleDeletion(supabase, clerkId);
+                break;
             }
 
-            const { error: userInsertError } = await supabaseAdmin
-                .from("users")
-                .insert({
-                    user_id: userId,
-                    email: "test@email.com",
-                    subscription_status: "trial",
-                });
-
-            if (userInsertError && userInsertError.code !== "23505") {
-                console.error("User insert error:", userInsertError);
-                return new Response("Database error", { status: 500 });
-            }
-
-            const { error: progressError } = await supabaseAdmin
-                .from("user_progress")
-                .insert({
-                    user_id: userId,
-                    total_entries: 0,
-                });
-
-            if (progressError) {
-                console.error("User progress init error:", progressError);
-
-                // rollback user if progress insert failed
-                await supabaseAdmin
-                    .from("users")
-                    .delete()
-                    .eq("user_id", userId);
-
-                return new Response("Database error", { status: 500 });
-            }
-
-            console.log("User created + progress initialized:", userId);
+            default:
+                console.log(`Unhandled event type: ${evt.type}`);
         }
 
         return new Response("Webhook received", { status: 200 });

@@ -3,9 +3,7 @@
 -- Enable pgvector for semantic search
 CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA extensions;
 
--- =============================================================================
 -- TABLES
--- =============================================================================
 -- USERS TABLE
 CREATE TABLE public.users(
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -95,9 +93,7 @@ CREATE TABLE public.user_progress(
     updated_at timestamptz NOT NULL DEFAULT now()
 );
 
--- =============================================================================
 -- TRIGGERS: Auto-update updated_at
--- =============================================================================
 CREATE OR REPLACE FUNCTION public.update_updated_at()
     RETURNS TRIGGER
     LANGUAGE plpgsql
@@ -145,9 +141,7 @@ CREATE TRIGGER user_progress_updated_at
     FOR EACH ROW
     EXECUTE FUNCTION public.update_updated_at();
 
--- =============================================================================
 -- ROW LEVEL SECURITY (RLS)
--- =============================================================================
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE public.entries ENABLE ROW LEVEL SECURITY;
@@ -249,9 +243,7 @@ CREATE POLICY "Users can view own progress" ON public.user_progress
             SELECT
                 auth.jwt() ->> 'sub') = user_id);
 
--- =============================================================================
 -- GRANTS: API Access for PostgREST
--- =============================================================================
 GRANT USAGE ON SCHEMA public TO anon, authenticated;
 
 -- Users table
