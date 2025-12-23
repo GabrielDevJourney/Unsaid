@@ -2,8 +2,8 @@ import type { EmailAddressJSON } from "@clerk/backend";
 import { verifyWebhook } from "@clerk/nextjs/webhooks";
 import type { NextRequest } from "next/server";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
-import type { CreateWithProgressPayload } from "@/types";
 import { createUserWithProgress } from "@/lib/users/service";
+import type { CreateWithProgressPayload } from "@/types";
 
 export async function POST(req: NextRequest) {
     try {
