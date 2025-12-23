@@ -1,36 +1,84 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Unsaid
 
-## Getting Started
+An AI journaling app that helps people understand themselves through pattern recognition and reflection.
 
-First, run the development server:
+## The idea
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+Journaling is powerful, but most people stop because they don't see the value. Unsaid reads your entries, finds patterns you might miss, and reflects them back to you — not as advice, but as observations that help you connect the dots.
+
+**Core loop:** Write → Get insight → See patterns over time → Track progress
+
+## Status
+
+Work in progress. Backend-first approach — building the AI pipeline before the UI.
+
+### Completed
+- Database schema with RLS policies
+- Clerk authentication + Supabase integration
+- User sync via webhooks
+- Entry creation API with rate limiting
+- Embedding generation for semantic search
+
+### In progress
+- Entry insights (streaming AI responses)
+- Weekly pattern recognition
+- Progress tracking
+
+## Tech stack
+
+| Layer | Tech |
+|-------|------|
+| Framework | Next.js 16 (App Router) |
+| Database | Supabase (Postgres + pgvector) |
+| Auth | Clerk |
+| AI | Vercel AI SDK, Claude, OpenAI embeddings |
+| Email | Resend + React Email |
+
+## Architecture
+
+```
+app/
+├── api/           → API routes (controllers)
+├── actions/       → Server actions
+lib/
+├── {domain}/
+│   ├── repo.ts    → Database access
+│   └── service.ts → Business logic
+├── ai/            → AI utilities
+├── schemas/       → Zod validation
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The backend is structured to be portable — services and repos can move to a shared package when adding React Native later.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Running locally
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+# Install dependencies
+npm install
 
-## Learn More
+# Start local Supabase
+npx supabase start
 
-To learn more about Next.js, take a look at the following resources:
+# Copy environment variables
+cp .env.example .env.local
+# Fill in values from `npx supabase status` and Clerk dashboard
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Run dev server
+npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Environment variables
 
-## Deploy on Vercel
+```
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+SUPABASE_SECRET_KEY=
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
+CLERK_SECRET_KEY=
+ANTHROPIC_API_KEY=
+OPENAI_API_KEY=
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## License
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
