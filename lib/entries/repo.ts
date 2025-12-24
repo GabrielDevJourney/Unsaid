@@ -82,27 +82,33 @@ export const updateEntryEmbedding = async (
 
 /**
  * Increment the total_entries count in user_progress.
- * Uses RPC or direct update - admin client bypasses RLS for system operations.
+ * Creates row if it doesn't exist (handles manual user creation).
  */
 export const incrementUserProgress = async (
     supabase: SupabaseClient,
     userId: string,
 ) => {
-    // Get current count and increment
-    const { data: progress, error: fetchError } = await supabase
+    // Try to get current count
+    const { data: progress } = await supabase
         .from("user_progress")
         .select("total_entries")
         .eq("user_id", userId)
         .single();
 
-    if (fetchError) {
-        return { data: null, error: fetchError };
-    }
+    const currentTotal = progress?.total_entries ?? 0;
+    const newTotal = currentTotal + 1;
 
-    const newTotal = (progress?.total_entries ?? 0) + 1;
-
+    // Upsert - insert if not exists, update if exists
     return supabase
         .from("user_progress")
-        .update({ total_entries: newTotal })
-        .eq("user_id", userId);
+        .upsert(
+            {
+                user_id: userId,
+                total_entries: newTotal,
+                entry_count_at_last_progress: 0,
+            },
+            { onConflict: "user_id" },
+        )
+        .select()
+        .single();
 };
