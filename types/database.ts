@@ -252,12 +252,55 @@ export type Database = {
                 };
                 Relationships: [];
             };
+            weekly_insight_patterns: {
+                Row: {
+                    created_at: string;
+                    description: string;
+                    evidence: string[];
+                    id: string;
+                    pattern_type: string;
+                    question: string | null;
+                    suggested_experiment: string | null;
+                    title: string;
+                    weekly_insight_id: string;
+                };
+                Insert: {
+                    created_at?: string;
+                    description: string;
+                    evidence?: string[];
+                    id?: string;
+                    pattern_type: string;
+                    question?: string | null;
+                    suggested_experiment?: string | null;
+                    title: string;
+                    weekly_insight_id: string;
+                };
+                Update: {
+                    created_at?: string;
+                    description?: string;
+                    evidence?: string[];
+                    id?: string;
+                    pattern_type?: string;
+                    question?: string | null;
+                    suggested_experiment?: string | null;
+                    title?: string;
+                    weekly_insight_id?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: "weekly_insight_patterns_weekly_insight_id_fkey";
+                        columns: ["weekly_insight_id"];
+                        isOneToOne: false;
+                        referencedRelation: "weekly_insights";
+                        referencedColumns: ["id"];
+                    },
+                ];
+            };
             weekly_insights: {
                 Row: {
                     created_at: string;
                     entry_ids: string[];
                     id: string;
-                    patterns: Json;
                     updated_at: string;
                     user_id: string;
                     week_start: string;
@@ -266,7 +309,6 @@ export type Database = {
                     created_at?: string;
                     entry_ids?: string[];
                     id?: string;
-                    patterns: Json;
                     updated_at?: string;
                     user_id: string;
                     week_start: string;
@@ -275,7 +317,6 @@ export type Database = {
                     created_at?: string;
                     entry_ids?: string[];
                     id?: string;
-                    patterns?: Json;
                     updated_at?: string;
                     user_id?: string;
                     week_start?: string;

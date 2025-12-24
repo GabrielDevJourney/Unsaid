@@ -46,12 +46,11 @@ CREATE TABLE public.entry_insights(
 
 CREATE INDEX entry_insights_user_idx ON public.entry_insights(user_id, created_at DESC);
 
--- WEEKLY_INSIGHTS TABLE (Tier 2: one per calendar week, JSON patterns)
+-- WEEKLY_INSIGHTS TABLE (Tier 2: one per calendar week)
 CREATE TABLE public.weekly_insights(
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id text NOT NULL REFERENCES public.users(user_id) ON DELETE CASCADE,
     week_start date NOT NULL,
-    patterns jsonb NOT NULL,
     entry_ids uuid[] NOT NULL DEFAULT '{}',
     created_at timestamptz NOT NULL DEFAULT now(),
     updated_at timestamptz NOT NULL DEFAULT now(),
@@ -59,6 +58,25 @@ CREATE TABLE public.weekly_insights(
 );
 
 CREATE INDEX weekly_insights_user_week_idx ON public.weekly_insights(user_id, week_start DESC);
+
+-- WEEKLY_INSIGHT_PATTERNS TABLE (insight cards for weekly analysis)
+CREATE TABLE public.weekly_insight_patterns(
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    weekly_insight_id uuid NOT NULL REFERENCES public.weekly_insights(id) ON DELETE CASCADE,
+    title text NOT NULL,
+    pattern_type text NOT NULL CHECK (pattern_type IN (
+        'theme', 'trigger', 'thought_pattern',
+        'avoidance', 'habit', 'need', 'growth'
+    )),
+    description text NOT NULL,
+    evidence uuid[] NOT NULL DEFAULT '{}',
+    question text,
+    suggested_experiment text,
+    created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX weekly_insight_patterns_insight_idx ON public.weekly_insight_patterns(weekly_insight_id);
+CREATE INDEX weekly_insight_patterns_type_idx ON public.weekly_insight_patterns(pattern_type);
 
 -- PROGRESS_INSIGHTS TABLE (Tier 3: triggered every N entries, text report)
 CREATE TABLE public.progress_insights(
@@ -150,6 +168,8 @@ ALTER TABLE public.entry_insights ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE public.weekly_insights ENABLE ROW LEVEL SECURITY;
 
+ALTER TABLE public.weekly_insight_patterns ENABLE ROW LEVEL SECURITY;
+
 ALTER TABLE public.progress_insights ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE public.prompts ENABLE ROW LEVEL SECURITY;
@@ -212,6 +232,17 @@ CREATE POLICY "Users can view own weekly insights" ON public.weekly_insights
             SELECT
                 auth.jwt() ->> 'sub') = user_id);
 
+-- WEEKLY_INSIGHT_PATTERNS policies (read-only for users, created by system)
+CREATE POLICY "Users can view own weekly insight patterns" ON public.weekly_insight_patterns
+    FOR SELECT
+        USING (
+            EXISTS (
+                SELECT 1 FROM public.weekly_insights wi
+                WHERE wi.id = weekly_insight_id
+                AND wi.user_id = (SELECT auth.jwt() ->> 'sub')
+            )
+        );
+
 -- PROGRESS_INSIGHTS policies (read-only for users, created by system)
 CREATE POLICY "Users can view own progress insights" ON public.progress_insights
     FOR SELECT
@@ -258,6 +289,8 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.entries TO authenticated;
 GRANT SELECT ON public.entry_insights TO authenticated;
 
 GRANT SELECT ON public.weekly_insights TO authenticated;
+
+GRANT SELECT ON public.weekly_insight_patterns TO authenticated;
 
 GRANT SELECT ON public.progress_insights TO authenticated;
 
