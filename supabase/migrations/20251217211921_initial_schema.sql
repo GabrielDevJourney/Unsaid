@@ -305,3 +305,105 @@ GRANT SELECT ON public.user_progress TO authenticated;
 -- Sequences (needed for uuid generation)
 GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO authenticated;
 
+-- SEMANTIC SEARCH RPC FUNCTIONS
+-- Search entries by embedding vector using cosine similarity
+-- Returns entries with similarity score (1 - cosine_distance, higher = more similar)
+-- Note: vector type is in extensions schema, so we use search_path to include it
+-- Using SECURITY DEFINER to bypass RLS (we filter by user_id_param manually for security)
+CREATE OR REPLACE FUNCTION public.search_entries_by_embedding(
+    query_embedding extensions.vector(1536),
+    user_id_param text,
+    match_threshold float DEFAULT 0.5,
+    match_count int DEFAULT 10
+)
+RETURNS TABLE (
+    id uuid,
+    user_id text,
+    content text,
+    word_count integer,
+    created_at timestamptz,
+    updated_at timestamptz,
+    similarity float
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, extensions
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        e.id,
+        e.user_id,
+        e.content,
+        e.word_count,
+        e.created_at,
+        e.updated_at,
+        (1 - (e.embedding <-> query_embedding))::float AS similarity
+    FROM public.entries e
+    WHERE
+        e.user_id = user_id_param
+        AND e.embedding IS NOT NULL
+        AND (1 - (e.embedding <-> query_embedding)) >= match_threshold
+    ORDER BY e.embedding <-> query_embedding
+    LIMIT match_count;
+END;
+$$;
+
+-- Find entries related to a specific entry by semantic similarity
+-- Excludes the source entry from results
+-- Using SECURITY DEFINER to bypass RLS (we filter by user_id_param manually for security)
+CREATE OR REPLACE FUNCTION public.find_related_entries(
+    entry_id_param uuid,
+    user_id_param text,
+    match_threshold float DEFAULT 0.5,
+    match_count int DEFAULT 5
+)
+RETURNS TABLE (
+    id uuid,
+    user_id text,
+    content text,
+    word_count integer,
+    created_at timestamptz,
+    updated_at timestamptz,
+    similarity float
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, extensions
+AS $$
+DECLARE
+    source_embedding extensions.vector(1536);
+BEGIN
+    -- Get the embedding of the source entry
+    SELECT e.embedding INTO source_embedding
+    FROM public.entries e
+    WHERE e.id = entry_id_param AND e.user_id = user_id_param;
+
+    -- Return empty if source entry not found or has no embedding
+    IF source_embedding IS NULL THEN
+        RETURN;
+    END IF;
+
+    RETURN QUERY
+    SELECT
+        e.id,
+        e.user_id,
+        e.content,
+        e.word_count,
+        e.created_at,
+        e.updated_at,
+        (1 - (e.embedding <-> source_embedding))::float AS similarity
+    FROM public.entries e
+    WHERE
+        e.user_id = user_id_param
+        AND e.id != entry_id_param
+        AND e.embedding IS NOT NULL
+        AND (1 - (e.embedding <-> source_embedding)) >= match_threshold
+    ORDER BY e.embedding <-> source_embedding
+    LIMIT match_count;
+END;
+$$;
+
+-- Grant execute permissions to authenticated users
+GRANT EXECUTE ON FUNCTION public.search_entries_by_embedding TO authenticated;
+GRANT EXECUTE ON FUNCTION public.find_related_entries TO authenticated;
