@@ -67,8 +67,11 @@ export const GET = async (req: NextRequest) => {
 
     if (!entries || entries.length === 0) {
         return NextResponse.json({
-            message: "No entries found for last week",
-            processed: 0,
+            data: {
+                message: "No entries found for last week",
+                weekStart,
+                processed: 0,
+            },
         });
     }
 
@@ -138,8 +141,10 @@ export const GET = async (req: NextRequest) => {
     console.log("Weekly insights generation complete:", results);
 
     return NextResponse.json({
-        message: "Weekly insights generation complete",
-        weekStart,
-        ...results,
+        data: {
+            message: "Weekly insights generation complete",
+            weekStart,
+            ...results,
+        },
     });
 };

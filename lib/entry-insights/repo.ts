@@ -30,7 +30,7 @@ export const getEntryInsightById = async (
 ) => {
     return supabase
         .from("entry_insights")
-        .select("id, user_id, entry_id,content, created_at, updated_at")
+        .select("id, user_id, entry_id, content, created_at, updated_at")
         .eq("id", entryInsightId)
         .single();
 };
