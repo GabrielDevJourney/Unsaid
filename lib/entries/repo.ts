@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { InsertEntryData } from "@/types";
+import type { EntryWithSimilarity, InsertEntryData } from "@/types";
 
 /**
  * Insert a new entry into the database.
@@ -111,4 +111,46 @@ export const incrementUserProgress = async (
         )
         .select()
         .single();
+};
+
+/**
+ * Search entries by embedding vector using semantic similarity.
+ * Calls the search_entries_by_embedding RPC function.
+ */
+export const searchEntriesByEmbedding = async (
+    supabase: SupabaseClient,
+    userId: string,
+    queryEmbedding: string,
+    limit = 10,
+    threshold = 0.5,
+): Promise<{ data: EntryWithSimilarity[] | null; error: Error | null }> => {
+    const { data, error } = await supabase.rpc("search_entries_by_embedding", {
+        query_embedding: queryEmbedding,
+        user_id_param: userId,
+        match_threshold: threshold,
+        match_count: limit,
+    });
+
+    return { data: data as EntryWithSimilarity[] | null, error };
+};
+
+/**
+ * Find entries related to a specific entry by semantic similarity.
+ * Calls the find_related_entries RPC function.
+ */
+export const findRelatedEntries = async (
+    supabase: SupabaseClient,
+    userId: string,
+    entryId: string,
+    limit = 5,
+    threshold = 0.5,
+): Promise<{ data: EntryWithSimilarity[] | null; error: Error | null }> => {
+    const { data, error } = await supabase.rpc("find_related_entries", {
+        entry_id_param: entryId,
+        user_id_param: userId,
+        match_threshold: threshold,
+        match_count: limit,
+    });
+
+    return { data: data as EntryWithSimilarity[] | null, error };
 };
