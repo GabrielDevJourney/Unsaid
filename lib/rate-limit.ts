@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { RateLimitResult } from "@/types/domain/entries";
+import type { RateLimitResult } from "@/types";
 
 const ENTRY_LIMITS = {
     perMinute: 1,

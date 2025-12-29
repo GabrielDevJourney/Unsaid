@@ -1,6 +1,10 @@
 import { generateWeeklyInsight } from "@/lib/ai/generate-weekly-insight";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
-import type { CreateWeeklyInsightPayload } from "@/types/domain/insights";
+import type {
+    CreateWeeklyInsightPayload,
+    ServiceResult,
+    WeeklyInsightWithPatterns,
+} from "@/types";
 import {
     getWeeklyInsightByWeekStart,
     insertWeeklyInsight,
@@ -17,11 +21,14 @@ import {
  * 4. Save pattern cards
  *
  * Uses admin client (bypasses RLS - insights are system-created).
+ *
+ * Returns error for expected failures (duplicate, not enough entries).
+ * Throws for unexpected DB errors.
  */
 export const createWeeklyInsight = async (
     userId: string,
     payload: CreateWeeklyInsightPayload,
-) => {
+): Promise<ServiceResult<WeeklyInsightWithPatterns>> => {
     const supabase = createSupabaseAdmin();
 
     // Check if insight already exists for this week
@@ -32,18 +39,12 @@ export const createWeeklyInsight = async (
     );
 
     if (existing) {
-        return {
-            error: "Weekly insight already exists for this week",
-            data: null,
-        };
+        return { error: "Weekly insight already exists for this week" };
     }
 
     // Need at least 2 entries to find patterns
     if (payload.entries.length < 2) {
-        return {
-            error: "Not enough entries for weekly insight (minimum 2)",
-            data: null,
-        };
+        return { error: "Not enough entries for weekly insight (minimum 2)" };
     }
 
     // Generate patterns using AI
@@ -56,10 +57,7 @@ export const createWeeklyInsight = async (
     );
 
     if (patterns.length === 0) {
-        return {
-            error: "Failed to generate patterns",
-            data: null,
-        };
+        return { error: "AI failed to identify patterns" };
     }
 
     // Insert weekly insight record
@@ -70,12 +68,13 @@ export const createWeeklyInsight = async (
             entryIds: payload.entryIds,
         });
 
-    if (insertError || !weeklyInsight) {
+    if (insertError) {
         console.error("Failed to insert weekly insight:", insertError);
-        return {
-            error: "Failed to save weekly insight",
-            data: null,
-        };
+        throw insertError;
+    }
+
+    if (!weeklyInsight) {
+        throw new Error("Weekly insight was not created");
     }
 
     // Insert pattern cards
@@ -94,9 +93,8 @@ export const createWeeklyInsight = async (
         );
 
     if (patternsError) {
+        // Weekly insight created but patterns failed - log but return insight
         console.error("Failed to insert patterns:", patternsError);
-        // Weekly insight was created but patterns failed
-        // This is a partial failure - log but return the insight
     }
 
     return {
@@ -104,7 +102,6 @@ export const createWeeklyInsight = async (
             ...weeklyInsight,
             patterns: insertedPatterns ?? [],
         },
-        error: null,
     };
 };
 

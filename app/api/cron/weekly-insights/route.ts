@@ -5,6 +5,7 @@ import {
     getWeekRange,
     getWeekStart,
 } from "@/lib/weekly-insights/service";
+import { isServiceError } from "@/types";
 
 /**
  * GET /api/cron/weekly-insights
@@ -99,7 +100,7 @@ export const GET = async (req: NextRequest) => {
         errors: [] as string[],
     };
 
-    // Process each user
+    // Process each user - continue on failure to avoid blocking others
     for (const [userId, userEntries] of Object.entries(entriesByUser)) {
         results.processed++;
 
@@ -109,21 +110,28 @@ export const GET = async (req: NextRequest) => {
             continue;
         }
 
-        const result = await createWeeklyInsight(userId, {
-            weekStart,
-            entryIds: userEntries.map((e) => e.id),
-            entries: userEntries.map((e) => ({
-                id: e.id,
-                content: e.content,
-                createdAt: e.created_at,
-            })),
-        });
+        try {
+            const result = await createWeeklyInsight(userId, {
+                weekStart,
+                entryIds: userEntries.map((e) => e.id),
+                entries: userEntries.map((e) => ({
+                    id: e.id,
+                    content: e.content,
+                    createdAt: e.created_at,
+                })),
+            });
 
-        if (result.error) {
+            if (isServiceError(result)) {
+                results.failed++;
+                results.errors.push(`User ${userId}: ${result.error}`);
+            } else {
+                results.success++;
+            }
+        } catch (error) {
+            // Unexpected error - log and continue to next user
+            console.error(`Unexpected error for user ${userId}:`, error);
             results.failed++;
-            results.errors.push(`User ${userId}: ${result.error}`);
-        } else {
-            results.success++;
+            results.errors.push(`User ${userId}: Unexpected error`);
         }
     }
 

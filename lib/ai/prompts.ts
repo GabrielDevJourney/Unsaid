@@ -10,17 +10,20 @@ const PROMPTS_DIR = path.join(process.cwd(), "prompts");
 const promptCache = new Map<string, string>();
 
 export const loadPrompt = async (relativePath: string): Promise<string> => {
-    // Return cached if available
     const cached = promptCache.get(relativePath);
     if (cached !== undefined) {
         return cached;
     }
 
     const fullPath = path.join(PROMPTS_DIR, relativePath);
-    const content = await readFile(fullPath, "utf-8");
 
-    promptCache.set(relativePath, content);
-    return content;
+    try {
+        const content = await readFile(fullPath, "utf-8");
+        promptCache.set(relativePath, content);
+        return content;
+    } catch {
+        throw new Error(`Prompt file not found: ${relativePath}`);
+    }
 };
 
 /**

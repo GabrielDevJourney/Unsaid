@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
     InsertWeeklyInsightData,
     InsertWeeklyInsightPatternData,
-} from "@/types/domain/insights";
+} from "@/types";
 
 /**
  * Insert a new weekly insight (without patterns).

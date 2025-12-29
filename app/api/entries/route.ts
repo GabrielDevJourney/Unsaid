@@ -6,6 +6,7 @@ import { getEntriesPaginated } from "@/lib/entries/repo";
 import { createEntry } from "@/lib/entries/service";
 import { EntryCreateSchema, PaginationSchema } from "@/lib/schemas/entry";
 import { createSupabaseServer } from "@/lib/supabase/server";
+import { isServiceError } from "@/types";
 
 /**
  * POST /api/entries - Create a new journal entry
@@ -33,8 +34,8 @@ export const POST = async (req: NextRequest) => {
         const supabase = await createSupabaseServer();
         const result = await createEntry(supabase, userId, validated.data);
 
-        if ("error" in result) {
-            // Rate limit error
+        if (isServiceError(result)) {
+            // Expected error (rate limit)
             return NextResponse.json({ error: result.error }, { status: 429 });
         }
 

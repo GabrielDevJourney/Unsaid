@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { InsertEntryData } from "@/types/domain/entries";
+import type { InsertEntryData } from "@/types";
 
 /**
  * Insert a new entry into the database.

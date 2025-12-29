@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { generateEmbedding } from "@/lib/ai/embeddings";
 import { checkEntryRateLimit } from "@/lib/rate-limit";
-import type { CreateEntryPayload, Entry } from "@/types/domain/entries";
+import type { CreateEntryPayload, Entry, ServiceResult } from "@/types";
 import {
     incrementUserProgress,
     insertEntry,
@@ -22,16 +22,19 @@ const calculateWordCount = (content: string): number => {
  * 1. Check rate limit
  * 2. Calculate word count
  * 3. Insert entry (without embedding)
- * 4. Generate embedding
+ * 4. Generate embedding async (non-blocking)
  * 5. Update entry with embedding
  * 6. Increment user_progress.total_entries
  * 7. Return created entry
+ *
+ * Returns error for expected failures (rate limit).
+ * Throws for unexpected DB errors.
  */
 export const createEntry = async (
     supabase: SupabaseClient,
     userId: string,
     payload: CreateEntryPayload,
-): Promise<{ data: Entry } | { error: string }> => {
+): Promise<ServiceResult<Entry>> => {
     const rateLimit = await checkEntryRateLimit(supabase, userId);
     if (!rateLimit.allowed) {
         return { error: rateLimit.reason ?? "Rate limit exceeded" };
@@ -55,6 +58,7 @@ export const createEntry = async (
         throw new Error("Entry was not created");
     }
 
+    // Generate embedding async - don't block entry creation
     try {
         const embedding = await generateEmbedding(payload.content);
 
