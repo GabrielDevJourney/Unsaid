@@ -11,7 +11,8 @@
         "commit": "cz",
         "test": "vitest",
         "test:run": "vitest run",
-        "test:coverage": "vitest run --coverage"
+        "test:coverage": "vitest run --coverage",
+        "seed:progress": "tsx scripts/seed-progress-test.ts"
     },
     "config": {
         "commitizen": {
@@ -44,10 +45,12 @@
         "@vitejs/plugin-react": "^5.1.2",
         "commitizen": "^4.3.1",
         "cz-conventional-changelog": "^3.3.0",
+        "dotenv": "^17.2.3",
         "jsdom": "^27.3.0",
         "lefthook": "^2.0.11",
         "supabase": "^2.67.1",
         "tailwindcss": "^4",
+        "tsx": "^4.21.0",
         "typescript": "^5",
         "vitest": "^4.0.16"
     }

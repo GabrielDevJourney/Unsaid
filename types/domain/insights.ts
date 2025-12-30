@@ -51,6 +51,29 @@ export interface InsertWeeklyInsightPatternData {
     suggestedExperiment?: string;
 }
 
+// Progress Insights
+export interface CreateProgressInsightPayload {
+    recentEntryIds: string[];
+    recentEntries: Array<{
+        id: string;
+        content: string;
+        createdAt: string;
+    }>;
+    relatedPastEntries?: Array<{
+        id: string;
+        content: string;
+        createdAt: string;
+        similarity?: number;
+    }>;
+}
+
+export interface InsertProgressInsightData {
+    userId: string;
+    content: string;
+    recentEntryIds: string[];
+    relatedPastEntryIds?: string[];
+}
+
 // 4. Enhanced Domain Model (Outputs)
 export interface WeeklyInsightWithPatterns extends WeeklyInsight {
     patterns: WeeklyInsightPattern[];
