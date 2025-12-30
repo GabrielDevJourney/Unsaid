@@ -2,6 +2,13 @@ import { z } from "zod";
 import { PATTERN_TYPE_CODES } from "@/lib/constants/pattern-types";
 
 /**
+ * Schema for weekStart URL parameter (YYYY-MM-DD format)
+ */
+export const WeekStartParamSchema = z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format. Use YYYY-MM-DD");
+
+/**
  * Schema for a single pattern found in weekly analysis
  */
 export const PatternSchema = z.object({

@@ -85,6 +85,42 @@ export const getWeeklyInsightByWeekStart = async (
 };
 
 /**
+ * Get weekly insight with patterns by week start date.
+ * Combines the insight and its patterns in a single return.
+ */
+export const getWeeklyInsightWithPatternsByWeekStart = async (
+    supabase: SupabaseClient,
+    userId: string,
+    weekStart: string,
+) => {
+    const { data: insight, error: insightError } = await supabase
+        .from("weekly_insights")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("week_start", weekStart)
+        .single();
+
+    if (insightError || !insight) {
+        return { data: null, error: insightError };
+    }
+
+    const { data: patterns, error: patternsError } = await supabase
+        .from("weekly_insight_patterns")
+        .select("*")
+        .eq("weekly_insight_id", insight.id)
+        .order("created_at", { ascending: true });
+
+    if (patternsError) {
+        return { data: null, error: patternsError };
+    }
+
+    return {
+        data: { ...insight, patterns: patterns ?? [] },
+        error: null,
+    };
+};
+
+/**
  * Get weekly insight with its patterns (insight cards).
  */
 export const getWeeklyInsightWithPatterns = async (
