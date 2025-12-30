@@ -338,13 +338,14 @@ BEGIN
         e.word_count,
         e.created_at,
         e.updated_at,
-        (1 - (e.embedding <-> query_embedding))::float AS similarity
+        -- Cosine similarity: 1 - cosine_distance (using <=> operator)
+        (1 - (e.embedding <=> query_embedding))::float AS similarity
     FROM public.entries e
     WHERE
         e.user_id = user_id_param
         AND e.embedding IS NOT NULL
-        AND (1 - (e.embedding <-> query_embedding)) >= match_threshold
-    ORDER BY e.embedding <-> query_embedding
+        AND (1 - (e.embedding <=> query_embedding)) >= match_threshold
+    ORDER BY e.embedding <=> query_embedding
     LIMIT match_count;
 END;
 $$;
@@ -392,14 +393,15 @@ BEGIN
         e.word_count,
         e.created_at,
         e.updated_at,
-        (1 - (e.embedding <-> source_embedding))::float AS similarity
+        -- Cosine similarity: 1 - cosine_distance (using <=> operator)
+        (1 - (e.embedding <=> source_embedding))::float AS similarity
     FROM public.entries e
     WHERE
         e.user_id = user_id_param
         AND e.id != entry_id_param
         AND e.embedding IS NOT NULL
-        AND (1 - (e.embedding <-> source_embedding)) >= match_threshold
-    ORDER BY e.embedding <-> source_embedding
+        AND (1 - (e.embedding <=> source_embedding)) >= match_threshold
+    ORDER BY e.embedding <=> source_embedding
     LIMIT match_count;
 END;
 $$;
