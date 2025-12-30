@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { generateEmbedding } from "@/lib/ai/embeddings";
 import { checkEntryRateLimit } from "@/lib/rate-limit";
+import { checkAndTriggerProgress } from "@/lib/triggers/check-progress-trigger";
 import type { CreateEntryPayload, Entry, ServiceResult } from "@/types";
 import {
     incrementUserProgress,
@@ -86,6 +87,16 @@ export const createEntry = async (
         // Log but don't fail - progress can be reconciled later
         console.error("Failed to increment user progress:", progressError);
     }
+
+    // Check if progress insight should be triggered (async, non-blocking)
+    // Using void to explicitly indicate fire-and-forget pattern
+    void checkAndTriggerProgress(userId).then((result) => {
+        if (result.data?.triggered) {
+            console.log(
+                `[Progress] Auto-triggered insight for user ${userId}: ${result.data.reason}`,
+            );
+        }
+    });
 
     return { data: entry };
 };
