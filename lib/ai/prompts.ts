@@ -37,3 +37,5 @@ export const loadSystemPrompt = () => loadPrompt("system.md");
 export const loadEntryTaskPrompt = () => loadPrompt("tasks/entry.md");
 export const loadWeeklyTaskPrompt = () => loadPrompt("tasks/weekly.md");
 export const loadProgressTaskPrompt = () => loadPrompt("tasks/progress.md");
+export const loadEntryThemeTaskPrompt = () =>
+    loadPrompt("tasks/entry-theme.md");
