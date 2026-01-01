@@ -43,7 +43,7 @@ export const generateWeeklyInsight = async (
 
     try {
         const { text } = await generateText({
-            model: anthropic("claude-sonnet-4-20250514"),
+            model: anthropic("claude-sonnet-4-5"),
             system: systemPrompt,
             messages: [
                 {
