@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { getEntryById } from "@/lib/entries/repo";
+import { getEntryWithInsightById } from "@/lib/entries/repo";
 import { createSupabaseServer } from "@/lib/supabase/server";
 
 interface RouteParams {
@@ -30,7 +30,10 @@ export const GET = async (_req: NextRequest, { params }: RouteParams) => {
         }
 
         const supabase = await createSupabaseServer();
-        const { data: entry, error } = await getEntryById(supabase, id);
+        const { data: entry, error } = await getEntryWithInsightById(
+            supabase,
+            id,
+        );
 
         if (error) {
             // PGRST116 = no rows returned (not found or RLS blocked)

@@ -65,6 +65,55 @@ export const getEntriesPaginated = async (
 };
 
 /**
+ * Get paginated entries WITH their insights (1:1 relation).
+ * Uses Supabase foreign table join to avoid N+1 queries.
+ */
+export const getEntriesWithInsightsPaginated = async (
+    supabase: SupabaseClient,
+    page: number,
+    pageSize: number,
+    userId?: string,
+) => {
+    const offset = (page - 1) * pageSize;
+
+    let query = supabase.from("entries").select(
+        `
+            id, user_id, content, word_count, created_at, updated_at,
+            entry_insights (id, content, created_at)
+        `,
+        { count: "exact" },
+    );
+
+    if (userId) {
+        query = query.eq("user_id", userId);
+    }
+
+    return query
+        .order("created_at", { ascending: false })
+        .range(offset, offset + pageSize - 1);
+};
+
+/**
+ * Get single entry WITH its insight.
+ * Uses Supabase foreign table join.
+ */
+export const getEntryWithInsightById = async (
+    supabase: SupabaseClient,
+    entryId: string,
+) => {
+    return supabase
+        .from("entries")
+        .select(
+            `
+            id, user_id, content, word_count, created_at, updated_at,
+            entry_insights (id, content, created_at)
+        `,
+        )
+        .eq("id", entryId)
+        .single();
+};
+
+/**
  * Update an entry's embedding after generation.
  */
 export const updateEntryEmbedding = async (

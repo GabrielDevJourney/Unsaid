@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getEntriesPaginated } from "@/lib/entries/repo";
+import { getEntriesWithInsightsPaginated } from "@/lib/entries/repo";
 import { createEntry } from "@/lib/entries/service";
 import { EntryCreateSchema, PaginationSchema } from "@/lib/schemas/entry";
 import { createSupabaseServer } from "@/lib/supabase/server";
@@ -87,7 +87,12 @@ export const GET = async (req: NextRequest) => {
             data: entries,
             count,
             error,
-        } = await getEntriesPaginated(supabase, page, pageSize, userId);
+        } = await getEntriesWithInsightsPaginated(
+            supabase,
+            page,
+            pageSize,
+            userId,
+        );
 
         if (error) {
             console.error("Failed to fetch entries:", error);

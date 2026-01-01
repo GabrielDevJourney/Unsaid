@@ -17,8 +17,28 @@ export interface InsertEntryData {
 }
 
 // 4. Enhanced Domain Model (Outputs)
+export interface EntryInsightEmbed {
+    id: string;
+    content: string;
+    created_at: string;
+}
+
+export interface EntryWithInsight extends Entry {
+    entry_insights: EntryInsightEmbed | null;
+}
+
 export interface PaginatedEntries {
     data: Entry[];
+    pagination: {
+        page: number;
+        pageSize: number;
+        total: number;
+        hasMore: boolean;
+    };
+}
+
+export interface PaginatedEntriesWithInsights {
+    data: EntryWithInsight[];
     pagination: {
         page: number;
         pageSize: number;
