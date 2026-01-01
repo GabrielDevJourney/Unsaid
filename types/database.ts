@@ -114,6 +114,93 @@ export type Database = {
                     },
                 ];
             };
+            feedback: {
+                Row: {
+                    category: string | null;
+                    created_at: string;
+                    description: string;
+                    id: string;
+                    parent_id: string | null;
+                    status: string;
+                    title: string | null;
+                    updated_at: string;
+                    upvotes: number;
+                    user_id: string;
+                };
+                Insert: {
+                    category?: string | null;
+                    created_at?: string;
+                    description: string;
+                    id?: string;
+                    parent_id?: string | null;
+                    status?: string;
+                    title?: string | null;
+                    updated_at?: string;
+                    upvotes?: number;
+                    user_id: string;
+                };
+                Update: {
+                    category?: string | null;
+                    created_at?: string;
+                    description?: string;
+                    id?: string;
+                    parent_id?: string | null;
+                    status?: string;
+                    title?: string | null;
+                    updated_at?: string;
+                    upvotes?: number;
+                    user_id?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: "feedback_parent_id_fkey";
+                        columns: ["parent_id"];
+                        isOneToOne: false;
+                        referencedRelation: "feedback";
+                        referencedColumns: ["id"];
+                    },
+                    {
+                        foreignKeyName: "feedback_user_id_fkey";
+                        columns: ["user_id"];
+                        isOneToOne: false;
+                        referencedRelation: "users";
+                        referencedColumns: ["user_id"];
+                    },
+                ];
+            };
+            feedback_votes: {
+                Row: {
+                    created_at: string;
+                    feedback_id: string;
+                    user_id: string;
+                };
+                Insert: {
+                    created_at?: string;
+                    feedback_id: string;
+                    user_id: string;
+                };
+                Update: {
+                    created_at?: string;
+                    feedback_id?: string;
+                    user_id?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: "feedback_votes_feedback_id_fkey";
+                        columns: ["feedback_id"];
+                        isOneToOne: false;
+                        referencedRelation: "feedback";
+                        referencedColumns: ["id"];
+                    },
+                    {
+                        foreignKeyName: "feedback_votes_user_id_fkey";
+                        columns: ["user_id"];
+                        isOneToOne: false;
+                        referencedRelation: "users";
+                        referencedColumns: ["user_id"];
+                    },
+                ];
+            };
             progress_insights: {
                 Row: {
                     content: string;
@@ -336,7 +423,40 @@ export type Database = {
             [_ in never]: never;
         };
         Functions: {
-            [_ in never]: never;
+            find_related_entries: {
+                Args: {
+                    entry_id_param: string;
+                    match_count?: number;
+                    match_threshold?: number;
+                    user_id_param: string;
+                };
+                Returns: {
+                    content: string;
+                    created_at: string;
+                    id: string;
+                    similarity: number;
+                    updated_at: string;
+                    user_id: string;
+                    word_count: number;
+                }[];
+            };
+            search_entries_by_embedding: {
+                Args: {
+                    match_count?: number;
+                    match_threshold?: number;
+                    query_embedding: string;
+                    user_id_param: string;
+                };
+                Returns: {
+                    content: string;
+                    created_at: string;
+                    id: string;
+                    similarity: number;
+                    updated_at: string;
+                    user_id: string;
+                    word_count: number;
+                }[];
+            };
         };
         Enums: {
             [_ in never]: never;

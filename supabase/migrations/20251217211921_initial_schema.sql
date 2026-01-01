@@ -9,6 +9,7 @@ CREATE TABLE public.users(
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id text UNIQUE NOT NULL,
     email text NOT NULL,
+    role text NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin')),
     subscription_status text NOT NULL DEFAULT 'trial' CHECK (subscription_status IN ('trial', 'active', 'expired', 'cancelled')),
     trial_started_at timestamptz DEFAULT now(),
     trial_ends_at timestamptz DEFAULT (now() + interval '7 days'),
@@ -18,6 +19,7 @@ CREATE TABLE public.users(
 );
 
 CREATE INDEX users_user_id_idx ON public.users(user_id);
+CREATE INDEX users_role_idx ON public.users(role) WHERE role = 'admin';
 
 -- ENTRIES TABLE
 CREATE TABLE public.entries(
@@ -111,6 +113,35 @@ CREATE TABLE public.user_progress(
     updated_at timestamptz NOT NULL DEFAULT now()
 );
 
+-- FEEDBACK TABLE (community-driven feature prioritization)
+CREATE TABLE public.feedback (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id text NOT NULL REFERENCES public.users(user_id) ON DELETE CASCADE,
+    parent_id uuid REFERENCES public.feedback(id) ON DELETE CASCADE, -- For comments
+    title text, -- NULL if comment
+    description text NOT NULL,
+    category text CHECK (category IN ('bug', 'feature', 'improvement', 'other')),
+    status text NOT NULL DEFAULT 'new' CHECK (status IN ('new', 'planned', 'in_progress', 'completed', 'wont_do')),
+    upvotes integer NOT NULL DEFAULT 0,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX feedback_status_votes_idx ON public.feedback(status, upvotes DESC);
+CREATE INDEX feedback_user_idx ON public.feedback(user_id);
+CREATE INDEX feedback_parent_idx ON public.feedback(parent_id) WHERE parent_id IS NOT NULL;
+CREATE INDEX feedback_created_idx ON public.feedback(created_at DESC);
+
+-- FEEDBACK_VOTES TABLE (one vote per user per feedback)
+CREATE TABLE public.feedback_votes (
+    user_id text NOT NULL REFERENCES public.users(user_id) ON DELETE CASCADE,
+    feedback_id uuid NOT NULL REFERENCES public.feedback(id) ON DELETE CASCADE,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY (user_id, feedback_id)
+);
+
+CREATE INDEX feedback_votes_feedback_idx ON public.feedback_votes(feedback_id);
+
 -- TRIGGERS: Auto-update updated_at
 CREATE OR REPLACE FUNCTION public.update_updated_at()
     RETURNS TRIGGER
@@ -159,6 +190,11 @@ CREATE TRIGGER user_progress_updated_at
     FOR EACH ROW
     EXECUTE FUNCTION public.update_updated_at();
 
+CREATE TRIGGER feedback_updated_at
+    BEFORE UPDATE ON public.feedback
+    FOR EACH ROW
+    EXECUTE FUNCTION public.update_updated_at();
+
 -- ROW LEVEL SECURITY (RLS)
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 
@@ -175,6 +211,10 @@ ALTER TABLE public.progress_insights ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.prompts ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE public.user_progress ENABLE ROW LEVEL SECURITY;
+
+ALTER TABLE public.feedback ENABLE ROW LEVEL SECURITY;
+
+ALTER TABLE public.feedback_votes ENABLE ROW LEVEL SECURITY;
 
 -- USERS policies
 CREATE POLICY "Service webhook can create users" ON public.users
@@ -274,6 +314,36 @@ CREATE POLICY "Users can view own progress" ON public.user_progress
             SELECT
                 auth.jwt() ->> 'sub') = user_id);
 
+-- FEEDBACK policies (auth required for all operations)
+CREATE POLICY "Authenticated users can view feedback" ON public.feedback
+    FOR SELECT
+    USING ((SELECT auth.jwt()) IS NOT NULL);
+
+CREATE POLICY "Users can create own feedback" ON public.feedback
+    FOR INSERT
+    WITH CHECK ((SELECT auth.jwt() ->> 'sub') = user_id);
+
+CREATE POLICY "Users can update own feedback" ON public.feedback
+    FOR UPDATE
+    USING ((SELECT auth.jwt() ->> 'sub') = user_id);
+
+CREATE POLICY "Users can delete own feedback" ON public.feedback
+    FOR DELETE
+    USING ((SELECT auth.jwt() ->> 'sub') = user_id);
+
+-- FEEDBACK_VOTES policies
+CREATE POLICY "Authenticated users can view votes" ON public.feedback_votes
+    FOR SELECT
+    USING ((SELECT auth.jwt()) IS NOT NULL);
+
+CREATE POLICY "Users can create own votes" ON public.feedback_votes
+    FOR INSERT
+    WITH CHECK ((SELECT auth.jwt() ->> 'sub') = user_id);
+
+CREATE POLICY "Users can delete own votes" ON public.feedback_votes
+    FOR DELETE
+    USING ((SELECT auth.jwt() ->> 'sub') = user_id);
+
 -- GRANTS: API Access for PostgREST
 GRANT USAGE ON SCHEMA public TO anon, authenticated;
 
@@ -301,6 +371,10 @@ GRANT SELECT, UPDATE ON public.prompts TO authenticated;
 GRANT INSERT ON public.user_progress TO service_role;
 
 GRANT SELECT ON public.user_progress TO authenticated;
+
+-- Feedback tables
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.feedback TO authenticated;
+GRANT SELECT, INSERT, DELETE ON public.feedback_votes TO authenticated;
 
 -- Sequences (needed for uuid generation)
 GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO authenticated;
