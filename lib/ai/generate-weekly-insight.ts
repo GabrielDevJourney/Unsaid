@@ -53,8 +53,13 @@ export const generateWeeklyInsight = async (
             ],
         });
 
-        // Parse and validate JSON response
-        const parsed = JSON.parse(text);
+        // Strip markdown code fences if presented (AI sometimes wraps JSON)
+        const jsonText = text
+            .replace(/^```(?:json)?\s*\n?/i, "")
+            .replace(/\n?```\s*$/i, "")
+            .trim();
+
+        const parsed = JSON.parse(jsonText);
         const validated = WeeklyInsightResponseSchema.safeParse(parsed);
 
         if (!validated.success) {
