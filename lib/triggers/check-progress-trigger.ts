@@ -1,7 +1,7 @@
+import { PROGRESS_TRIGGER_INTERVAL } from "@/lib/constants";
 import { sendProgressCheckEmail } from "@/lib/email/service";
 import {
     createProgressInsight,
-    PROGRESS_TRIGGER_INTERVAL,
     shouldTriggerProgressInsight,
 } from "@/lib/progress-insights/service";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";

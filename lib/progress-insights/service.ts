@@ -1,5 +1,6 @@
 import { generateEmbedding } from "@/lib/ai/embeddings";
 import { generateProgressInsight } from "@/lib/ai/generate-progress-insight";
+import { PROGRESS_TRIGGER_INTERVAL } from "@/lib/constants";
 import { searchEntriesByEmbedding } from "@/lib/entries/repo";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
 import type {
@@ -14,8 +15,7 @@ import {
     updateUserProgressAfterInsight,
 } from "./repo";
 
-/** Number of entries required to trigger a progress insight */
-export const PROGRESS_TRIGGER_INTERVAL = 15;
+export { PROGRESS_TRIGGER_INTERVAL };
 
 /** Number of related past entries to include for context */
 const RELATED_ENTRIES_LIMIT = 7;

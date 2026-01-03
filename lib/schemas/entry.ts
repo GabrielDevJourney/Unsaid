@@ -1,8 +1,5 @@
 import { z } from "zod";
-
-// Entry content constraints
-const MIN_CONTENT_LENGTH = 10;
-const MAX_CONTENT_LENGTH = 16000;
+import { MAX_ENTRY_LENGTH, MIN_ENTRY_LENGTH } from "@/lib/constants";
 
 /**
  * Schema for creating a new entry
@@ -11,11 +8,11 @@ const MAX_CONTENT_LENGTH = 16000;
 export const EntryCreateSchema = z.object({
     content: z
         .string()
-        .min(MIN_CONTENT_LENGTH, {
-            message: `Entry must be at least ${MIN_CONTENT_LENGTH} characters`,
+        .min(MIN_ENTRY_LENGTH, {
+            message: `Entry must be at least ${MIN_ENTRY_LENGTH} characters`,
         })
-        .max(MAX_CONTENT_LENGTH, {
-            message: `Entry must be at most ${MAX_CONTENT_LENGTH} characters`,
+        .max(MAX_ENTRY_LENGTH, {
+            message: `Entry must be at most ${MAX_ENTRY_LENGTH} characters`,
         }),
 });
 

@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { TRIAL_DAYS } from "@/lib/constants";
 import {
     isSubscriptionEvent,
     type LemonWebhookInput,
@@ -16,8 +17,6 @@ import {
     updateSubscriptionFromWebhook,
     updateSubscriptionStatus,
 } from "./repo";
-
-const TRIAL_DAYS = 7;
 
 /**
  * Create a trial subscription for a new user.

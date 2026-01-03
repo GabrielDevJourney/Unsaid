@@ -1,9 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { TRIAL_DAYS } from "@/lib/constants";
 import type { SubscriptionStatusType } from "@/lib/schemas/subscription";
 import type { Json } from "@/types/database";
-
-// Constants
-const TRIAL_DAYS = 7;
 
 /**
  * Insert a new subscription (trial by default).

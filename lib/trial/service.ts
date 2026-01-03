@@ -1,7 +1,7 @@
+import { TRIAL_DAYS } from "@/lib/constants";
 import type { SubscriptionStatusType } from "@/lib/schemas/subscription";
 import type { SubscriptionRow } from "@/types/domain/subscriptions";
-
-export const TRIAL_DAYS = 7;
+export { TRIAL_DAYS };
 
 /**
  * Check if trial is currently active.
