@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { sendWeeklyPatternsEmail } from "@/lib/email/service";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
 import {
     createWeeklyInsight,
@@ -100,6 +101,8 @@ export const GET = async (req: NextRequest) => {
         success: 0,
         skipped: 0,
         failed: 0,
+        emailsSent: 0,
+        emailsFailed: 0,
         errors: [] as string[],
     };
 
@@ -129,6 +132,36 @@ export const GET = async (req: NextRequest) => {
                 results.errors.push(`User ${userId}: ${result.error}`);
             } else {
                 results.success++;
+
+                try {
+                    const { data: user } = await supabase
+                        .from("users")
+                        .select("email")
+                        .eq("user_id", userId)
+                        .single();
+
+                    if (user?.email && result.data.patterns) {
+                        const patternPreviews = result.data.patterns
+                            .slice(0, 3)
+                            .map((p) => p.title);
+
+                        const emailResult = await sendWeeklyPatternsEmail(
+                            user.email,
+                            user.email.split("@")[0],
+                            result.data.patterns.length,
+                            patternPreviews,
+                        );
+
+                        if (emailResult.success) {
+                            results.emailsSent++;
+                        } else {
+                            results.emailsFailed++;
+                        }
+                    }
+                } catch (emailError) {
+                    console.error(`Email failed for ${userId}:`, emailError);
+                    results.emailsFailed++;
+                }
             }
         } catch (error) {
             // Unexpected error - log and continue to next user

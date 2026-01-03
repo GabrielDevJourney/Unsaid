@@ -1,9 +1,23 @@
+import { sendProgressCheckEmail } from "@/lib/email/service";
 import {
     createProgressInsight,
     PROGRESS_TRIGGER_INTERVAL,
     shouldTriggerProgressInsight,
 } from "@/lib/progress-insights/service";
+import { createSupabaseAdmin } from "@/lib/supabase/admin";
 import type { ServiceResult } from "@/types";
+
+/**
+ * Extract the headline from progress insight content.
+ * Looks for "THE HEADLINE" section and extracts the text after it.
+ */
+const extractHeadline = (content: string): string => {
+    const headlineMatch = content.match(/THE HEADLINE[:\s]*\n+([^\n]+)/i);
+    if (headlineMatch?.[1]) {
+        return headlineMatch[1].replace(/^[#*>\s]+/, "").trim();
+    }
+    return "Your progress insight is ready";
+};
 
 /**
  * Result of checking the progress trigger.
@@ -57,6 +71,36 @@ export const checkAndTriggerProgress = async (
                     reason: `Failed to generate: ${generateError}`,
                 },
             };
+        }
+
+        if (insight?.content) {
+            try {
+                const supabase = createSupabaseAdmin();
+                const { data: user } = await supabase
+                    .from("users")
+                    .select("email")
+                    .eq("user_id", userId)
+                    .single();
+
+                if (user?.email) {
+                    const headline = extractHeadline(insight.content);
+                    const emailResult = await sendProgressCheckEmail(
+                        user.email,
+                        user.email.split("@")[0],
+                        headline,
+                        triggerCheck.totalEntries,
+                    );
+
+                    if (!emailResult.success) {
+                        console.error(
+                            "Progress email failed:",
+                            emailResult.error,
+                        );
+                    }
+                }
+            } catch (emailError) {
+                console.error("Progress email error:", emailError);
+            }
         }
 
         return {
