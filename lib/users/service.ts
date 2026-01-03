@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { insertSubscription } from "@/lib/subscriptions/repo";
 import type { CreateWithProgressPayload, ServiceResult } from "@/types";
 import { deleteUser, insertUser, insertUserProgress } from "./repo";
 
@@ -7,7 +8,7 @@ type CreateUserResult = {
 };
 
 /**
- * Create a user and initialize their progress tracking.
+ * Create a user and initialize their progress tracking and trial subscription.
  *
  * Handles idempotency: if user already exists (duplicate webhook), succeeds silently.
  * Throws on unexpected DB errors (controller should catch and log).
@@ -33,9 +34,20 @@ export const createUserWithProgress = async (
     );
 
     if (progressError) {
-        // Rollback user creation on progress failure
         await deleteUser(supabase, user.id);
         throw progressError;
+    }
+
+    // Create trial subscription
+    const { error: subscriptionError } = await insertSubscription(
+        supabase,
+        user.id,
+    );
+
+    // Ignore duplicate constraint (idempotent for webhook retries)
+    if (subscriptionError && subscriptionError.code !== "23505") {
+        await deleteUser(supabase, user.id);
+        throw subscriptionError;
     }
 
     return { data: { userId: user.id } };
