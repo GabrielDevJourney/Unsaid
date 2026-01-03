@@ -2,5 +2,6 @@ export * from "./domain/entries";
 export * from "./domain/feedback";
 export * from "./domain/insights";
 export * from "./domain/semantic-search";
+export * from "./domain/subscriptions";
 export * from "./domain/users";
 export * from "./service";
