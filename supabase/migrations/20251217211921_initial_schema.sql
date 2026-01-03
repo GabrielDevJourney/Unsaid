@@ -142,6 +142,40 @@ CREATE TABLE public.feedback_votes (
 
 CREATE INDEX feedback_votes_feedback_idx ON public.feedback_votes(feedback_id);
 
+-- SUBSCRIPTIONS TABLE (1:1 with users, source of truth for billing)
+CREATE TABLE public.subscriptions (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id text UNIQUE NOT NULL REFERENCES public.users(user_id) ON DELETE CASCADE,
+    status text NOT NULL DEFAULT 'trial' CHECK (status IN ('trial', 'active', 'canceled', 'expired')),
+    trial_ends_at timestamptz,
+    lemon_subscription_id text,          -- null during trial
+    lemon_customer_id text,              -- null during trial
+    plan_id text,                        -- null during trial
+    current_period_end timestamptz,      -- null during trial
+    canceled_at timestamptz,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX subscriptions_status_idx ON public.subscriptions(status);
+CREATE INDEX subscriptions_trial_ends_idx ON public.subscriptions(trial_ends_at) WHERE status = 'trial';
+CREATE INDEX subscriptions_lemon_sub_idx ON public.subscriptions(lemon_subscription_id) WHERE lemon_subscription_id IS NOT NULL;
+
+-- PAYMENT_EVENTS TABLE (webhook idempotency + audit trail)
+CREATE TABLE public.payment_events (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id text REFERENCES public.users(user_id) ON DELETE SET NULL,
+    event_type text NOT NULL,
+    lemon_event_id text UNIQUE NOT NULL,  -- prevents double-processing
+    payload jsonb NOT NULL,
+    processed_at timestamptz,
+    created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX payment_events_user_idx ON public.payment_events(user_id) WHERE user_id IS NOT NULL;
+CREATE INDEX payment_events_type_idx ON public.payment_events(event_type);
+CREATE INDEX payment_events_created_idx ON public.payment_events(created_at DESC);
+
 -- TRIGGERS: Auto-update updated_at
 CREATE OR REPLACE FUNCTION public.update_updated_at()
     RETURNS TRIGGER
@@ -195,6 +229,11 @@ CREATE TRIGGER feedback_updated_at
     FOR EACH ROW
     EXECUTE FUNCTION public.update_updated_at();
 
+CREATE TRIGGER subscriptions_updated_at
+    BEFORE UPDATE ON public.subscriptions
+    FOR EACH ROW
+    EXECUTE FUNCTION public.update_updated_at();
+
 -- ROW LEVEL SECURITY (RLS)
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 
@@ -215,6 +254,10 @@ ALTER TABLE public.user_progress ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.feedback ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE public.feedback_votes ENABLE ROW LEVEL SECURITY;
+
+ALTER TABLE public.subscriptions ENABLE ROW LEVEL SECURITY;
+
+ALTER TABLE public.payment_events ENABLE ROW LEVEL SECURITY;
 
 -- USERS policies
 CREATE POLICY "Service webhook can create users" ON public.users
@@ -344,6 +387,24 @@ CREATE POLICY "Users can delete own votes" ON public.feedback_votes
     FOR DELETE
     USING ((SELECT auth.jwt() ->> 'sub') = user_id);
 
+-- SUBSCRIPTIONS policies
+CREATE POLICY "Users can view own subscription" ON public.subscriptions
+    FOR SELECT
+    USING ((SELECT auth.jwt() ->> 'sub') = user_id);
+
+CREATE POLICY "Service can manage subscriptions" ON public.subscriptions
+    FOR ALL
+    TO service_role
+    USING (true)
+    WITH CHECK (true);
+
+-- PAYMENT_EVENTS policies (internal only - service role access)
+CREATE POLICY "Service can manage payment events" ON public.payment_events
+    FOR ALL
+    TO service_role
+    USING (true)
+    WITH CHECK (true);
+
 -- GRANTS: API Access for PostgREST
 GRANT USAGE ON SCHEMA public TO anon, authenticated;
 
@@ -375,6 +436,13 @@ GRANT SELECT ON public.user_progress TO authenticated;
 -- Feedback tables
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.feedback TO authenticated;
 GRANT SELECT, INSERT, DELETE ON public.feedback_votes TO authenticated;
+
+-- Subscriptions table (users can read, service can write)
+GRANT SELECT ON public.subscriptions TO authenticated;
+GRANT ALL ON public.subscriptions TO service_role;
+
+-- Payment events table (service role only)
+GRANT ALL ON public.payment_events TO service_role;
 
 -- Sequences (needed for uuid generation)
 GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO authenticated;

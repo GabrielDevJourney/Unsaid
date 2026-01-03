@@ -201,6 +201,44 @@ export type Database = {
                     },
                 ];
             };
+            payment_events: {
+                Row: {
+                    created_at: string;
+                    event_type: string;
+                    id: string;
+                    lemon_event_id: string;
+                    payload: Json;
+                    processed_at: string | null;
+                    user_id: string | null;
+                };
+                Insert: {
+                    created_at?: string;
+                    event_type: string;
+                    id?: string;
+                    lemon_event_id: string;
+                    payload: Json;
+                    processed_at?: string | null;
+                    user_id?: string | null;
+                };
+                Update: {
+                    created_at?: string;
+                    event_type?: string;
+                    id?: string;
+                    lemon_event_id?: string;
+                    payload?: Json;
+                    processed_at?: string | null;
+                    user_id?: string | null;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: "payment_events_user_id_fkey";
+                        columns: ["user_id"];
+                        isOneToOne: false;
+                        referencedRelation: "users";
+                        referencedColumns: ["user_id"];
+                    },
+                ];
+            };
             progress_insights: {
                 Row: {
                     content: string;
@@ -274,6 +312,56 @@ export type Database = {
                     },
                 ];
             };
+            subscriptions: {
+                Row: {
+                    canceled_at: string | null;
+                    created_at: string;
+                    current_period_end: string | null;
+                    id: string;
+                    lemon_customer_id: string | null;
+                    lemon_subscription_id: string | null;
+                    plan_id: string | null;
+                    status: string;
+                    trial_ends_at: string | null;
+                    updated_at: string;
+                    user_id: string;
+                };
+                Insert: {
+                    canceled_at?: string | null;
+                    created_at?: string;
+                    current_period_end?: string | null;
+                    id?: string;
+                    lemon_customer_id?: string | null;
+                    lemon_subscription_id?: string | null;
+                    plan_id?: string | null;
+                    status?: string;
+                    trial_ends_at?: string | null;
+                    updated_at?: string;
+                    user_id: string;
+                };
+                Update: {
+                    canceled_at?: string | null;
+                    created_at?: string;
+                    current_period_end?: string | null;
+                    id?: string;
+                    lemon_customer_id?: string | null;
+                    lemon_subscription_id?: string | null;
+                    plan_id?: string | null;
+                    status?: string;
+                    trial_ends_at?: string | null;
+                    updated_at?: string;
+                    user_id?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: "subscriptions_user_id_fkey";
+                        columns: ["user_id"];
+                        isOneToOne: true;
+                        referencedRelation: "users";
+                        referencedColumns: ["user_id"];
+                    },
+                ];
+            };
             user_progress: {
                 Row: {
                     entry_count_at_last_progress: number;
@@ -309,6 +397,7 @@ export type Database = {
                     deleted_at: string | null;
                     email: string;
                     id: string;
+                    role: string;
                     subscription_status: string;
                     trial_ends_at: string | null;
                     trial_started_at: string | null;
@@ -320,6 +409,7 @@ export type Database = {
                     deleted_at?: string | null;
                     email: string;
                     id?: string;
+                    role?: string;
                     subscription_status?: string;
                     trial_ends_at?: string | null;
                     trial_started_at?: string | null;
@@ -331,6 +421,7 @@ export type Database = {
                     deleted_at?: string | null;
                     email?: string;
                     id?: string;
+                    role?: string;
                     subscription_status?: string;
                     trial_ends_at?: string | null;
                     trial_started_at?: string | null;
