@@ -1,56 +1,78 @@
 # Unsaid
 
-An AI journaling app that helps people understand themselves through pattern recognition and reflection.
+An AI journaling coach that doesn't let you bullshit yourself. Write about anything—the AI spots patterns you can't see, tracks your progress, and asks the questions you're avoiding.
 
-## The idea
+## How It Works
 
-Journaling is powerful, but most people stop because they don't see the value. Unsaid reads your entries, finds patterns you might miss, and reflects them back to you — not as advice, but as observations that help you connect the dots.
+```
+Write → Immediate insight → Weekly patterns → Progress checks
+```
 
-**Core loop:** Write → Get insight → See patterns over time → Track progress
+1. **Write** - Clean entry page with AI-generated prompts
+2. **Tier 1** - Immediate streaming insight after each entry
+3. **Tier 2** - Weekly pattern cards (auto-generated Sunday)
+4. **Tier 3** - Progress checks every 15 entries with semantic search
 
 ## Status
 
-Work in progress. Backend-first approach — building the AI pipeline before the UI.
+Backend complete. Waiting for UI design.
 
-### Completed
+### Complete
+
 - Database schema with RLS policies
 - Clerk authentication + Supabase integration
-- User sync via webhooks
-- Entry creation API with rate limiting
-- Embedding generation for semantic search
+- Entry creation with embeddings + rate limiting
+- Tier 1: Streaming entry insights (Claude Haiku)
+- Tier 2: Weekly pattern generation (Claude Sonnet)
+- Tier 3: Progress insights with semantic search (Claude Sonnet)
+- Entry theme prompts (contextual AI-generated)
+- Semantic search API (pgvector)
+- Email infrastructure (Resend + React Email)
+- Trial/subscription logic (7-day trial, soft-block)
+- Payment integration (Lemon Squeezy webhooks)
+- Feedback forum (CRUD + voting)
+- Cron jobs (weekly insights, trial reminders)
 
-### In progress
-- Entry insights (streaming AI responses)
-- Weekly pattern recognition
-- Progress tracking
+### In Progress
 
-## Tech stack
+- Payment flow end-to-end testing
+- Core UI (waiting for design)
+
+## Tech Stack
 
 | Layer | Tech |
 |-------|------|
-| Framework | Next.js 16 (App Router) |
+| Framework | Next.js 16 (App Router, TypeScript) |
+| Styling | Tailwind CSS + shadcn/ui |
 | Database | Supabase (Postgres + pgvector) |
 | Auth | Clerk |
-| AI | Vercel AI SDK, Claude, OpenAI embeddings |
+| AI | Vercel AI SDK + Anthropic + OpenAI |
 | Email | Resend + React Email |
+| Payments | Lemon Squeezy |
+| Hosting | Vercel |
 
-## Architecture
+## Project Structure
 
 ```
 app/
-├── api/           → API routes (controllers)
-├── actions/       → Server actions
+├── api/              # API routes
+│   ├── cron/         # Scheduled jobs
+│   └── webhooks/     # Clerk, Lemon Squeezy
+├── actions/          # Server actions
 lib/
 ├── {domain}/
-│   ├── repo.ts    → Database access
-│   └── service.ts → Business logic
-├── ai/            → AI utilities
-├── schemas/       → Zod validation
+│   ├── repo.ts       # Database access
+│   └── service.ts    # Business logic
+├── ai/               # AI generation functions
+├── email/            # Email service
+├── schemas/          # Zod validation
+├── constants.ts      # Shared constants
+prompts/              # AI prompt templates
+emails/               # React Email templates
+docs/                 # Project documentation
 ```
 
-The backend is structured to be portable — services and repos can move to a shared package when adding React Native later.
-
-## Running locally
+## Running Locally
 
 ```bash
 # Install dependencies
@@ -61,23 +83,62 @@ npx supabase start
 
 # Copy environment variables
 cp .env.example .env.local
-# Fill in values from `npx supabase status` and Clerk dashboard
+# Fill in values (see below)
+
+# Run database migrations
+npx supabase db push
 
 # Run dev server
 npm run dev
 ```
 
-## Environment variables
+## Environment Variables
 
-```
+```bash
+# Supabase
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 SUPABASE_SECRET_KEY=
+
+# Clerk
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
 CLERK_SECRET_KEY=
+CLERK_WEBHOOK_SECRET=
+
+# AI
 ANTHROPIC_API_KEY=
 OPENAI_API_KEY=
+
+# Email
+RESEND_API_KEY=
+
+# Payments
+LEMONSQUEEZY_API_KEY=
+LEMONSQUEEZY_WEBHOOK_SECRET=
+
+# Cron
+CRON_SECRET=
+
+# App
+NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
+
+## Scripts
+
+```bash
+npm run dev          # Start dev server
+npm run build        # Production build
+npm run lint         # Run Biome linter
+npm run format       # Format code
+npm test             # Run tests
+```
+
+## Documentation
+
+- `docs/mvp-scope.md` - Full MVP reference
+- `docs/planning.md` - Development phases
+- `docs/pre-design-tasks.md` - Current task list
+- `CLAUDE.md` - AI coding conventions
 
 ## License
 
