@@ -1,7 +1,7 @@
 -- RLS uses auth.jwt()->>'sub' which contains the Clerk user ID.
 -- All policies use (SELECT auth.jwt()) for performance (evaluated once per query).
--- Enable pgvector for semantic search
-CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA extensions;
+-- Enable pgvector for semantic search (in public schema for simpler usage)
+CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA public;
 
 -- TABLES
 -- USERS TABLE
@@ -450,10 +450,9 @@ GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO authenticated;
 -- SEMANTIC SEARCH RPC FUNCTIONS
 -- Search entries by embedding vector using cosine similarity
 -- Returns entries with similarity score (1 - cosine_distance, higher = more similar)
--- Note: vector type is in extensions schema, so we use search_path to include it
 -- Using SECURITY DEFINER to bypass RLS (we filter by user_id_param manually for security)
 CREATE OR REPLACE FUNCTION public.search_entries_by_embedding(
-    query_embedding extensions.vector(1536),
+    query_embedding vector(1536),
     user_id_param text,
     match_threshold float DEFAULT 0.5,
     match_count int DEFAULT 10
@@ -469,7 +468,7 @@ RETURNS TABLE (
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public, extensions
+SET search_path = public
 AS $$
 BEGIN
     RETURN QUERY
@@ -512,10 +511,10 @@ RETURNS TABLE (
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public, extensions
+SET search_path = public
 AS $$
 DECLARE
-    source_embedding extensions.vector(1536);
+    source_embedding vector(1536);
 BEGIN
     -- Get the embedding of the source entry
     SELECT e.embedding INTO source_embedding
