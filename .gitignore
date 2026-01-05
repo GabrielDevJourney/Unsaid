@@ -48,3 +48,5 @@ CLAUDE.md
 #docs since are more early stage focus
 /docs
 /prompts/sandbox
+# Sentry Config File
+.env.sentry-build-plugin
