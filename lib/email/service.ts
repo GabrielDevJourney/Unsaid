@@ -1,8 +1,6 @@
 import type { ReactElement } from "react";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 const FROM_EMAIL = "Unsaid <noreply@emails.byunsaid.com>";
 const APP_URL =
     process.env.NEXT_PUBLIC_APP_URL ?? "https://emails.byunsaid.com";
@@ -14,6 +12,26 @@ interface SendEmailParams {
 }
 
 /**
+ * Lazily initialized Resend instance.
+ * Prevents build-time execution failures in CI / Next.js.
+ */
+let resendInstance: Resend | null = null;
+
+function getResend(): Resend {
+    if (!resendInstance) {
+        const apiKey = process.env.RESEND_API_KEY;
+
+        if (!apiKey) {
+            throw new Error("RESEND_API_KEY is not set");
+        }
+
+        resendInstance = new Resend(apiKey);
+    }
+
+    return resendInstance;
+}
+
+/**
  * Generic email sender wrapper.
  */
 export const sendEmail = async ({
@@ -22,6 +40,8 @@ export const sendEmail = async ({
     react,
 }: SendEmailParams): Promise<{ success: boolean; error?: string }> => {
     try {
+        const resend = getResend();
+
         const { error } = await resend.emails.send({
             from: FROM_EMAIL,
             to,
