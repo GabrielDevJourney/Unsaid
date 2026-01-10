@@ -91,6 +91,7 @@ export const updateSubscriptionFromWebhook = async (
         lemonCustomerId?: string;
         currentPeriodEnd?: string;
         canceledAt?: string | null;
+        customerPortalUrl?: string;
     },
 ) => {
     return supabase
@@ -101,6 +102,7 @@ export const updateSubscriptionFromWebhook = async (
             lemon_customer_id: data.lemonCustomerId,
             current_period_end: data.currentPeriodEnd,
             canceled_at: data.canceledAt,
+            customer_portal_url: data.customerPortalUrl,
         })
         .eq("user_id", userId)
         .select()
