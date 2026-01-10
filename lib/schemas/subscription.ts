@@ -4,6 +4,8 @@ import { z } from "zod";
 export const SubscriptionStatus = z.enum([
     "trial",
     "active",
+    "paused",
+    "unpaid",
     "canceled",
     "expired",
 ]);
@@ -46,21 +48,19 @@ export const LemonWebhookSchema = z.object({
     data: z.object({
         type: z.string(),
         id: z.string(),
-        attributes: z
-            .object({
-                customer_id: z.number(),
-                user_email: z.string().email(),
-                status: LemonStatus,
-                cancelled: z.boolean(),
-                trial_ends_at: z.string().nullable(),
-                renews_at: z.string().nullable(),
-                ends_at: z.string().nullable(),
-                urls: z.object({
-                    update_payment_method: z.string(),
-                    customer_portal: z.string().optional(),
-                }),
-            })
-            .passthrough(),
+        attributes: z.strictObject({
+            customer_id: z.number(),
+            user_email: z.email(),
+            status: LemonStatus,
+            cancelled: z.boolean(),
+            trial_ends_at: z.string().nullable(),
+            renews_at: z.string().nullable(),
+            ends_at: z.string().nullable(),
+            urls: z.object({
+                update_payment_method: z.string(),
+                customer_portal: z.string().optional(),
+            }),
+        }),
     }),
 });
 
@@ -82,10 +82,12 @@ export const mapLemonToInternalStatus = (
         case "on_trial":
             return "trial";
         case "active":
+            return "active";
         case "paused":
+            return "paused";
         case "past_due":
         case "unpaid":
-            return "active";
+            return "unpaid";
         case "cancelled":
             return "canceled";
         case "expired":
