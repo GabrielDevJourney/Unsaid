@@ -317,6 +317,7 @@ export type Database = {
                     canceled_at: string | null;
                     created_at: string;
                     current_period_end: string | null;
+                    customer_portal_url: string | null;
                     id: string;
                     lemon_customer_id: string | null;
                     lemon_subscription_id: string | null;
@@ -330,6 +331,7 @@ export type Database = {
                     canceled_at?: string | null;
                     created_at?: string;
                     current_period_end?: string | null;
+                    customer_portal_url?: string | null;
                     id?: string;
                     lemon_customer_id?: string | null;
                     lemon_subscription_id?: string | null;
@@ -343,6 +345,7 @@ export type Database = {
                     canceled_at?: string | null;
                     created_at?: string;
                     current_period_end?: string | null;
+                    customer_portal_url?: string | null;
                     id?: string;
                     lemon_customer_id?: string | null;
                     lemon_subscription_id?: string | null;

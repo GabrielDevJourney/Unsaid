@@ -46,6 +46,10 @@ export const getTrialDaysRemaining = (
  * - status is 'trial' (and not expired)
  * - status is 'active'
  * - status is 'canceled' but still in paid period
+ * - status is 'paused' but still in paid period (pausing next payment, not current)
+ * Not allowed when:
+ * - status is 'unpaid' (payment failed)
+ * - status is 'expired'
  */
 export const canUseFeatures = (subscription: SubscriptionRow): boolean => {
     const { status } = subscription;
@@ -58,10 +62,15 @@ export const canUseFeatures = (subscription: SubscriptionRow): boolean => {
         return true;
     }
 
-    if (status === "canceled" && subscription.current_period_end) {
+    // Canceled or paused - still have access until current period ends
+    if (
+        (status === "canceled" || status === "paused") &&
+        subscription.current_period_end
+    ) {
         return new Date() < new Date(subscription.current_period_end);
     }
 
+    // Unpaid, expired - no access
     return false;
 };
 
@@ -109,19 +118,26 @@ export const getAccessStatus = (
 };
 
 /**
- * Check if subscription needs upgrade prompt (trial expiring or expired).
+ * Check if subscription needs action prompt.
+ * Shows prompt when:
+ * - trial expiring (3 days or less)
+ * - expired
+ * - canceled
+ * - paused (remind to resume)
+ * - unpaid (payment issue)
  */
 export const needsUpgradePrompt = (subscription: SubscriptionRow): boolean => {
     const { status } = subscription;
 
     if (status === "expired") return true;
+    if (status === "canceled") return true;
+    if (status === "paused") return true;
+    if (status === "unpaid") return true;
 
     if (status === "trial") {
         const daysRemaining = getTrialDaysRemaining(subscription);
         return daysRemaining !== null && daysRemaining <= 3;
     }
-
-    if (status === "canceled") return true;
 
     return false;
 };

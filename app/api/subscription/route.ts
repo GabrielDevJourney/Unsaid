@@ -47,3 +47,44 @@ export const GET = async () => {
         );
     }
 };
+
+export const POST = async () => {
+    try {
+        const { userId } = await auth();
+
+        if (!userId) {
+            return NextResponse.json(
+                { error: "Unauthorized" },
+                { status: 401 },
+            );
+        }
+
+        const supabase = await createSupabaseServer();
+        const result = await getSubscription(supabase, userId);
+
+        if (isServiceError(result)) {
+            return NextResponse.json({ error: result.error }, { status: 404 });
+        }
+
+        const subscription = result.data as SubscriptionRow;
+
+        if (!subscription) {
+            return NextResponse.json(
+                { error: "No active subscription" },
+                { status: 400 },
+            );
+        }
+
+        return NextResponse.json({
+            data: {
+                url: subscription.customer_portal_url,
+            },
+        });
+    } catch (error) {
+        console.error("Failed to get billing portal URL:", error);
+        return NextResponse.json(
+            { error: "Failed to get billing portal URL" },
+            { status: 500 },
+        );
+    }
+};

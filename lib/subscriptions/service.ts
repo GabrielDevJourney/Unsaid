@@ -148,6 +148,7 @@ const processSubscriptionUpdate = async (
     payload: LemonWebhookInput,
 ): Promise<ServiceResult<{ processed: boolean }>> => {
     const attrs = payload.data.attributes;
+    const lemonSubscriptionId = payload.data.id;
 
     // Map Lemon status to our internal status
     const internalStatus = mapLemonToInternalStatus(
@@ -161,10 +162,11 @@ const processSubscriptionUpdate = async (
         userId,
         {
             status: internalStatus,
-            lemonSubscriptionId: payload.data.id,
+            lemonSubscriptionId: lemonSubscriptionId,
             lemonCustomerId: String(attrs.customer_id),
             currentPeriodEnd: attrs.renews_at ?? attrs.ends_at ?? undefined,
             canceledAt: attrs.cancelled ? new Date().toISOString() : null,
+            customerPortalUrl: attrs.urls.customer_portal,
         },
     );
 
