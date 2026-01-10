@@ -490,7 +490,9 @@ const createEntryInsights = async (
     if (dryRun) return entries.length;
 
     // Dynamic imports to avoid module load issues
-    const { streamEntryInsight } = await import("../lib/ai/stream-entry-insight");
+    const { streamEntryInsight } = await import(
+        "../lib/ai/stream-entry-insight"
+    );
     const { insertEntryInsight } = await import("../lib/entry-insights/repo");
 
     let count = 0;

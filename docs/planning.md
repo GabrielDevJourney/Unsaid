@@ -10,6 +10,17 @@ Build the AI journaling backend first, test with simple UI, add design later.
 
 ---
 
+## AI Cost Model
+
+| User Type | Entries/Month | AI Cost | Margin @ $12.99 |
+|-----------|---------------|---------|-----------------|
+| Average | 28 entries | ~$0.75 | **94%** |
+| Heavy | 90 entries | ~$2.25 | **83%** |
+
+Costs are usage-capped by design—even power users can't abuse the system.
+
+---
+
 ## Current Status
 
 ### Backend: Complete ✅
@@ -25,6 +36,8 @@ Build the AI journaling backend first, test with simple UI, add design later.
 | Cron jobs | ✅ Done |
 | Feedback forum API | ✅ Done |
 | Payment integration | ✅ Done (testing pending) |
+| User provisioning middleware | ✅ Done |
+| Heavy usage seeder (stress test) | ✅ Done |
 
 ### Infrastructure: Complete ✅
 
@@ -52,17 +65,14 @@ Build the AI journaling backend first, test with simple UI, add design later.
 |------|--------|-------|
 | Lemon Squeezy test flow | ⏸️ Blocked | Account in review |
 | Connect domain | ⬜ Ready | Vercel + Hostinger DNS |
-| Delete Sentry example page | ⬜ Quick | Cleanup |
 | Add Sentry.setUser() with Clerk | ⬜ P1 | Link errors to users |
 
 ### Before Design Arrives
 
 | Task | Priority | Notes |
 |------|----------|-------|
-| Write 3 critical tests | P1 | AI parsing, Zod schemas, trigger logic |
 | Build minimal functional UI | P1 | Dogfood the product |
-| Error handling polish | P2 | lib/errors.ts, consistent format |
-| Prompt documentation | P2 | What each tier does |
+| Write critical tests | P2 | AI parsing, Zod schemas, trigger logic |
 
 ### What NOT To Do Now
 
@@ -259,10 +269,10 @@ packages/
 - Email infrastructure
 - Cron jobs
 - Sentry error tracking
-- Domain connection
+- User provisioning middleware
+- Heavy usage seeder (90 entries stress test)
 
 ### In Progress ⏳
-- Payment flow testing (blocked on Lemon Squeezy)
 
 ### Missing (MVP Critical) ❌
 - Core UI (waiting for design)
@@ -272,4 +282,3 @@ packages/
 - Performance optimization
 - Monorepo (mobile)
 - Voice journaling
-- User subscription managing dashboard
