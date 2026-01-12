@@ -14,14 +14,20 @@
         "isolatedModules": true,
         "jsx": "react-jsx",
         "incremental": true,
+
         "plugins": [
             {
                 "name": "next"
             }
         ],
+
         "paths": {
             "@/*": ["./*"]
-        }
+        },
+
+        "sourceMap": true,
+        "inlineSources": true,
+        "sourceRoot": "/"
     },
     "include": [
         "next-env.d.ts",
