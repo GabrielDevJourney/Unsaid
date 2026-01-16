@@ -3,7 +3,16 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { createSupabaseMiddleware } from "./lib/supabase/middleware";
 
+const BOT_PROBE_PATTERNS =
+    /^\/(\.env|\.git|\.aws|\.docker|config\/|wp-|admin|phpmy|cgi-bin|\.well-known\/security)/i;
+
 export default clerkMiddleware(async (auth, req: NextRequest) => {
+    const pathname = req.nextUrl.pathname;
+
+    if (BOT_PROBE_PATTERNS.test(pathname)) {
+        return new NextResponse(null, { status: 404 });
+    }
+
     const { userId } = await auth();
 
     // Not signed in → let Clerk handle it
