@@ -21,16 +21,17 @@ export const insertEntryInsight = async (
 };
 
 /**
- * Get a single entry insight by ID.
- * RLS ensures user can only fetch their own entries.
+ * Get entry insight by entry ID.
+ * Returns the insight associated with a specific entry.
+ * RLS ensures user can only fetch their own entry insights.
  */
-export const getEntryInsightById = async (
+export const getEntryInsightByEntryId = async (
     supabase: SupabaseClient,
-    entryInsightId: string,
+    entryId: string,
 ) => {
     return supabase
         .from("entry_insights")
         .select("id, user_id, entry_id, content, created_at, updated_at")
-        .eq("id", entryInsightId)
+        .eq("entry_id", entryId)
         .single();
 };
