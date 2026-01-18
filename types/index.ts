@@ -4,4 +4,5 @@ export * from "./domain/insights";
 export * from "./domain/semantic-search";
 export * from "./domain/subscriptions";
 export * from "./domain/users";
+export * from "./domain/waitlist";
 export * from "./service";
