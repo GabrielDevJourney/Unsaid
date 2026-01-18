@@ -137,3 +137,20 @@ export const sendProgressCheckEmail = async (
         }),
     });
 };
+
+/**
+ * Send waitlist confirmation email.
+ */
+export const sendWaitlistConfirmationEmail = async (
+    to: string,
+): Promise<{ success: boolean; error?: string }> => {
+    const { default: WaitlistConfirmationEmail } = await import(
+        "@/emails/waitlist-confirmation"
+    );
+
+    return sendEmail({
+        to,
+        subject: "You're on the Unsaid waitlist",
+        react: WaitlistConfirmationEmail({ email: to }),
+    });
+};

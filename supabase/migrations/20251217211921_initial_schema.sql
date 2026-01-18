@@ -39,7 +39,7 @@ CREATE TABLE public.entries(
 
 CREATE INDEX entries_user_created_idx ON public.entries(user_id, created_at DESC);
 
-CREATE INDEX entries_embedding_idx ON public.entries USING ivfflat(embedding vector_cosine_ops) WITH (lists = 100);
+CREATE INDEX entries_embedding_idx ON public.entries USING ivfflat(embedding extensions.vector_cosine_ops) WITH (lists = 100);
 
 -- ENTRY_INSIGHTS TABLE (Tier 1: one per entry, text response)
 CREATE TABLE public.entry_insights(
@@ -181,6 +181,17 @@ CREATE INDEX payment_events_user_idx ON public.payment_events(user_id) WHERE use
 CREATE INDEX payment_events_type_idx ON public.payment_events(event_type);
 CREATE INDEX payment_events_created_idx ON public.payment_events(created_at DESC);
 
+-- WAITLIST TABLE (pre-launch email collection)
+CREATE TABLE public.waitlist (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    email text UNIQUE NOT NULL,
+    source text DEFAULT 'landing_page',
+    created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX waitlist_email_idx ON public.waitlist(email);
+CREATE INDEX waitlist_created_idx ON public.waitlist(created_at DESC);
+
 -- TRIGGERS: Auto-update updated_at
 CREATE OR REPLACE FUNCTION public.update_updated_at()
     RETURNS TRIGGER
@@ -263,6 +274,8 @@ ALTER TABLE public.feedback_votes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.subscriptions ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE public.payment_events ENABLE ROW LEVEL SECURITY;
+
+ALTER TABLE public.waitlist ENABLE ROW LEVEL SECURITY;
 
 -- USERS policies
 CREATE POLICY "Service webhook can create users" ON public.users
@@ -412,6 +425,23 @@ CREATE POLICY "Service can manage payment events" ON public.payment_events
     USING (true)
     WITH CHECK (true);
 
+-- WAITLIST policies (public insert for landing page, service role for management)
+-- Validate email format at RLS level for defense in depth
+CREATE POLICY "Anyone can join waitlist" ON public.waitlist
+    FOR INSERT
+    TO anon
+    WITH CHECK (
+        email IS NOT NULL
+        AND length(email) >= 5
+        AND email ~ '^[^@]+@[^@]+\.[^@]+$'
+    );
+
+CREATE POLICY "Service can manage waitlist" ON public.waitlist
+    FOR ALL
+    TO service_role
+    USING (true)
+    WITH CHECK (true);
+
 -- GRANTS: API Access for PostgREST
 GRANT USAGE ON SCHEMA public TO anon, authenticated;
 
@@ -450,6 +480,10 @@ GRANT ALL ON public.subscriptions TO service_role;
 
 -- Payment events table (service role only)
 GRANT ALL ON public.payment_events TO service_role;
+
+-- Waitlist table (anon can insert, service role has full access)
+GRANT INSERT ON public.waitlist TO anon;
+GRANT ALL ON public.waitlist TO service_role;
 
 -- Sequences (needed for uuid generation)
 GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO authenticated;
