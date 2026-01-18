@@ -266,10 +266,10 @@ export default function ComingSoonPage() {
                             "transform 0.6s cubic-bezier(0.23, 1, 0.32, 1)",
                     }}
                 >
-                    <div className="relative w-[420px] h-[420px] md:w-[520px] md:h-[520px]">
+                    <div className="relative w-105 h-105 md:w-130 md:h-130">
                         <GridLines />
                         <div
-                            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] h-[280px] md:w-[340px] md:h-[340px] rounded-full"
+                            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-70 h-70 md:w-85 md:h-85 rounded-full"
                             style={{
                                 background: `
                   radial-gradient(circle at 30% 30%, rgba(255,255,255,0.8) 0%, transparent 40%),
@@ -320,7 +320,7 @@ export default function ComingSoonPage() {
                             delay: 0.6,
                             ...SPRING_CONFIG,
                         }}
-                        className="font-mono text-[12px] tracking-[0.02em] text-[#8A8A8A] mb-[340px] md:mb-[420px] max-w-[420px] mx-auto leading-relaxed"
+                        className="font-mono text-[12px] tracking-[0.02em] text-[#8A8A8A] mb-85 md:mb-105 max-w-105 mx-auto leading-relaxed"
                     >
                         Catch the patterns, understand the shift, and own your
                         evolution across time.
@@ -335,7 +335,7 @@ export default function ComingSoonPage() {
                             ...SPRING_CONFIG,
                         }}
                         onClick={() => setShowWaitlistModal(true)}
-                        className="h-[52px] px-10 bg-[#0A0A0A] rounded-lg font-mono text-[11px] font-medium uppercase tracking-[0.25em] text-white transition-all hover:bg-[#1A1A1A] hover:scale-[1.02] active:scale-[0.98]"
+                        className="h-13 px-10 bg-[#0A0A0A] rounded-lg font-mono text-[11px] font-medium uppercase tracking-[0.25em] text-white transition-all hover:bg-[#1A1A1A] hover:scale-[1.02] active:scale-[0.98]"
                     >
                         Join Waitlist
                     </motion.button>
@@ -365,7 +365,7 @@ export default function ComingSoonPage() {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.3 }}
-                        className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0A0A0A]/60 backdrop-blur-sm"
+                        className="fixed inset-0 z-100 flex items-center justify-center bg-[#0A0A0A]/60 backdrop-blur-sm"
                         onClick={() => setShowWaitlistModal(false)}
                     >
                         <motion.div
@@ -378,7 +378,7 @@ export default function ComingSoonPage() {
                                 stiffness: 300,
                                 damping: 30,
                             }}
-                            className="relative w-[90%] max-w-[480px] bg-white rounded-2xl p-10 shadow-2xl"
+                            className="relative w-[90%] max-w-120 bg-white rounded-2xl p-10 shadow-2xl"
                             onClick={(e) => e.stopPropagation()}
                         >
                             <button
@@ -418,7 +418,7 @@ export default function ComingSoonPage() {
                                         onBlur={() => setLensScale(1)}
                                         placeholder="you@example.com"
                                         disabled={isSubmitting}
-                                        className="w-full h-[56px] pl-12 pr-5 bg-[#F8F8F6] rounded-xl font-mono text-[13px] text-[#0A0A0A] placeholder:text-[#B0B0B0] focus:outline-none focus:ring-2 focus:ring-[#0A0A0A]/10 transition-all border border-[#E8E8E6] disabled:opacity-50"
+                                        className="w-full h-14 pl-12 pr-5 bg-[#F8F8F6] rounded-xl font-mono text-[13px] text-[#0A0A0A] placeholder:text-[#B0B0B0] focus:outline-none focus:ring-2 focus:ring-[#0A0A0A]/10 transition-all border border-[#E8E8E6] disabled:opacity-50"
                                         required
                                     />
                                 </div>
@@ -438,7 +438,7 @@ export default function ComingSoonPage() {
                                 <button
                                     type="submit"
                                     disabled={isSubmitting}
-                                    className="w-full h-[56px] bg-[#0A0A0A] rounded-xl font-mono text-[12px] font-medium uppercase tracking-[0.2em] text-white transition-all hover:bg-[#1A1A1A] flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="w-full h-14 bg-[#0A0A0A] rounded-xl font-mono text-[12px] font-medium uppercase tracking-[0.2em] text-white transition-all hover:bg-[#1A1A1A] flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {isSubmitting ? (
                                         "Joining..."

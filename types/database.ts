@@ -433,6 +433,27 @@ export type Database = {
                 };
                 Relationships: [];
             };
+            waitlist: {
+                Row: {
+                    created_at: string;
+                    email: string;
+                    id: string;
+                    source: string | null;
+                };
+                Insert: {
+                    created_at?: string;
+                    email: string;
+                    id?: string;
+                    source?: string | null;
+                };
+                Update: {
+                    created_at?: string;
+                    email?: string;
+                    id?: string;
+                    source?: string | null;
+                };
+                Relationships: [];
+            };
             weekly_insight_patterns: {
                 Row: {
                     created_at: string;
