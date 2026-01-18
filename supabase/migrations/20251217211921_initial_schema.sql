@@ -1,7 +1,12 @@
 -- RLS uses auth.jwt()->>'sub' which contains the Clerk user ID.
 -- All policies use (SELECT auth.jwt()) for performance (evaluated once per query).
--- Enable pgvector for semantic search (in public schema for simpler usage)
-CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA public;
+
+-- Create dedicated extensions schema (Supabase best practice)
+CREATE SCHEMA IF NOT EXISTS extensions;
+GRANT USAGE ON SCHEMA extensions TO postgres, anon, authenticated, service_role;
+
+-- Enable pgvector for semantic search in extensions schema
+CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA extensions;
 
 -- TABLES
 -- USERS TABLE
@@ -27,7 +32,7 @@ CREATE TABLE public.entries(
     user_id text NOT NULL REFERENCES public.users(user_id) ON DELETE CASCADE,
     content text NOT NULL,
     word_count integer NOT NULL DEFAULT 0,
-    embedding vector(1536),
+    embedding extensions.vector(1536),
     created_at timestamptz NOT NULL DEFAULT now(),
     updated_at timestamptz NOT NULL DEFAULT now()
 );
@@ -275,7 +280,8 @@ ALTER TABLE public.waitlist ENABLE ROW LEVEL SECURITY;
 -- USERS policies
 CREATE POLICY "Service webhook can create users" ON public.users
     FOR INSERT
-        WITH CHECK (TRUE);
+    TO service_role
+    WITH CHECK (true);
 
 CREATE POLICY "Users can view own profile" ON public.users
     FOR SELECT
@@ -362,7 +368,8 @@ CREATE POLICY "Users can update own prompts" ON public.prompts
 -- USER_PROGRESS policies (read-only for users, updated by system)
 CREATE POLICY "Service webhook can insert init user progress" ON public.user_progress
     FOR INSERT
-        WITH CHECK (TRUE);
+    TO service_role
+    WITH CHECK (true);
 
 CREATE POLICY "Users can view own progress" ON public.user_progress
     FOR SELECT
@@ -486,7 +493,7 @@ GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO authenticated;
 -- Returns entries with similarity score (1 - cosine_distance, higher = more similar)
 -- Using SECURITY DEFINER to bypass RLS (we filter by user_id_param manually for security)
 CREATE OR REPLACE FUNCTION public.search_entries_by_embedding(
-    query_embedding vector(1536),
+    query_embedding extensions.vector(1536),
     user_id_param text,
     match_threshold float DEFAULT 0.5,
     match_count int DEFAULT 10
@@ -502,7 +509,7 @@ RETURNS TABLE (
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = public, extensions
 AS $$
 BEGIN
     RETURN QUERY
@@ -545,10 +552,10 @@ RETURNS TABLE (
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = public, extensions
 AS $$
 DECLARE
-    source_embedding vector(1536);
+    source_embedding extensions.vector(1536);
 BEGIN
     -- Get the embedding of the source entry
     SELECT e.embedding INTO source_embedding
