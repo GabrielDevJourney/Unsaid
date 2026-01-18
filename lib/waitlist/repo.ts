@@ -25,9 +25,5 @@ export const getWaitlistEntryByEmail = async (
     supabase: SupabaseClient,
     email: string,
 ) => {
-    return supabase
-        .from("waitlist")
-        .select("*")
-        .eq("email", email)
-        .single();
+    return supabase.from("waitlist").select("*").eq("email", email).single();
 };
