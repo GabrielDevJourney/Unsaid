@@ -90,7 +90,7 @@ export const getRelatedEntries = async (
 
     if (entryError) {
         // PGRST116 = no rows returned (not found or RLS blocked)
-        if (entryError.code === "PGRST116") {
+        if ("code" in entryError && entryError.code === "PGRST116") {
             return { error: "Entry not found" };
         }
         console.error("Failed to fetch source entry:", entryError);
