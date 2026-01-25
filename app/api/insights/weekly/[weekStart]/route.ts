@@ -46,7 +46,7 @@ export const GET = async (_req: NextRequest, { params }: RouteParams) => {
 
         if (error) {
             // PGRST116 = no rows found
-            if (error.code === "PGRST116") {
+            if ("code" in error && error.code === "PGRST116") {
                 return NextResponse.json(
                     { error: "Weekly insight not found for this week" },
                     { status: 404 },

@@ -37,7 +37,7 @@ export const GET = async (_req: NextRequest, { params }: RouteParams) => {
 
         if (error) {
             // PGRST116 = no rows returned (not found or RLS blocked)
-            if (error.code === "PGRST116") {
+            if ("code" in error && error.code === "PGRST116") {
                 return NextResponse.json(
                     { error: "Entry not found" },
                     { status: 404 },
