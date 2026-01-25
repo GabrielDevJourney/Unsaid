@@ -5,6 +5,8 @@ import { searchEntriesByEmbedding } from "@/lib/entries/repo";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
 import type {
     CreateProgressInsightPayload,
+    EntryMinimal,
+    EntryMinimalWithSimilarity,
     ProgressInsight,
     ServiceResult,
 } from "@/types";
@@ -90,11 +92,7 @@ export const createProgressInsight = async (
     const supabase = createSupabaseAdmin();
 
     // Get recent entries if not provided in payload
-    let recentEntries: Array<{
-        id: string;
-        content: string;
-        createdAt: string;
-    }>;
+    let recentEntries: EntryMinimal[];
 
     if (payload?.recentEntries && payload.recentEntries.length > 0) {
         recentEntries = payload.recentEntries;
@@ -119,17 +117,12 @@ export const createProgressInsight = async (
         recentEntries = entries.map((e) => ({
             id: e.id,
             content: e.content,
-            createdAt: e.created_at,
+            createdAt: e.createdAt,
         }));
     }
 
     // Find related past entries using semantic search
-    let relatedPastEntries: Array<{
-        id: string;
-        content: string;
-        createdAt: string;
-        similarity?: number;
-    }> = [];
+    let relatedPastEntries: EntryMinimalWithSimilarity[] = [];
 
     if (payload?.relatedPastEntries) {
         relatedPastEntries = payload.relatedPastEntries;
@@ -200,15 +193,8 @@ export const createProgressInsight = async (
 const findRelatedPastEntries = async (
     supabase: ReturnType<typeof createSupabaseAdmin>,
     userId: string,
-    recentEntries: Array<{ id: string; content: string; createdAt: string }>,
-): Promise<
-    Array<{
-        id: string;
-        content: string;
-        createdAt: string;
-        similarity?: number;
-    }>
-> => {
+    recentEntries: EntryMinimal[],
+): Promise<EntryMinimalWithSimilarity[]> => {
     // Get the oldest recent entry date to exclude recent entries from search
     const oldestRecentDate = recentEntries.reduce((oldest, entry) => {
         const date = new Date(entry.createdAt);
@@ -248,7 +234,7 @@ const findRelatedPastEntries = async (
         const recentIds = new Set(recentEntries.map((e) => e.id));
         const pastEntries = relatedEntries
             .filter((e) => !recentIds.has(e.id))
-            .filter((e) => new Date(e.created_at) < oldestRecentDate)
+            .filter((e) => new Date(e.createdAt) < oldestRecentDate)
             .slice(0, RELATED_ENTRIES_LIMIT);
 
         console.log(
@@ -258,7 +244,7 @@ const findRelatedPastEntries = async (
         return pastEntries.map((e) => ({
             id: e.id,
             content: e.content,
-            createdAt: e.created_at,
+            createdAt: e.createdAt,
             similarity: e.similarity,
         }));
     } catch (embeddingError) {

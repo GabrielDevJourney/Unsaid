@@ -199,12 +199,17 @@ const cleanTestData = async () => {
 };
 
 /**
- * Create entries spread across the last week
+ * Create entries spread across the last week using repos
  */
 const createEntries = async (userId: string) => {
     console.log("\nCreating 15 entries spread across last week...");
 
-    const entries = [];
+    const { insertEntry, updateEntryEmbedding } = await import(
+        "../lib/entries/repo"
+    );
+
+    const entries: Array<{ id: string; content: string; createdAt: string }> =
+        [];
 
     for (let i = 0; i < 15; i++) {
         const content = JOURNAL_ENTRIES[i % JOURNAL_ENTRIES.length];
@@ -217,25 +222,47 @@ const createEntries = async (userId: string) => {
 
         console.log(`  Entry ${i + 1}/15...`);
 
-        const embedding = await generateEmbedding(content);
-
-        const { data, error } = await supabase
-            .from("entries")
-            .insert({
-                user_id: userId,
+        // Create entry using repo (handles encryption)
+        const { data: entry, error: insertError } = await insertEntry(
+            supabase,
+            {
+                userId,
                 content,
-                word_count: wordCount,
-                embedding,
-                created_at: date.toISOString(),
-            })
-            .select()
-            .single();
+                wordCount,
+            },
+        );
 
-        if (error) {
-            console.error(`Failed to create entry ${i + 1}:`, error);
-        } else {
-            entries.push(data);
+        if (insertError || !entry) {
+            console.error(`Failed to create entry ${i + 1}:`, insertError);
+            continue;
         }
+
+        // Update created_at to staggered date
+        await supabase
+            .from("entries")
+            .update({ created_at: date.toISOString() })
+            .eq("id", entry.id);
+
+        // Generate and update embedding
+        const embedding = await generateEmbedding(content);
+        const { error: embeddingError } = await updateEntryEmbedding(
+            supabase,
+            entry.id,
+            embedding,
+        );
+
+        if (embeddingError) {
+            console.error(
+                `Failed to update embedding ${i + 1}:`,
+                embeddingError,
+            );
+        }
+
+        entries.push({
+            id: entry.id,
+            content: entry.content,
+            createdAt: date.toISOString(),
+        });
 
         // Small delay to avoid rate limits
         await new Promise((resolve) => setTimeout(resolve, 200));
@@ -282,7 +309,7 @@ const sendTrialReminder = async (email: string, dryRun: boolean) => {
 const sendWeeklyPatterns = async (
     userId: string,
     email: string,
-    entries: Array<{ id: string; content: string; created_at: string }>,
+    entries: Array<{ id: string; content: string; createdAt: string }>,
     dryRun: boolean,
 ) => {
     console.log("\n--- Weekly Patterns Email ---");
@@ -308,7 +335,7 @@ const sendWeeklyPatterns = async (
         entries: entries.map((e) => ({
             id: e.id,
             content: e.content,
-            createdAt: e.created_at,
+            createdAt: e.createdAt,
         })),
     });
 

@@ -1,3 +1,4 @@
+export * from "./domain/crypto";
 export * from "./domain/entries";
 export * from "./domain/feedback";
 export * from "./domain/insights";

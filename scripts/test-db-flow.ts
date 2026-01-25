@@ -124,12 +124,18 @@ const cleanTestData = async (userId: string) => {
 };
 
 /**
- * Test 1: Create entries with embeddings
+ * Test 1: Create entries with embeddings using repo
  */
 const testEntryCreation = async (userId: string) => {
     logSection("TEST 1: Entry Creation with Embeddings");
 
-    const entries: Array<{ id: string; content: string; created_at: string }> =
+    const { insertEntry, updateEntryEmbedding } = await import(
+        "../lib/entries/repo"
+    );
+
+    // Using inline type since dynamic imports don't work well with type-only imports
+    // This matches EntryMinimal from @/types
+    const entries: Array<{ id: string; content: string; createdAt: string }> =
         [];
 
     for (let i = 0; i < TEST_ENTRIES.length; i++) {
@@ -138,36 +144,41 @@ const testEntryCreation = async (userId: string) => {
 
         log("📝", `Creating entry ${i + 1}/${TEST_ENTRIES.length}...`);
 
-        // Generate embedding
+        // Create entry using repo (handles encryption)
+        const { data: entry, error: insertError } = await insertEntry(
+            supabase,
+            {
+                userId,
+                content,
+                wordCount,
+            },
+        );
+
+        if (insertError || !entry) {
+            log("❌", `  Failed: ${insertError?.message}`);
+            throw insertError;
+        }
+
+        log("✅", `  Entry created: ${entry.id.slice(0, 8)}...`);
+
+        // Generate and update embedding
         const embedding = await generateEmbedding(content);
         log("🧮", `  Embedding generated (${embedding.length} dimensions)`);
 
-        // Create entry with date spread over past week
-        const date = new Date();
-        date.setDate(date.getDate() - (TEST_ENTRIES.length - i));
+        const { error: embeddingError } = await updateEntryEmbedding(
+            supabase,
+            entry.id,
+            JSON.stringify(embedding),
+        );
 
-        const { data, error } = await supabase
-            .from("entries")
-            .insert({
-                user_id: userId,
-                content,
-                word_count: wordCount,
-                embedding: JSON.stringify(embedding),
-                created_at: date.toISOString(),
-            })
-            .select()
-            .single();
-
-        if (error) {
-            log("❌", `  Failed: ${error.message}`);
-            throw error;
+        if (embeddingError) {
+            log("⚠️", `  Embedding update failed: ${embeddingError.message}`);
         }
 
-        log("✅", `  Entry created: ${data.id.slice(0, 8)}...`);
         entries.push({
-            id: data.id,
-            content: data.content,
-            created_at: data.created_at,
+            id: entry.id,
+            content: entry.content,
+            createdAt: entry.createdAt,
         });
     }
 
@@ -218,7 +229,7 @@ const testEntryInsight = async (
  */
 const testWeeklyInsight = async (
     userId: string,
-    entries: Array<{ id: string; content: string; created_at: string }>,
+    entries: Array<{ id: string; content: string; createdAt: string }>,
 ) => {
     logSection("TEST 3: Weekly Insight (Tier 2)");
 
@@ -228,7 +239,7 @@ const testWeeklyInsight = async (
         "../lib/weekly-insights/service"
     );
 
-    const weekStart = getWeekStart(new Date(entries[0].created_at));
+    const weekStart = getWeekStart(new Date(entries[0].createdAt));
 
     const result = await createWeeklyInsight(userId, {
         weekStart,
@@ -236,7 +247,7 @@ const testWeeklyInsight = async (
         entries: entries.map((e) => ({
             id: e.id,
             content: e.content,
-            createdAt: e.created_at,
+            createdAt: e.createdAt,
         })),
     });
 
@@ -252,7 +263,7 @@ const testWeeklyInsight = async (
 
     if (result.data?.patterns?.length) {
         for (const pattern of result.data.patterns.slice(0, 2)) {
-            log("  📌", `Pattern: ${pattern.title} (${pattern.pattern_type})`);
+            log("  📌", `Pattern: ${pattern.title} (${pattern.patternType})`);
         }
     }
 
@@ -264,7 +275,7 @@ const testWeeklyInsight = async (
  */
 const testProgressInsight = async (
     userId: string,
-    entries: Array<{ id: string; content: string; created_at: string }>,
+    entries: Array<{ id: string; content: string; createdAt: string }>,
 ) => {
     logSection("TEST 4: Progress Insight (Tier 3)");
 
@@ -279,7 +290,7 @@ const testProgressInsight = async (
         recentEntries: entries.map((e) => ({
             id: e.id,
             content: e.content,
-            createdAt: e.created_at,
+            createdAt: e.createdAt,
         })),
         relatedPastEntries: [],
     });
@@ -319,7 +330,7 @@ const testEntryThemePrompt = async (userId: string) => {
 };
 
 /**
- * Test 6: Semantic Search
+ * Test 6: Semantic Search using repo
  */
 const testSemanticSearch = async (
     userId: string,
@@ -327,21 +338,24 @@ const testSemanticSearch = async (
 ) => {
     logSection("TEST 6: Semantic Search (Vector Functions)");
 
-    log("🔍", "Testing search_entries_by_embedding...");
+    const { searchEntriesByEmbedding, findRelatedEntries } = await import(
+        "../lib/entries/repo"
+    );
+
+    log("🔍", "Testing searchEntriesByEmbedding...");
 
     // Generate embedding for a search query
     const searchQuery = "feeling overwhelmed at work";
     const queryEmbedding = await generateEmbedding(searchQuery);
 
-    const { data: searchResults, error: searchError } = await supabase.rpc(
-        "search_entries_by_embedding",
-        {
-            query_embedding: JSON.stringify(queryEmbedding),
-            user_id_param: userId,
-            match_threshold: 0.3,
-            match_count: 5,
-        },
-    );
+    const { data: searchResults, error: searchError } =
+        await searchEntriesByEmbedding(
+            supabase,
+            userId,
+            JSON.stringify(queryEmbedding),
+            5,
+            0.3,
+        );
 
     if (searchError) {
         log("❌", `  Search failed: ${searchError.message}`);
@@ -359,18 +373,11 @@ const testSemanticSearch = async (
         }
     }
 
-    // Test find_related_entries
-    log("🔍", "Testing find_related_entries...");
+    // Test findRelatedEntries
+    log("🔍", "Testing findRelatedEntries...");
 
-    const { data: relatedResults, error: relatedError } = await supabase.rpc(
-        "find_related_entries",
-        {
-            entry_id_param: entries[0].id,
-            user_id_param: userId,
-            match_threshold: 0.3,
-            match_count: 5,
-        },
-    );
+    const { data: relatedResults, error: relatedError } =
+        await findRelatedEntries(supabase, userId, entries[0].id, 5, 0.3);
 
     if (relatedError) {
         log("❌", `  Related search failed: ${relatedError.message}`);
@@ -399,7 +406,9 @@ const main = async () => {
 
         // Run all tests
         const entries = await testEntryCreation(userId);
-        await testEntryInsight(userId, entries[0]);
+        for (const entry of entries) {
+            await testEntryInsight(userId, entry);
+        }
         await testWeeklyInsight(userId, entries);
         await testProgressInsight(userId, entries);
         await testEntryThemePrompt(userId);

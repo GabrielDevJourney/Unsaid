@@ -196,14 +196,19 @@ const cleanEntries = async (userId: string) => {
 };
 
 /**
- * Create entries with staggered dates
+ * Create entries with staggered dates using repos
  */
 const createEntries = async (
     userId: string,
     entries: string[],
     startDaysAgo: number,
 ) => {
-    const results = [];
+    const { insertEntry, updateEntryEmbedding } = await import(
+        "../lib/entries/repo"
+    );
+
+    const results: Array<{ id: string; content: string; createdAt: string }> =
+        [];
 
     for (let i = 0; i < entries.length; i++) {
         const content = entries[i];
@@ -216,26 +221,47 @@ const createEntries = async (
 
         console.log(`Creating entry ${i + 1}/${entries.length}...`);
 
-        // Generate embedding
-        const embedding = await generateEmbedding(content);
-
-        const { data, error } = await supabase
-            .from("entries")
-            .insert({
-                user_id: userId,
+        // Create entry using repo (handles encryption)
+        const { data: entry, error: insertError } = await insertEntry(
+            supabase,
+            {
+                userId,
                 content,
-                word_count: wordCount,
-                embedding,
-                created_at: date.toISOString(),
-            })
-            .select()
-            .single();
+                wordCount,
+            },
+        );
 
-        if (error) {
-            console.error(`Failed to create entry ${i + 1}:`, error);
-        } else {
-            results.push(data);
+        if (insertError || !entry) {
+            console.error(`Failed to create entry ${i + 1}:`, insertError);
+            continue;
         }
+
+        // Update created_at to staggered date (direct update since repo doesn't support custom dates)
+        await supabase
+            .from("entries")
+            .update({ created_at: date.toISOString() })
+            .eq("id", entry.id);
+
+        // Generate and update embedding
+        const embedding = await generateEmbedding(content);
+        const { error: embeddingError } = await updateEntryEmbedding(
+            supabase,
+            entry.id,
+            embedding,
+        );
+
+        if (embeddingError) {
+            console.error(
+                `Failed to update embedding ${i + 1}:`,
+                embeddingError,
+            );
+        }
+
+        results.push({
+            id: entry.id,
+            content: entry.content,
+            createdAt: date.toISOString(),
+        });
 
         // Small delay to avoid rate limits
         await new Promise((resolve) => setTimeout(resolve, 200));
@@ -339,14 +365,14 @@ const main = async () => {
             // Show metadata
             console.log("\n📊 Response metadata:");
             console.log(`  id: ${insight.id}`);
-            console.log(`  user_id: ${insight.user_id}`);
+            console.log(`  userId: ${insight.userId}`);
             console.log(
-                `  recent_entry_ids: [${insight.recent_entry_ids.length} entries]`,
+                `  recentEntryIds: [${insight.recentEntryIds.length} entries]`,
             );
             console.log(
-                `  related_past_entry_ids: [${insight.related_past_entry_ids?.length ?? 0} entries]`,
+                `  relatedPastEntryIds: [${insight.relatedPastEntryIds?.length ?? 0} entries]`,
             );
-            console.log(`  created_at: ${insight.created_at}`);
+            console.log(`  createdAt: ${insight.createdAt}`);
 
             // Show content
             console.log("\n📝 Content:");

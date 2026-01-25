@@ -15,7 +15,7 @@ export const PatternSchema = z.object({
     title: z.string().min(1),
     pattern_type: z.enum(PATTERN_TYPE_CODES),
     description: z.string().min(1),
-    evidence: z.array(z.string().uuid()).min(1),
+    evidence: z.array(z.uuid()).min(1),
     question: z.string().optional(),
     suggested_experiment: z.string().optional(),
 });
@@ -35,7 +35,7 @@ export type WeeklyInsightResponse = z.infer<typeof WeeklyInsightResponseSchema>;
  */
 export const WeeklyInsightCreateSchema = z.object({
     week_start: z.string(), // ISO date string (YYYY-MM-DD)
-    entry_ids: z.array(z.string().uuid()).min(1),
+    entry_ids: z.array(z.uuid()).min(1),
 });
 
 export type WeeklyInsightCreateInput = z.infer<
@@ -46,10 +46,10 @@ export type WeeklyInsightCreateInput = z.infer<
  * Schema for weekly insight row (from database)
  */
 export const WeeklyInsightRowSchema = z.object({
-    id: z.string().uuid(),
+    id: z.uuid(),
     user_id: z.string(),
     week_start: z.string(),
-    entry_ids: z.array(z.string().uuid()),
+    entry_ids: z.array(z.uuid()),
     created_at: z.string(),
     updated_at: z.string(),
 });
@@ -60,12 +60,12 @@ export type WeeklyInsightRow = z.infer<typeof WeeklyInsightRowSchema>;
  * Schema for pattern row (from database)
  */
 export const WeeklyInsightPatternRowSchema = z.object({
-    id: z.string().uuid(),
-    weekly_insight_id: z.string().uuid(),
+    id: z.uuid(),
+    weekly_insight_id: z.uuid(),
     title: z.string(),
     pattern_type: z.enum(PATTERN_TYPE_CODES),
     description: z.string(),
-    evidence: z.array(z.string().uuid()),
+    evidence: z.array(z.uuid()),
     question: z.string().nullable(),
     suggested_experiment: z.string().nullable(),
     created_at: z.string(),

@@ -36,27 +36,33 @@ export type Database = {
         Tables: {
             entries: {
                 Row: {
-                    content: string;
+                    content_iv: string | null;
+                    content_tag: string | null;
                     created_at: string;
                     embedding: string | null;
+                    encrypted_content: string | null;
                     id: string;
                     updated_at: string;
                     user_id: string;
                     word_count: number;
                 };
                 Insert: {
-                    content: string;
+                    content_iv?: string | null;
+                    content_tag?: string | null;
                     created_at?: string;
                     embedding?: string | null;
+                    encrypted_content?: string | null;
                     id?: string;
                     updated_at?: string;
                     user_id: string;
                     word_count?: number;
                 };
                 Update: {
-                    content?: string;
+                    content_iv?: string | null;
+                    content_tag?: string | null;
                     created_at?: string;
                     embedding?: string | null;
+                    encrypted_content?: string | null;
                     id?: string;
                     updated_at?: string;
                     user_id?: string;
@@ -74,24 +80,30 @@ export type Database = {
             };
             entry_insights: {
                 Row: {
-                    content: string;
+                    content_iv: string | null;
+                    content_tag: string | null;
                     created_at: string;
+                    encrypted_content: string | null;
                     entry_id: string;
                     id: string;
                     updated_at: string;
                     user_id: string;
                 };
                 Insert: {
-                    content: string;
+                    content_iv?: string | null;
+                    content_tag?: string | null;
                     created_at?: string;
+                    encrypted_content?: string | null;
                     entry_id: string;
                     id?: string;
                     updated_at?: string;
                     user_id: string;
                 };
                 Update: {
-                    content?: string;
+                    content_iv?: string | null;
+                    content_tag?: string | null;
                     created_at?: string;
+                    encrypted_content?: string | null;
                     entry_id?: string;
                     id?: string;
                     updated_at?: string;
@@ -241,8 +253,10 @@ export type Database = {
             };
             progress_insights: {
                 Row: {
-                    content: string;
+                    content_iv: string | null;
+                    content_tag: string | null;
                     created_at: string;
+                    encrypted_content: string | null;
                     id: string;
                     recent_entry_ids: string[];
                     related_past_entry_ids: string[] | null;
@@ -250,8 +264,10 @@ export type Database = {
                     user_id: string;
                 };
                 Insert: {
-                    content: string;
+                    content_iv?: string | null;
+                    content_tag?: string | null;
                     created_at?: string;
+                    encrypted_content?: string | null;
                     id?: string;
                     recent_entry_ids?: string[];
                     related_past_entry_ids?: string[] | null;
@@ -259,8 +275,10 @@ export type Database = {
                     user_id: string;
                 };
                 Update: {
-                    content?: string;
+                    content_iv?: string | null;
+                    content_tag?: string | null;
                     created_at?: string;
+                    encrypted_content?: string | null;
                     id?: string;
                     recent_entry_ids?: string[];
                     related_past_entry_ids?: string[] | null;
@@ -457,34 +475,52 @@ export type Database = {
             weekly_insight_patterns: {
                 Row: {
                     created_at: string;
-                    description: string;
+                    description_iv: string | null;
+                    description_tag: string | null;
+                    encrypted_description: string | null;
+                    encrypted_question: string | null;
+                    encrypted_suggested_experiment: string | null;
                     evidence: string[];
                     id: string;
                     pattern_type: string;
-                    question: string | null;
-                    suggested_experiment: string | null;
+                    question_iv: string | null;
+                    question_tag: string | null;
+                    suggested_experiment_iv: string | null;
+                    suggested_experiment_tag: string | null;
                     title: string;
                     weekly_insight_id: string;
                 };
                 Insert: {
                     created_at?: string;
-                    description: string;
+                    description_iv?: string | null;
+                    description_tag?: string | null;
+                    encrypted_description?: string | null;
+                    encrypted_question?: string | null;
+                    encrypted_suggested_experiment?: string | null;
                     evidence?: string[];
                     id?: string;
                     pattern_type: string;
-                    question?: string | null;
-                    suggested_experiment?: string | null;
+                    question_iv?: string | null;
+                    question_tag?: string | null;
+                    suggested_experiment_iv?: string | null;
+                    suggested_experiment_tag?: string | null;
                     title: string;
                     weekly_insight_id: string;
                 };
                 Update: {
                     created_at?: string;
-                    description?: string;
+                    description_iv?: string | null;
+                    description_tag?: string | null;
+                    encrypted_description?: string | null;
+                    encrypted_question?: string | null;
+                    encrypted_suggested_experiment?: string | null;
                     evidence?: string[];
                     id?: string;
                     pattern_type?: string;
-                    question?: string | null;
-                    suggested_experiment?: string | null;
+                    question_iv?: string | null;
+                    question_tag?: string | null;
+                    suggested_experiment_iv?: string | null;
+                    suggested_experiment_tag?: string | null;
                     title?: string;
                     weekly_insight_id?: string;
                 };

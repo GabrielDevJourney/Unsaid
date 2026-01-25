@@ -4,7 +4,7 @@ import { z } from "zod";
  * Schema for entry data used in progress insight generation.
  */
 export const EntryForProgressSchema = z.object({
-    id: z.string().uuid(),
+    id: z.uuid(),
     content: z.string().min(1),
     createdAt: z.string(),
 });
@@ -21,7 +21,7 @@ export const RelatedPastEntrySchema = EntryForProgressSchema.extend({
  * Validates the input payload before processing.
  */
 export const CreateProgressInsightSchema = z.object({
-    recentEntryIds: z.array(z.string().uuid()).min(1),
+    recentEntryIds: z.array(z.uuid()).min(1),
     recentEntries: z.array(EntryForProgressSchema).min(1),
     relatedPastEntries: z.array(RelatedPastEntrySchema).optional(),
 });
@@ -32,8 +32,8 @@ export const CreateProgressInsightSchema = z.object({
 export const InsertProgressInsightSchema = z.object({
     userId: z.string().min(1),
     content: z.string().min(1),
-    recentEntryIds: z.array(z.string().uuid()),
-    relatedPastEntryIds: z.array(z.string().uuid()).optional(),
+    recentEntryIds: z.array(z.uuid()),
+    relatedPastEntryIds: z.array(z.uuid()).optional(),
 });
 
 /**

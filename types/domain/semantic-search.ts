@@ -1,10 +1,22 @@
-import type { Entry } from "./entries";
+import type { Entry, EntryRowEncrypted } from "./entries";
+
+// 1. RAW DATABASE TYPES (from RPC functions)
+
+/**
+ * Raw result from search_entries_by_embedding RPC.
+ * Extends EntryRowEncrypted with similarity score.
+ */
+export interface SearchEntryRowResult extends EntryRowEncrypted {
+    similarity: number;
+}
+
+// 2. DOMAIN MODELS (decrypted)
 
 /**
  * Entry with similarity score from semantic search.
- * Excludes embedding field since it's not needed in search results.
+ * Decrypted and ready for application use.
  */
-export interface EntryWithSimilarity extends Omit<Entry, "embedding"> {
+export interface EntryWithSimilarity extends Entry {
     similarity: number;
 }
 
