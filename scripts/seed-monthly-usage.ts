@@ -413,13 +413,53 @@ const cleanData = async (userId: string) => {
 };
 
 /**
- * Create entries with date distribution
+ * Generate dry-run entries (no DB writes)
  */
-const createEntries = async (userId: string, dryRun: boolean) => {
-    const entries: Array<{ id: string; content: string; created_at: string }> =
+const generateDryRunEntries = () => {
+    const entries: Array<{ id: string; content: string; createdAt: string }> =
         [];
 
+    for (let i = 0; i < TOTAL_ENTRIES; i++) {
+        const content = generateEntry(i);
+        const date = new Date();
+        const dayOffset = DAYS - Math.floor(i / ENTRIES_PER_DAY);
+        date.setDate(date.getDate() - dayOffset);
+        date.setHours(
+            [8, 14, 20][i % ENTRIES_PER_DAY],
+            Math.floor(Math.random() * 60),
+            0,
+            0,
+        );
+
+        entries.push({
+            id: `dry-${i}`,
+            content,
+            createdAt: date.toISOString(),
+        });
+    }
+
+    return entries;
+};
+
+/**
+ * Create entries with date distribution using repos
+ */
+const createEntries = async (userId: string, dryRun: boolean) => {
     console.log(`\nCreating ${TOTAL_ENTRIES} entries...`);
+
+    // Handle dry run separately
+    if (dryRun) {
+        const entries = generateDryRunEntries();
+        console.log(`\n  [DRY RUN] Generated ${entries.length} entries.`);
+        return entries;
+    }
+
+    const { insertEntry, updateEntryEmbedding } = await import(
+        "../lib/entries/repo"
+    );
+
+    const entries: Array<{ id: string; content: string; createdAt: string }> =
+        [];
 
     for (let i = 0; i < TOTAL_ENTRIES; i++) {
         const content = generateEntry(i);
@@ -436,40 +476,51 @@ const createEntries = async (userId: string, dryRun: boolean) => {
             0,
         );
 
-        if (dryRun) {
-            entries.push({
-                id: `dry-${i}`,
-                content,
-                created_at: date.toISOString(),
-            });
-            continue;
-        }
-
         process.stdout.write(
             `\r  Entry ${i + 1}/${TOTAL_ENTRIES} (${wordCount} words)`,
         );
 
-        const embedding = await generateEmbedding(content);
-
-        const { data, error } = await supabase
-            .from("entries")
-            .insert({
-                user_id: userId,
+        // Create entry using repo (handles encryption)
+        const { data: entry, error: insertError } = await insertEntry(
+            supabase,
+            {
+                userId,
                 content,
-                word_count: wordCount,
-                embedding,
-                created_at: date.toISOString(),
-            })
-            .select()
-            .single();
+                wordCount,
+            },
+        );
 
-        if (error) console.error(`\n  Error on entry ${i + 1}:`, error.message);
-        else if (data)
-            entries.push({
-                id: data.id,
-                content: data.content,
-                created_at: data.created_at,
-            });
+        if (insertError || !entry) {
+            console.error(`\n  Error on entry ${i + 1}:`, insertError?.message);
+            continue;
+        }
+
+        // Update created_at to staggered date
+        await supabase
+            .from("entries")
+            .update({ created_at: date.toISOString() })
+            .eq("id", entry.id);
+
+        // Generate and update embedding
+        const embedding = await generateEmbedding(content);
+        const { error: embeddingError } = await updateEntryEmbedding(
+            supabase,
+            entry.id,
+            embedding,
+        );
+
+        if (embeddingError) {
+            console.error(
+                `\n  Embedding error ${i + 1}:`,
+                embeddingError.message,
+            );
+        }
+
+        entries.push({
+            id: entry.id,
+            content: entry.content,
+            createdAt: date.toISOString(),
+        });
 
         await new Promise((r) => setTimeout(r, 100));
     }
@@ -526,7 +577,7 @@ const createEntryInsights = async (
  */
 const createWeeklyInsights = async (
     userId: string,
-    entries: Array<{ id: string; content: string; created_at: string }>,
+    entries: Array<{ id: string; content: string; createdAt: string }>,
     dryRun: boolean,
 ) => {
     // Dynamic imports
@@ -537,7 +588,7 @@ const createWeeklyInsights = async (
     // Group by week
     const byWeek = new Map<string, typeof entries>();
     for (const entry of entries) {
-        const week = getWeekStart(new Date(entry.created_at));
+        const week = getWeekStart(new Date(entry.createdAt));
         const existing = byWeek.get(week) ?? [];
         existing.push(entry);
         byWeek.set(week, existing);
@@ -564,7 +615,7 @@ const createWeeklyInsights = async (
                 entries: weekEntries.map((e) => ({
                     id: e.id,
                     content: e.content,
-                    createdAt: e.created_at,
+                    createdAt: e.createdAt,
                 })),
             });
 
@@ -591,7 +642,7 @@ const createWeeklyInsights = async (
  */
 const createProgressInsights = async (
     userId: string,
-    entries: Array<{ id: string; content: string; created_at: string }>,
+    entries: Array<{ id: string; content: string; createdAt: string }>,
     dryRun: boolean,
 ) => {
     const progressCount = Math.floor(entries.length / PROGRESS_INTERVAL);
@@ -620,12 +671,12 @@ const createProgressInsights = async (
                 recentEntries: recent.map((e) => ({
                     id: e.id,
                     content: e.content,
-                    createdAt: e.created_at,
+                    createdAt: e.createdAt,
                 })),
                 relatedPastEntries: past.map((e) => ({
                     id: e.id,
                     content: e.content,
-                    createdAt: e.created_at,
+                    createdAt: e.createdAt,
                 })),
             });
 

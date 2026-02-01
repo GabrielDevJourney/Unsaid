@@ -36,8 +36,8 @@ For each card provide:
    - Why it matters (what it reveals about them)
    - What might be underneath it (hypothesis, not diagnosis)
 4. **evidence**: Array of entry IDs where this pattern appears (minimum 2)
-5. **question**: A thoughtful follow-up question (optional)
-6. **suggested_experiment**: A small action to test a hypothesis about this pattern (optional)
+5. **question**: A thoughtful follow-up question
+6. **suggested_experiment**: A small, simple action the user could try to explore or test this pattern. Provide one for every card, even if minimal. Do NOT leave it blank.
 
 ## Prioritize Cards That
 
@@ -57,8 +57,8 @@ Return ONLY a valid JSON array. No preamble, no explanation, no markdown code bl
     "pattern_type": "theme|trigger|thought_pattern|avoidance|habit|need|growth",
     "description": "string",
     "evidence": ["entry_id_1", "entry_id_2"],
-    "question": "string (optional)",
-    "suggested_experiment": "string (optional)"
+    "question": "string",
+    "suggested_experiment": "string"
   }
 ]
 ```
@@ -89,7 +89,8 @@ Return ONLY a valid JSON array. No preamble, no explanation, no markdown code bl
     "pattern_type": "need",
     "description": "Being seen as 'committed' matters deeply to you. You stayed late to not 'disappoint' and worry they'll think you're 'not committed'. This need for external validation of your work ethic is driving overwork.",
     "evidence": ["def456", "jkl012"],
-    "question": "If no one at work ever praised your commitment again, how would you know you're doing enough?"
+    "question": "If no one at work ever praised your commitment again, how would you know you're doing enough?",
+    "suggested_experiement": "This week, deliberately take one evening to stop working after your normal hours. Notice how it feels and whether your sense of being 'committed' changes."
   }
 ]
 ```

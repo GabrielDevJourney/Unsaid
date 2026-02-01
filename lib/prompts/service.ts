@@ -60,7 +60,7 @@ export const getEntryThemePrompt = async (
     // Generate contextual prompt from recent entries
     const formattedEntries = entries.map((entry) => ({
         content: entry.content,
-        createdAt: entry.created_at,
+        createdAt: entry.createdAt,
     }));
 
     const generatedPrompt = await generateEntryThemePrompt(formattedEntries);
