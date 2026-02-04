@@ -1,7 +1,6 @@
 "use client";
 
 import { cva, type VariantProps } from "class-variance-authority";
-import { PanelLeftIcon } from "lucide-react";
 import { Slot } from "radix-ui";
 import * as React from "react";
 import { Button } from "@/components/ui/button";
@@ -23,12 +22,13 @@ import {
 } from "@/components/ui/tooltip";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { SidebarToggleIcon } from "../icons/sidebar-trigger-icon";
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state";
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
-const SIDEBAR_WIDTH = "16rem";
+const SIDEBAR_WIDTH = "15rem";
 const SIDEBAR_WIDTH_MOBILE = "18rem";
-const SIDEBAR_WIDTH_ICON = "3rem";
+const SIDEBAR_WIDTH_ICON = "5rem";
 const SIDEBAR_KEYBOARD_SHORTCUT = "b";
 
 type SidebarContextProps = {
@@ -248,7 +248,7 @@ function Sidebar({
                         : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
                     // Adjust the padding for floating and inset variants.
                     variant === "floating" || variant === "inset"
-                        ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]"
+                        ? "group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]"
                         : "group-data-[collapsible=icon]:w-(--sidebar-width-icon) group-data-[side=left]:border-r group-data-[side=right]:border-l",
                     className,
                 )}
@@ -286,7 +286,7 @@ function SidebarTrigger({
             }}
             {...props}
         >
-            <PanelLeftIcon />
+            <SidebarToggleIcon />
             <span className="sr-only">Toggle Sidebar</span>
         </Button>
     );
@@ -361,7 +361,7 @@ function SidebarFooter({ className, ...props }: React.ComponentProps<"div">) {
         <div
             data-slot="sidebar-footer"
             data-sidebar="footer"
-            className={cn("flex flex-col gap-2 p-2", className)}
+            className={cn("flex flex-col gap-2", className)}
             {...props}
         />
     );
@@ -401,7 +401,7 @@ function SidebarGroup({ className, ...props }: React.ComponentProps<"div">) {
             data-slot="sidebar-group"
             data-sidebar="group"
             className={cn(
-                "relative flex w-full min-w-0 flex-col p-2",
+                "relative flex w-full min-w-0 flex-col p-2 group-data-[state=collapsed]:items-center",
                 className,
             )}
             {...props}
@@ -421,7 +421,7 @@ function SidebarGroupLabel({
             data-slot="sidebar-group-label"
             data-sidebar="group-label"
             className={cn(
-                "text-sidebar-foreground/70 ring-sidebar-ring flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium outline-hidden transition-[margin,opacity] duration-200 ease-linear focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0",
+                "text-sidebar-foreground/70 ring-sidebar-ring flex h-8 shrink-0 items-center rounded-md text-xs font-medium outline-hidden transition-[margin,opacity] duration-200 ease-linear focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0",
                 "group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0",
                 className,
             )}
@@ -461,7 +461,10 @@ function SidebarGroupContent({
         <div
             data-slot="sidebar-group-content"
             data-sidebar="group-content"
-            className={cn("w-full text-sm", className)}
+            className={cn(
+                "w-full text-sm group-data-[collapsible=icon]:w-auto",
+                className,
+            )}
             {...props}
         />
     );
@@ -472,7 +475,10 @@ function SidebarMenu({ className, ...props }: React.ComponentProps<"ul">) {
         <ul
             data-slot="sidebar-menu"
             data-sidebar="menu"
-            className={cn("flex w-full min-w-0 flex-col gap-1", className)}
+            className={cn(
+                "flex w-full min-w-0 flex-col gap-1 group-data-[collapsible=icon]:w-auto group-data-[collapsible=icon]:items-center",
+                className,
+            )}
             {...props}
         />
     );
@@ -490,7 +496,7 @@ function SidebarMenuItem({ className, ...props }: React.ComponentProps<"li">) {
 }
 
 const sidebarMenuButtonVariants = cva(
-    "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-sm p-2 text-left text-sm text-zinc-600 outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:border data-[active=true]:bg-gray-3 data-[active=true]:font-medium data-[active=true]:text-zinc-600 data-[state=open]:hover:bg-gray-3 data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-5 [&>svg]:shrink-0",
+    "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-sm p-2 text-left text-sm text-zinc-600 outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:border data-[active=true]:bg-gray-3 data-[active=true]:font-medium data-[active=true]:text-zinc-600 data-[state=open]:hover:bg-gray-3 data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:p-0! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:[&>svg]:size-6 group-data-[collapsible=icon]:[&>span]:hidden [&>span:last-child]:truncate [&>svg]:size-5 [&>svg]:shrink-0",
     {
         variants: {
             variant: {
