@@ -3,6 +3,8 @@ pre-commit:
     - name: biome
       glob: "*.{js,ts,jsx,tsx,json}"
       run: npx biome check --write --no-errors-on-unmatched {staged_files}
+    - name: typecheck
+      run: npx tsc --noEmit
 
 commit-msg:
   jobs:

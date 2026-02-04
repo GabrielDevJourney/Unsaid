@@ -26,6 +26,8 @@
         "@ai-sdk/anthropic": "^2.0.56",
         "@ai-sdk/openai": "^2.0.86",
         "@clerk/nextjs": "^6.37.1",
+        "@hugeicons/core-free-icons": "^3.1.1",
+        "@hugeicons/react": "^1.1.4",
         "@react-email/components": "^1.0.3",
         "@react-email/render": "^2.0.1",
         "@sentry/cli": "^2.58.4",

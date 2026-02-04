@@ -19,7 +19,8 @@
         "rules": {
             "recommended": true,
             "suspicious": {
-                "noUnknownAtRules": "off"
+                "noUnknownAtRules": "off",
+                "noDocumentCookie": "off"
             }
         },
         "domains": {
@@ -27,6 +28,18 @@
             "react": "recommended"
         }
     },
+    "overrides": [
+        {
+            "includes": ["components/ui/**"],
+            "linter": {
+                "rules": {
+                    "correctness": {
+                        "useExhaustiveDependencies": "off"
+                    }
+                }
+            }
+        }
+    ],
     "assist": {
         "actions": {
             "source": {

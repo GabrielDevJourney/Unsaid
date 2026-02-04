@@ -7,7 +7,7 @@ const libreBaskerville = Libre_Baskerville({
     variable: "--font-libre",
     subsets: ["latin"],
     weight: ["400", "700"],
-    style: ["normal", "italic"],
+    style: ["italic"],
 });
 
 const geistSans = Geist({
