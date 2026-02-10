@@ -1,4 +1,4 @@
-export const SidebarToggleIcon = () => (
+export const SidebarTriggerIcon = () => (
     <svg
         width="16"
         height="14"
