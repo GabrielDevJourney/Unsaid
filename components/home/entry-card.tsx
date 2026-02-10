@@ -29,7 +29,7 @@ const EntryCard = ({ entry, entryNumber, tags = [] }: EntryCardProps) => {
     return (
         <div
             className={cn(
-                "relative shadow-xs flex flex-col overflow-hidden rounded-xl bg-card transition-all duration-300",
+                "relative shadow-xs flex flex-col overflow-hidden rounded-xl bg-card transition-all duration-500",
                 isInsightOpen
                     ? "border border-transparent [background:linear-gradient(var(--card),var(--card))_padding-box,linear-gradient(to_right,rgb(148,163,184),rgba(148,163,184,0.9),rgba(251,146,60,0.6))_border-box]"
                     : "border border-border",
@@ -77,7 +77,7 @@ const EntryCard = ({ entry, entryNumber, tags = [] }: EntryCardProps) => {
             {/* Insight overlay -- slides up from bottom */}
             {hasInsight && (
                 <div
-                    className={`absolute inset-x-0 bottom-0 z-20 rounded-t-xl border-t bg-neutral-100 transition-transform duration-300 ease-in-out ${isInsightOpen ? "translate-y-0" : "translate-y-full"}`}
+                    className={`absolute inset-x-0 bottom-0 z-20 rounded-t-xl border-t bg-neutral-100 transition-transform duration-500 ease-in-out ${isInsightOpen ? "translate-y-0" : "translate-y-full"}`}
                     style={{ top: "3.5rem" }}
                 >
                     {/* Insight content with fade */}

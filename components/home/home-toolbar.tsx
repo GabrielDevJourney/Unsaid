@@ -6,6 +6,7 @@ import {
     Search01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import Link from "next/link";
 import type { DateRange } from "react-day-picker";
 
 import { DateFilter } from "@/components/home/date-filter";
@@ -28,6 +29,8 @@ interface HomeToolbarWithFilters extends HomeToolbarBase {
     isEmpty: false;
     selectedTags: Set<TagName>;
     dateRange: DateRange | undefined;
+    searchQuery: string;
+    onSearchChange: (query: string) => void;
     onToggleTag: (tag: TagName) => void;
     onClearTags: () => void;
     onDateRangeChange: (range: DateRange | undefined) => void;
@@ -51,7 +54,11 @@ const HomeToolbar = (props: HomeToolbarProps) => {
                             className="pointer-events-none absolute top-1/2 left-3 size-5 -translate-y-1/2 text-muted-foreground"
                         />
                         <Input
-                            placeholder="Search..."
+                            placeholder="Search entries..."
+                            value={props.searchQuery}
+                            onChange={(e) =>
+                                props.onSearchChange(e.target.value)
+                            }
                             className="h-10 rounded-lg bg-card pl-9 text-muted-foreground font-medium"
                         />
                     </div>
@@ -70,11 +77,20 @@ const HomeToolbar = (props: HomeToolbarProps) => {
             )}
 
             {/* New entry button — always visible */}
-            <Button variant="sunrise" className="ring-4 ring-zinc-300 gap-2">
-                <HugeiconsIcon icon={Add01Icon} className="size-5 text-white" />
-                <span className="text-sm font-medium text-white">
-                    New entry
-                </span>
+            <Button
+                variant="sunrise"
+                className="ring-4 ring-zinc-300 gap-2"
+                asChild
+            >
+                <Link href="/entries/new">
+                    <HugeiconsIcon
+                        icon={Add01Icon}
+                        className="size-5 text-white"
+                    />
+                    <span className="text-sm font-medium text-white">
+                        New entry
+                    </span>
+                </Link>
             </Button>
 
             {/* Aside toggle — visible only below xl */}

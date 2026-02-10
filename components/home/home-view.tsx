@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { DateRange } from "react-day-picker";
 import {
     EntryCardGrid,
@@ -17,6 +17,8 @@ import {
     SheetHeader,
     SheetTitle,
 } from "@/components/ui/sheet";
+import { useDebounce } from "@/lib/hooks/use-debounce";
+import type { EntryWithSimilarity } from "@/types";
 
 interface HomeViewProps {
     entries: EntryItem[];
@@ -29,6 +31,53 @@ const HomeView = ({ entries, totalEntries, userName }: HomeViewProps) => {
     const [selectedTags, setSelectedTags] = useState<Set<TagName>>(new Set());
     const [dateRange, setDateRange] = useState<DateRange | undefined>();
     const [isScrolled, setIsScrolled] = useState(false);
+
+    const [searchQuery, setSearchQuery] = useState("");
+    const [searchResults, setSearchResults] = useState<EntryItem[] | null>(
+        null,
+    );
+    const [isSearching, setIsSearching] = useState(false);
+    const debouncedQuery = useDebounce(searchQuery, 400);
+
+    useEffect(() => {
+        if (debouncedQuery.length < 3) {
+            setSearchResults(null);
+            return;
+        }
+
+        const controller = new AbortController();
+
+        const fetchResults = async () => {
+            setIsSearching(true);
+            try {
+                const res = await fetch(
+                    `/api/entries/search?q=${encodeURIComponent(debouncedQuery)}&threshold=0.4`,
+                    { signal: controller.signal },
+                );
+                if (!res.ok) return;
+
+                const json = (await res.json()) as {
+                    data?: { entries: EntryWithSimilarity[] };
+                };
+                if (json.data) {
+                    setSearchResults(
+                        json.data.entries.map((entry) => ({
+                            entry: { ...entry, entryInsight: null },
+                        })),
+                    );
+                }
+            } catch (err) {
+                if (err instanceof DOMException && err.name === "AbortError")
+                    return;
+                console.error("Search failed:", err);
+            } finally {
+                setIsSearching(false);
+            }
+        };
+
+        fetchResults();
+        return () => controller.abort();
+    }, [debouncedQuery]);
 
     const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
         setIsScrolled(e.currentTarget.scrollTop > 0);
@@ -95,6 +144,8 @@ const HomeView = ({ entries, totalEntries, userName }: HomeViewProps) => {
                                     onToggleAside={() => setIsAsideOpen(true)}
                                     selectedTags={selectedTags}
                                     dateRange={dateRange}
+                                    searchQuery={searchQuery}
+                                    onSearchChange={setSearchQuery}
                                     onToggleTag={toggleTag}
                                     onClearTags={() =>
                                         setSelectedTags(new Set())
@@ -103,12 +154,18 @@ const HomeView = ({ entries, totalEntries, userName }: HomeViewProps) => {
                                 />
                             )}
 
-                            <EntryCardGrid
-                                entries={filteredEntries}
-                                totalEntries={
-                                    entries.length === 0 ? 0 : totalEntries
-                                }
-                            />
+                            {isSearching ? (
+                                <div className="flex items-center justify-center py-20">
+                                    <div className="size-6 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
+                                </div>
+                            ) : (
+                                <EntryCardGrid
+                                    entries={searchResults ?? filteredEntries}
+                                    totalEntries={
+                                        entries.length === 0 ? 0 : totalEntries
+                                    }
+                                />
+                            )}
                         </div>
                     </div>
 
