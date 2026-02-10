@@ -1,7 +1,5 @@
 "use client";
 
-import { Add01Icon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { useCallback, useState } from "react";
 import type { DateRange } from "react-day-picker";
 import {
@@ -12,7 +10,6 @@ import type { TagName } from "@/components/home/entry-tag";
 import { HomeAside } from "@/components/home/home-aside";
 import { HomeToolbar } from "@/components/home/home-toolbar";
 import { PageHeader } from "@/components/layout/page-header";
-import { Button } from "@/components/ui/button";
 import {
     Sheet,
     SheetContent,
@@ -85,44 +82,16 @@ const HomeView = ({ entries, totalEntries, userName }: HomeViewProps) => {
                         onScroll={handleScroll}
                     >
                         <div className="w-full px-6 py-6 ">
-                            {entries?.length > 0 ? (
-                                <HomeToolbar
-                                    selectedTags={selectedTags}
-                                    dateRange={dateRange}
-                                    isScrolled={isScrolled}
-                                    onToggleTag={toggleTag}
-                                    onClearTags={() =>
-                                        setSelectedTags(new Set())
-                                    }
-                                    onDateRangeChange={setDateRange}
-                                    onToggleAside={() => setIsAsideOpen(true)}
-                                />
-                            ) : (
-                                <div className="mb-6 flex items-start justify-between py-2">
-                                    <div>
-                                        <h2 className="font-serif text-5xl text-zinc-600 italic">
-                                            Build your mind temple
-                                        </h2>
-                                        <p className="mt-1 text-muted-foreground">
-                                            One entry at a time, create a space
-                                            for your thoughts, emotions, and
-                                            self-discovery.
-                                        </p>
-                                    </div>
-                                    <Button
-                                        variant="sunrise"
-                                        className="shrink-0 ring-4 ring-border gap-2"
-                                    >
-                                        <HugeiconsIcon
-                                            icon={Add01Icon}
-                                            className="size-5 text-white"
-                                        />
-                                        <span className="text-sm font-medium text-white">
-                                            New entry
-                                        </span>
-                                    </Button>
-                                </div>
-                            )}
+                            <HomeToolbar
+                                isEmpty={entries.length === 0}
+                                isScrolled={isScrolled}
+                                onToggleAside={() => setIsAsideOpen(true)}
+                                selectedTags={selectedTags}
+                                dateRange={dateRange}
+                                onToggleTag={toggleTag}
+                                onClearTags={() => setSelectedTags(new Set())}
+                                onDateRangeChange={setDateRange}
+                            />
 
                             <EntryCardGrid
                                 entries={filteredEntries}
