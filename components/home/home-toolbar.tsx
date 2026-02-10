@@ -65,12 +65,9 @@ const HomeToolbar = ({
                     <Button
                         variant="outline"
                         size="icon-lg"
-                        className={`bg-accent ${selectedTags.size > 0 ? "border-foreground" : ""}`}
+                        className={`bg-accent hover:bg-white ${selectedTags.size > 0 ? "border-slate-500 bg-white" : ""}`}
                     >
-                        <HugeiconsIcon
-                            icon={Flag03Icon}
-                            className="size-5"
-                        />
+                        <HugeiconsIcon icon={Flag03Icon} className="size-5" />
                         <span className="sr-only">Filter by tags</span>
                     </Button>
                 </PopoverTrigger>
@@ -111,7 +108,7 @@ const HomeToolbar = ({
                     <Button
                         variant="outline"
                         size="icon-lg"
-                        className={`bg-accent ${dateRange?.from ? "border-foreground" : ""}`}
+                        className={`bg-accent hover:bg-white ${dateRange?.from ? "border-slate-500 bg-white" : ""}`}
                     >
                         <HugeiconsIcon
                             icon={Calendar04Icon}
@@ -120,9 +117,11 @@ const HomeToolbar = ({
                         <span className="sr-only">Filter by date</span>
                     </Button>
                 </PopoverTrigger>
-                <PopoverContent align="end" className="w-auto p-0">
+                <PopoverContent
+                    align="end"
+                    className="w-auto p-0 rounded-xl shadow-lg"
+                >
                     <div className="flex items-center justify-between px-4 pt-3">
-                        <p className="text-sm font-medium">Filter by date</p>
                         {dateRange?.from && (
                             <button
                                 type="button"
@@ -144,11 +143,8 @@ const HomeToolbar = ({
             </Popover>
 
             {/* New entry button */}
-            <Button variant="sunrise" className="ring-4 ring-border gap-2">
-                <HugeiconsIcon
-                    icon={Add01Icon}
-                    className="size-5 text-white"
-                />
+            <Button variant="sunrise" className="ring-4 ring-zinc-300 gap-2">
+                <HugeiconsIcon icon={Add01Icon} className="size-5 text-white" />
                 <span className="text-sm font-medium text-white">
                     New entry
                 </span>
@@ -161,10 +157,7 @@ const HomeToolbar = ({
                 className="bg-card xl:hidden"
                 onClick={onToggleAside}
             >
-                <HugeiconsIcon
-                    icon={PanelLeftOpenIcon}
-                    className="size-5"
-                />
+                <HugeiconsIcon icon={PanelLeftOpenIcon} className="size-5" />
                 <span className="sr-only">Open aside panel</span>
             </Button>
         </div>

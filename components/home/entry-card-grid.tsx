@@ -1,3 +1,4 @@
+import { HomeEmptyState } from "@/components/home/empty-state";
 import { EntryCard } from "@/components/home/entry-card";
 import type { TagName } from "@/components/home/entry-tag";
 import type { EntryWithInsight } from "@/types";
@@ -13,6 +14,10 @@ interface EntryCardGridProps {
 }
 
 const EntryCardGrid = ({ entries, totalEntries }: EntryCardGridProps) => {
+    if (totalEntries === 0) {
+        return <HomeEmptyState />;
+    }
+
     return (
         <div className="relative min-h-0 flex-1">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
