@@ -33,6 +33,7 @@ const buttonVariants = cva(
 
                     "[&>*]:relative [&>*]:z-10",
                 ),
+                filter: "",
             },
             size: {
                 default: "h-9 px-4 py-2 has-[>svg]:px-3",
