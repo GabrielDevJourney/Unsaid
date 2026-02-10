@@ -11,7 +11,7 @@ import { EntryTag, type TagName } from "./entry-tag";
 interface EntryCardProps {
     entry: EntryWithInsight;
     entryNumber: number;
-    tags: TagName[];
+    tags?: TagName[];
 }
 
 const formatEntryDate = (dateString: string): string => {
@@ -22,7 +22,7 @@ const formatEntryDate = (dateString: string): string => {
     return `${day} ${month} ${year}`;
 };
 
-const EntryCard = ({ entry, entryNumber, tags }: EntryCardProps) => {
+const EntryCard = ({ entry, entryNumber, tags = [] }: EntryCardProps) => {
     const [isInsightOpen, setIsInsightOpen] = useState(false);
     const hasInsight = !!entry.entryInsight;
 
