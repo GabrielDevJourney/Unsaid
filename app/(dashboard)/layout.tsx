@@ -7,10 +7,10 @@ const Layout = ({
     children: React.ReactNode;
 }>) => {
     return (
-        <div className="flex min-h-screen">
+        <div className="flex h-svh">
             <SidebarProvider>
                 <AppSidebar />
-                <main className="flex-1 p-6">{children}</main>
+                <main className="flex-1 overflow-hidden">{children}</main>
             </SidebarProvider>
         </div>
     );

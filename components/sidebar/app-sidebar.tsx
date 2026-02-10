@@ -20,28 +20,28 @@ import { SidebarUser } from "./sidebar-user";
 export const AppSidebar = () => {
     return (
         <Sidebar collapsible="icon">
-            <SidebarHeader className="flex-row items-center justify-between p-8 group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:relative group-data-[state=collapsed]:h-14">
+            <SidebarHeader className="h-24 flex-row items-center justify-between border-b p-8 group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:relative group-data-[state=collapsed]:h-24">
                 <Link
                     href="/home"
                     className="font-serif text-2xl font-medium group-data-[state=collapsed]:hidden flex-2 text-center"
                 >
                     unsaid.
                 </Link>
-                <SidebarTrigger className="group-data-[state=collapsed]:absolute group-data-[state=collapsed]:left-full group-data-[state=collapsed]:-translate-x-1/2 group-data-[state=collapsed]:top-1/2 group-data-[state=collapsed]:-translate-y-1/2 group-data-[state=collapsed]:z-20 flex-1" />
+                <SidebarTrigger className="group-data-[state=collapsed]:absolute group-data-[state=collapsed]:left-full group-data-[state=collapsed]:-translate-x-1/2 group-data-[state=collapsed]:top-1/2 group-data-[state=collapsed]:-translate-y-1/2 group-data-[state=collapsed]:z-20 flex-1 hover:bg-transparent" />
             </SidebarHeader>
 
-            <SidebarContent className="group-data-[state=collapsed]:mt-16">
+            <SidebarContent className="group-data-[state=collapsed]:mt-4">
                 <SidebarGroup className="p-4">
                     <SidebarGroupLabel>Journaling</SidebarGroupLabel>
                     <SidebarGroupContent>
                         <Link
                             href="/entries/new"
-                            className="btn-add-entry text-zinc-600 w-36 h-10 group-data-[state=collapsed]:w-8 group-data-[state=collapsed]:h-8 group-data-[state=collapsed]:bg-transparent group-data-[state=collapsed]:border-none group-data-[state=collapsed]:p-0 group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:ring-6 group-data-[state=collapsed]:ring-border group-data-[state=collapsed]:rounded-md"
+                            className="flex items-center text-zinc-600 w-36 h-10 group-data-[state=collapsed]:w-8 group-data-[state=collapsed]:h-8 group-data-[state=collapsed]:bg-transparent group-data-[state=collapsed]:border-none group-data-[state=collapsed]:p-0 group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:ring-6 group-data-[state=collapsed]:ring-border group-data-[state=collapsed]:rounded-md"
                         >
-                            <span className="group-data-[state=collapsed]:hidden">
+                            <span className="group-data-[state=collapsed]:hidden h-full flex-1 min-w-0 flex items-center justify-center border-y border-l border-border rounded-l-md text-zinc-600 bg-gray-3">
                                 Add entry
                             </span>
-                            <span className="btn-add-entry-icon bg-slate-500 group-data-[state=collapsed]:rounded-md group-data-[state=collapsed]:w-full group-data-[state=collapsed]:h-full">
+                            <span className="btn-add-entry-icon bg-slate-400 group-data-[state=collapsed]:rounded-md relative flex items-center justify-center w-10 group-data-[state=collapsed]:w-8 shrink-0 h-full overflow-hidden cursor-pointer rounded-r-md">
                                 <HugeiconsIcon
                                     icon={Add01Icon}
                                     className="relative z-10 size-5 text-white"
