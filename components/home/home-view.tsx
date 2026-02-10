@@ -82,16 +82,26 @@ const HomeView = ({ entries, totalEntries, userName }: HomeViewProps) => {
                         onScroll={handleScroll}
                     >
                         <div className="w-full px-6 py-6 ">
-                            <HomeToolbar
-                                isEmpty={entries.length === 0}
-                                isScrolled={isScrolled}
-                                onToggleAside={() => setIsAsideOpen(true)}
-                                selectedTags={selectedTags}
-                                dateRange={dateRange}
-                                onToggleTag={toggleTag}
-                                onClearTags={() => setSelectedTags(new Set())}
-                                onDateRangeChange={setDateRange}
-                            />
+                            {entries.length === 0 ? (
+                                <HomeToolbar
+                                    isEmpty
+                                    isScrolled={isScrolled}
+                                    onToggleAside={() => setIsAsideOpen(true)}
+                                />
+                            ) : (
+                                <HomeToolbar
+                                    isEmpty={false}
+                                    isScrolled={isScrolled}
+                                    onToggleAside={() => setIsAsideOpen(true)}
+                                    selectedTags={selectedTags}
+                                    dateRange={dateRange}
+                                    onToggleTag={toggleTag}
+                                    onClearTags={() =>
+                                        setSelectedTags(new Set())
+                                    }
+                                    onDateRangeChange={setDateRange}
+                                />
+                            )}
 
                             <EntryCardGrid
                                 entries={filteredEntries}

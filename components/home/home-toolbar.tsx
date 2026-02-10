@@ -15,32 +15,32 @@ import { TagFilter } from "@/components/home/tag-filter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-interface HomeToolbarProps {
-    isEmpty: boolean;
+interface HomeToolbarBase {
     isScrolled: boolean;
     onToggleAside: () => void;
-    selectedTags?: Set<TagName>;
-    dateRange?: DateRange | undefined;
-    onToggleTag?: (tag: TagName) => void;
-    onClearTags?: () => void;
-    onDateRangeChange?: (range: DateRange | undefined) => void;
 }
 
-const HomeToolbar = ({
-    isEmpty,
-    isScrolled,
-    onToggleAside,
-    selectedTags,
-    dateRange,
-    onToggleTag,
-    onClearTags,
-    onDateRangeChange,
-}: HomeToolbarProps) => {
+interface HomeToolbarEmpty extends HomeToolbarBase {
+    isEmpty: true;
+}
+
+interface HomeToolbarWithFilters extends HomeToolbarBase {
+    isEmpty: false;
+    selectedTags: Set<TagName>;
+    dateRange: DateRange | undefined;
+    onToggleTag: (tag: TagName) => void;
+    onClearTags: () => void;
+    onDateRangeChange: (range: DateRange | undefined) => void;
+}
+
+type HomeToolbarProps = HomeToolbarEmpty | HomeToolbarWithFilters;
+
+const HomeToolbar = (props: HomeToolbarProps) => {
     return (
         <div
-            className={`sticky top-0 z-30 mb-6 flex items-center gap-3 bg-background py-2 ${isScrolled ? "border-b border-border" : ""}`}
+            className={`sticky top-0 z-30 mb-6 flex items-center gap-3 bg-background py-2 ${props.isScrolled ? "border-b border-border" : ""}`}
         >
-            {isEmpty ? (
+            {props.isEmpty ? (
                 <HomeEmptyBanner />
             ) : (
                 <>
@@ -57,14 +57,14 @@ const HomeToolbar = ({
                     </div>
 
                     <TagFilter
-                        selectedTags={selectedTags ?? new Set()}
-                        onToggleTag={onToggleTag!}
-                        onClearTags={onClearTags!}
+                        selectedTags={props.selectedTags}
+                        onToggleTag={props.onToggleTag}
+                        onClearTags={props.onClearTags}
                     />
 
                     <DateFilter
-                        dateRange={dateRange}
-                        onDateRangeChange={onDateRangeChange!}
+                        dateRange={props.dateRange}
+                        onDateRangeChange={props.onDateRangeChange}
                     />
                 </>
             )}
@@ -82,7 +82,7 @@ const HomeToolbar = ({
                 variant="outline"
                 size="icon"
                 className="bg-card xl:hidden"
-                onClick={onToggleAside}
+                onClick={props.onToggleAside}
             >
                 <HugeiconsIcon icon={PanelLeftOpenIcon} className="size-5" />
                 <span className="sr-only">Open aside panel</span>
