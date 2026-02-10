@@ -77,7 +77,7 @@
     --sidebar-foreground: oklch(0.145 0 0);
     --sidebar-primary: oklch(0.205 0 0);
     --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
+    --sidebar-accent: oklch(92% 0.004 286.32);
     --sidebar-accent-foreground: oklch(0.205 0 0);
     --sidebar-border: oklch(0.922 0 0);
     --sidebar-ring: oklch(0.708 0 0);
@@ -128,39 +128,26 @@
 }
 
 @layer components {
-    .btn-add-entry {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-        background: var(--gray-3);
-        border: 1px solid var(--border);
-        padding: 0;
-        padding-left: 1rem;
-        border-radius: var(--radius);
-    }
-
-    .btn-add-entry-icon {
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 2.75rem;
-        height: 100%;
-        border-radius: 0 var(--radius) var(--radius) 0;
-        overflow: hidden;
-    }
-
     .btn-add-entry-icon::before {
         content: "";
         position: absolute;
-        top: 20%;
-        left: 70%;
-        transform: translateX(-50%);
-        width: 142px;
-        height: 142px;
-        background: radial-gradient(circle, #f97316 0%, transparent 70%);
-        opacity: 1;
+        top: -5px;
+        left: -5px;
+        width: 120px;
+        height: 120px;
+        background: radial-gradient(
+            circle at 80% 85%,
+            rgba(251, 146, 60, 0.7) 0%,
+            rgba(255, 115, 1, 0.5) 60%,
+            transparent 80%
+        );
         pointer-events: none;
+        z-index: 10;
+    }
+
+    /* keep content above the glow */
+    .btn-add-entry-icon > * {
+        position: relative;
+        z-index: 10;
     }
 }
