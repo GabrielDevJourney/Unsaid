@@ -31,7 +31,7 @@ const DashedCard = () => (
 
 const HomeEmptyState = () => {
     return (
-        <div className="flex items-center justify-center py-24">
+        <div className="flex items-center justify-center py-52">
             <div className="relative h-56 w-80">
                 {/* Back card — dashed, rotated left */}
                 <DashedCard />
