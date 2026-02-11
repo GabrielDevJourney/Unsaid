@@ -1,14 +1,19 @@
-const DashboardLayout = ({
+import { AppSidebar } from "@/components/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
+
+const Layout = ({
     children,
 }: Readonly<{
     children: React.ReactNode;
 }>) => {
     return (
-        <div className="flex min-h-screen">
-            <aside className="w-60 border-r bg-sidebar" />
-            <main className="flex-1 p-6">{children}</main>
+        <div className="flex h-svh">
+            <SidebarProvider>
+                <AppSidebar />
+                <main className="flex-1 overflow-hidden">{children}</main>
+            </SidebarProvider>
         </div>
     );
 };
 
-export default DashboardLayout;
+export default Layout;
