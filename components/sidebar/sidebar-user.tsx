@@ -21,9 +21,11 @@ export const SidebarUser = ({
                     {initials}
                 </AvatarFallback>
             </Avatar>
-            <div className="flex flex-col group-data-[state=collapsed]:hidden">
-                <span className="text-sm font-medium">{name}</span>
-                <span className="text-xs text-muted-foreground">{email}</span>
+            <div className="flex min-w-0 flex-col group-data-[state=collapsed]:hidden">
+                <span className="truncate text-sm font-medium">{name}</span>
+                <span className="truncate text-xs text-muted-foreground">
+                    {email}
+                </span>
             </div>
         </div>
     );

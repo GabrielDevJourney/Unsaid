@@ -1,6 +1,7 @@
 "use client";
 
-import { Add01Icon } from "@hugeicons/core-free-icons";
+import { useClerk, useUser } from "@clerk/nextjs";
+import { Add01Icon, Login01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
 import {
@@ -11,6 +12,9 @@ import {
     SidebarGroupContent,
     SidebarGroupLabel,
     SidebarHeader,
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
     SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { brainNavItems, footerNavItems } from "@/config/sidebar";
@@ -18,6 +22,13 @@ import { SidebarNavGroup } from "./sidebar-nav-group";
 import { SidebarUser } from "./sidebar-user";
 
 export const AppSidebar = () => {
+    const { signOut } = useClerk();
+    const { user } = useUser();
+
+    const displayName = user?.username ?? user?.firstName ?? "User";
+    const userEmail = user?.primaryEmailAddress?.emailAddress ?? "";
+    const userInitials = displayName.charAt(0).toUpperCase();
+
     return (
         <Sidebar collapsible="icon">
             <SidebarHeader className="h-24 flex-row items-center justify-between border-b p-8 group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:relative group-data-[state=collapsed]:h-24">
@@ -60,10 +71,25 @@ export const AppSidebar = () => {
 
             <SidebarFooter>
                 <SidebarNavGroup items={footerNavItems} className="p-4" />
+                <SidebarMenu className="px-4">
+                    <SidebarMenuItem>
+                        <SidebarMenuButton
+                            onClick={() => signOut({ redirectUrl: "/sign-in" })}
+                        >
+                            <HugeiconsIcon
+                                strokeWidth={1.5}
+                                icon={Login01Icon}
+                                className="text-muted-foreground"
+                            />
+                            <span>Logout</span>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                </SidebarMenu>
                 <SidebarUser
-                    name="Gabi"
-                    email="gabi@example.com"
-                    initials="G"
+                    name={displayName}
+                    email={userEmail}
+                    initials={userInitials}
+                    avatarUrl={user?.imageUrl}
                 />
             </SidebarFooter>
         </Sidebar>
