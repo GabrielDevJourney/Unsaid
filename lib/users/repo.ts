@@ -5,12 +5,14 @@ export async function insertUser(
     user: {
         id: string;
         email: string;
+        username: string;
         subscription_status: string;
     },
 ) {
     return supabase.from("users").insert({
         user_id: user.id,
         email: user.email,
+        username: user.username,
         subscription_status: user.subscription_status,
     });
 }
