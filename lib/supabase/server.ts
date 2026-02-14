@@ -21,7 +21,7 @@ export const createSupabaseServer = async () => {
 
     return createClient(supabaseUrl, supabasePublishableKey, {
         async accessToken() {
-            return (await getToken()) ?? null;
+            return (await getToken({ template: "supabase" })) ?? null;
         },
     });
 };
