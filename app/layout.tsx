@@ -25,13 +25,28 @@ export const metadata: Metadata = {
     description: "AI-powered journaling for self-discovery",
 };
 
+const localization = {
+    signIn: {
+        start: {
+            title: "Welcome back",
+            subtitle: "Sign in to continue your reflections.",
+        },
+    },
+    signUp: {
+        start: {
+            title: "Welcome to Unsaid",
+            subtitle: "A private space where your words become insight.",
+        },
+    },
+};
+
 const RootLayout = ({
     children,
 }: Readonly<{
     children: React.ReactNode;
 }>) => {
     return (
-        <ClerkProvider>
+        <ClerkProvider localization={localization}>
             <html lang="en">
                 <body
                     className={`${geistSans.variable} ${geistMono.variable} ${libreBaskerville.variable} antialiased`}

@@ -6,6 +6,7 @@
 export interface CreateWithProgressPayload {
     id: string;
     email: string;
+    username: string;
 }
 
 // 4. Enhanced Domain Model (Outputs)

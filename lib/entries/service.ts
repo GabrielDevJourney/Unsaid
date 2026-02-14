@@ -2,8 +2,14 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { generateEmbedding } from "@/lib/ai/embeddings";
 import { checkEntryRateLimit } from "@/lib/rate-limit";
 import { checkAndTriggerProgress } from "@/lib/triggers/check-progress-trigger";
-import type { CreateEntryPayload, Entry, ServiceResult } from "@/types";
+import type {
+    CreateEntryPayload,
+    Entry,
+    EntryWithInsight,
+    ServiceResult,
+} from "@/types";
 import {
+    getEntriesWithInsights,
     incrementUserProgress,
     insertEntry,
     updateEntryEmbedding,
@@ -99,4 +105,16 @@ export const createEntry = async (
     });
 
     return { data: entry };
+};
+
+export const getUserEntriesWithInsights = async (
+    supabase: SupabaseClient,
+): Promise<ServiceResult<EntryWithInsight[]>> => {
+    const { data, error } = await getEntriesWithInsights(supabase);
+
+    if (error) {
+        throw error;
+    }
+
+    return { data };
 };

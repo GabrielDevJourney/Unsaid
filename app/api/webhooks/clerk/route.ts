@@ -28,9 +28,16 @@ export async function POST(req: NextRequest) {
                     return new Response("Missing email", { status: 400 });
                 }
 
+                const username = evt.data.username;
+                if (!username) {
+                    console.error("No username found for user:", clerkId);
+                    return new Response("Missing username", { status: 400 });
+                }
+
                 const user: CreateWithProgressPayload = {
                     id: clerkId,
-                    email: email,
+                    email,
+                    username,
                 };
 
                 await createUserWithProgress(supabaseAdmin, user);

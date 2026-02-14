@@ -48,9 +48,9 @@ export type ServiceResult<T> = ServiceSuccess<T> | ServiceError;
  *
  * @example
  * if (isServiceError(result)) {
- *   // result.error is string
+ *   result.error is string
  * } else {
- *   // result.data is T
+ *   result.data is T
  * }
  */
 export const isServiceError = <T>(

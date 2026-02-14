@@ -20,11 +20,6 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
         return NextResponse.next();
     }
 
-    // Allow provisioning page itself
-    if (req.nextUrl.pathname.startsWith("/provisioning")) {
-        return NextResponse.next();
-    }
-
     const supabase = await createSupabaseMiddleware();
 
     const { data: user } = await supabase
@@ -33,18 +28,25 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
         .eq("user_id", userId)
         .single();
 
-    // Signed in but not yet provisioned
+    // Signed in but not yet provisioned (webhook race condition)
     if (!user) {
-        // API routes → JSON
         if (req.nextUrl.pathname.startsWith("/api")) {
             return NextResponse.json(
                 { error: "User provisioning in progress" },
-                { status: 409 },
+                { status: 409, headers: { "Retry-After": "2" } },
             );
         }
 
-        // Pages → redirect
-        return NextResponse.redirect(new URL("/provisioning", req.url));
+        return new NextResponse(
+            '<html><head><meta http-equiv="refresh" content="2"></head><body style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:system-ui;color:#666">Setting up your account…</body></html>',
+            {
+                status: 503,
+                headers: {
+                    "Content-Type": "text/html",
+                    "Retry-After": "2",
+                },
+            },
+        );
     }
 
     // User is authenticated + provisioned

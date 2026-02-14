@@ -20,6 +20,7 @@ export const createUserWithProgress = async (
     const { error: userError } = await insertUser(supabase, {
         id: user.id,
         email: user.email,
+        username: user.username,
         subscription_status: "trial",
     });
 
