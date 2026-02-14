@@ -117,6 +117,42 @@ export const getEntriesPaginated = async (
     };
 };
 
+export const getEntriesWithInsights = async (
+    supabase: SupabaseClient,
+): Promise<{
+    data: EntryWithInsight[];
+    error: Error | null;
+}> => {
+    const query = supabase.from("entries").select(
+        `
+        id, user_id, encrypted_content, content_iv, content_tag, word_count, created_at, updated_at,
+        entry_insights (
+            id, encrypted_content, content_iv, content_tag, created_at
+        )
+        `,
+    );
+
+    const { data: entryRows, error } = await query.order("created_at", {
+        ascending: false,
+    });
+
+    if (error || !entryRows) {
+        return { data: [], error };
+    }
+
+    const entries: EntryWithInsight[] = entryRows.map((entryRow) => {
+        const entry = toEntry(entryRow);
+        // Supabase returns array for joins even on 1:1 relations - take first element
+        const insightData = Array.isArray(entryRow.entry_insights)
+            ? entryRow.entry_insights[0]
+            : entryRow.entry_insights;
+        const insight = insightData ? toEntryInsightEmbed(insightData) : null;
+
+        return { ...entry, entryInsight: insight };
+    });
+
+    return { data: entries, error: null };
+};
 /**
  * Get paginated entries WITH their insights (1:1 relation).
  * Uses Supabase foreign table join to avoid N+1 queries.
