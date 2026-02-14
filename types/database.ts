@@ -424,6 +424,7 @@ export type Database = {
                     trial_started_at: string | null;
                     updated_at: string;
                     user_id: string;
+                    username: string;
                 };
                 Insert: {
                     created_at?: string;
@@ -436,6 +437,7 @@ export type Database = {
                     trial_started_at?: string | null;
                     updated_at?: string;
                     user_id: string;
+                    username: string;
                 };
                 Update: {
                     created_at?: string;
@@ -448,6 +450,7 @@ export type Database = {
                     trial_started_at?: string | null;
                     updated_at?: string;
                     user_id?: string;
+                    username?: string;
                 };
                 Relationships: [];
             };
@@ -582,8 +585,10 @@ export type Database = {
                     user_id_param: string;
                 };
                 Returns: {
-                    content: string;
+                    content_iv: string;
+                    content_tag: string;
                     created_at: string;
+                    encrypted_content: string;
                     id: string;
                     similarity: number;
                     updated_at: string;
@@ -599,8 +604,10 @@ export type Database = {
                     user_id_param: string;
                 };
                 Returns: {
-                    content: string;
+                    content_iv: string;
+                    content_tag: string;
                     created_at: string;
+                    encrypted_content: string;
                     id: string;
                     similarity: number;
                     updated_at: string;
