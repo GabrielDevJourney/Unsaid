@@ -35,6 +35,18 @@ export interface EntryRowEncryptedMinimal {
     created_at: string;
 }
 
+/**
+ * Entry row with nested insight from Supabase join query.
+ * PostgREST returns a single object (not array) when the FK has a UNIQUE
+ * constraint (1:1 relation). Both cases must be handled at runtime.
+ */
+export interface EntryRowWithInsights extends EntryRowEncrypted {
+    entry_insights:
+        | EntryRowEncryptedMinimal
+        | EntryRowEncryptedMinimal[]
+        | null;
+}
+
 // 2. DOMAIN MODELS (decrypted, camelCase, frontend contract)
 
 /**

@@ -9,7 +9,7 @@ import type {
 import { encrypt } from "../crypto";
 import {
     toEntry,
-    toEntryInsightEmbed,
+    toEntryWithInsight,
     toEntryWithSimilarity,
 } from "./transformers";
 
@@ -140,19 +140,9 @@ export const getEntriesWithInsights = async (
         return { data: [], error };
     }
 
-    const entries: EntryWithInsight[] = entryRows.map((entryRow) => {
-        const entry = toEntry(entryRow);
-        // Supabase returns array for joins even on 1:1 relations - take first element
-        const insightData = Array.isArray(entryRow.entry_insights)
-            ? entryRow.entry_insights[0]
-            : entryRow.entry_insights;
-        const insight = insightData ? toEntryInsightEmbed(insightData) : null;
-
-        return { ...entry, entryInsight: insight };
-    });
-
-    return { data: entries, error: null };
+    return { data: entryRows.map(toEntryWithInsight), error: null };
 };
+
 /**
  * Get paginated entries WITH their insights (1:1 relation).
  * Uses Supabase foreign table join to avoid N+1 queries.
@@ -196,18 +186,11 @@ export const getEntriesWithInsightsPaginated = async (
         return { data: [], error, count: 0 };
     }
 
-    const entries: EntryWithInsight[] = entryRows.map((entryRow) => {
-        const entry = toEntry(entryRow);
-        // Supabase returns array for joins even on 1:1 relations - take first element
-        const insightData = Array.isArray(entryRow.entry_insights)
-            ? entryRow.entry_insights[0]
-            : entryRow.entry_insights;
-        const insight = insightData ? toEntryInsightEmbed(insightData) : null;
-
-        return { ...entry, entryInsight: insight };
-    });
-
-    return { data: entries, error: null, count: count ?? 0 };
+    return {
+        data: entryRows.map(toEntryWithInsight),
+        error: null,
+        count: count ?? 0,
+    };
 };
 
 /**
@@ -236,14 +219,7 @@ export const getEntryWithInsightById = async (
         return { data: null, error };
     }
 
-    const entry = toEntry(entryRow);
-    // Supabase returns array for joins even on 1:1 relations - take first element
-    const insightData = Array.isArray(entryRow.entry_insights)
-        ? entryRow.entry_insights[0]
-        : entryRow.entry_insights;
-    const insight = insightData ? toEntryInsightEmbed(insightData) : null;
-
-    return { data: { ...entry, entryInsight: insight }, error: null };
+    return { data: toEntryWithInsight(entryRow), error: null };
 };
 
 /**

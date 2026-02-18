@@ -4,6 +4,8 @@ import type {
     EntryMinimal,
     EntryRowEncrypted,
     EntryRowEncryptedMinimal,
+    EntryRowWithInsights,
+    EntryWithInsight,
     EntryWithSimilarity,
     SearchEntryRowResult,
 } from "@/types";
@@ -67,6 +69,22 @@ export const toEntryInsightEmbed = (
         content,
         createdAt: insightRow.created_at,
     };
+};
+
+/**
+ * Transform entry row with nested insight to EntryWithInsight.
+ * PostgREST returns a single object for 1:1 FK (UNIQUE constraint) but an
+ * array for 1:many. Both cases are handled to be safe.
+ */
+export const toEntryWithInsight = (
+    entryRow: EntryRowWithInsights,
+): EntryWithInsight => {
+    const entry = toEntry(entryRow);
+    const insightData = Array.isArray(entryRow.entry_insights)
+        ? entryRow.entry_insights[0]
+        : entryRow.entry_insights;
+    const insight = insightData ? toEntryInsightEmbed(insightData) : null;
+    return { ...entry, entryInsight: insight };
 };
 
 /**
