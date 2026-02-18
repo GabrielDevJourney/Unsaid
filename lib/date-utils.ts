@@ -1,4 +1,15 @@
 /**
+ * Format a month name from year + zero-based month index.
+ * Uses Intl so it's locale-aware and needs no hardcoded arrays.
+ *
+ * @example getMonthName(2026, 1) → "January"
+ */
+export const getMonthName = (year: number, month: number): string =>
+    new Intl.DateTimeFormat("en-US", { month: "long" }).format(
+        new Date(year, month),
+    );
+
+/**
  * Get the Monday of the week for a given date.
  * Used to determine week boundaries for weekly insights.
  */
