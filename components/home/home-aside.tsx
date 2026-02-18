@@ -1,29 +1,19 @@
+import { getMonthName } from "@/lib/date-utils";
 import { HomeAsideIcon } from "../icons/home-aside-icon";
 
-// Days in January 2026 that have journal entries (matches mock data)
-const MOCK_ENTRY_DAYS = new Set([23, 25, 27, 28, 29, 31]);
+interface HomeAsideProps {
+    totalEntries: number;
+    weeklyInsightsCount: number;
+    entryDates: string[];
+}
 
-const MOCK_DATE = {
-    day: 24,
-    month: "January",
-    year: 2026,
-};
-
-const MOCK_STATS = {
-    writtenEntries: 24,
-    weeklyInsights: 4,
-};
-
-// January 2026 starts on Thursday (index 3 in Mon-start week)
-const buildCalendarGrid = () => {
-    const daysInMonth = 31;
-    // 0=Mon, 1=Tue, ..., 6=Sun — January 1, 2026 is Thursday (index 3)
-    const startDayOffset = 3;
+const buildCalendarGrid = (year: number, month: number) => {
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const startDayOffset = (new Date(year, month, 1).getDay() + 6) % 7;
 
     const grid: (number | null)[][] = [];
     let currentDay = 1;
 
-    // First row with leading empty cells
     const firstRow: (number | null)[] = Array.from<null>({
         length: startDayOffset,
     }).fill(null);
@@ -32,30 +22,52 @@ const buildCalendarGrid = () => {
     }
     grid.push(firstRow);
 
-    // Remaining full/partial rows
     while (currentDay <= daysInMonth) {
         const row: (number | null)[] = [];
         for (let i = 0; i < 7 && currentDay <= daysInMonth; i++) {
             row.push(currentDay++);
         }
-        while (row.length < 7) {
-            row.push(null);
-        }
+        while (row.length < 7) row.push(null);
         grid.push(row);
     }
 
     return grid;
 };
 
-// Flat list of calendar slots with stable keys for rendering
-const calendarSlots = buildCalendarGrid().flatMap((row, rowIndex) =>
-    row.map((day, colIndex) => ({
-        key: day !== null ? `day-${day}` : `empty-${rowIndex}-${colIndex}`,
-        day,
-    })),
-);
+const HomeAside = ({
+    totalEntries,
+    weeklyInsightsCount,
+    entryDates,
+}: HomeAsideProps) => {
+    const now = new Date();
+    const currentDay = now.getDate();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    const monthLabel = getMonthName(currentYear, currentMonth);
 
-const HomeAside = () => {
+    const entryDaySet = new Set(
+        entryDates
+            .filter((dateStr) => {
+                const d = new Date(dateStr);
+                return (
+                    d.getMonth() === currentMonth &&
+                    d.getFullYear() === currentYear
+                );
+            })
+            .map((dateStr) => new Date(dateStr).getDate()),
+    );
+
+    const calendarSlots = buildCalendarGrid(currentYear, currentMonth).flatMap(
+        (row, rowIndex) =>
+            row.map((day, colIndex) => ({
+                key:
+                    day !== null
+                        ? `day-${day}`
+                        : `empty-${rowIndex}-${colIndex}`,
+                day,
+            })),
+    );
+
     return (
         <div className="flex h-full flex-col w-full">
             {/* Date + Stats -- 2x2 grid, first row 2x height of second */}
@@ -69,12 +81,12 @@ const HomeAside = () => {
                         <div className="flex flex-col items-end gap-4">
                             <HomeAsideIcon />
                             <span className="font-serif text-[54px] leading-none text-zinc-600 italic">
-                                {MOCK_DATE.day}
+                                {currentDay}
                             </span>
                         </div>
 
                         <span className="text-xl text-gray-500">
-                            {MOCK_DATE.month}
+                            {monthLabel}
                         </span>
                     </div>
                 </div>
@@ -83,7 +95,7 @@ const HomeAside = () => {
                 <div className="flex flex-col items-center justify-center text-zinc-600 border-r border-b">
                     <div className="flex flex-col justify-start">
                         <span className="font-serif text-2xl italic">
-                            {MOCK_STATS.writtenEntries}
+                            {totalEntries}
                         </span>
                         <span className="text-xs leading-tight text-muted-foreground">
                             written
@@ -97,7 +109,7 @@ const HomeAside = () => {
                 <div className="flex flex-col items-center justify-center border-b text-zinc-600">
                     <div className="flex flex-col justify-start">
                         <span className="font-serif text-2xl italic">
-                            {MOCK_STATS.weeklyInsights}
+                            {weeklyInsightsCount}
                         </span>
                         <span className="text-xs leading-tight text-muted-foreground">
                             weekly
@@ -111,7 +123,7 @@ const HomeAside = () => {
             {/* Mini calendar */}
             <div className="flex flex-col gap-2 border-b px-5 py-5 items-center">
                 <h3 className="mb-4 font-serif text-3xl italic text-zinc-600">
-                    {MOCK_DATE.month} {MOCK_DATE.year}
+                    {monthLabel} {currentYear}
                 </h3>
 
                 <div className="grid grid-cols-7 gap-4">
@@ -120,7 +132,7 @@ const HomeAside = () => {
                             return <div key={slot.key} className="size-4" />;
                         }
 
-                        const hasEntry = MOCK_ENTRY_DAYS.has(slot.day);
+                        const hasEntry = entryDaySet.has(slot.day);
 
                         return (
                             <div
@@ -130,7 +142,7 @@ const HomeAside = () => {
                                         ? "border-3 border-zinc-300 bg-zinc-600"
                                         : "bg-zinc-200"
                                 }`}
-                                title={`${MOCK_DATE.month} ${slot.day}`}
+                                title={`${monthLabel} ${slot.day}`}
                             />
                         );
                     })}
@@ -140,4 +152,4 @@ const HomeAside = () => {
     );
 };
 
-export { HomeAside };
+export { HomeAside, type HomeAsideProps };

@@ -24,9 +24,26 @@ interface HomeViewProps {
     entries: EntryItem[];
     totalEntries: number;
     userName: string;
+    asideTotalEntries: number;
+    weeklyInsightsCount: number;
+    entryDates: string[];
 }
 
-const HomeView = ({ entries, totalEntries, userName }: HomeViewProps) => {
+const getGreeting = (): string => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) return "Good morning";
+    if (hour >= 12 && hour < 18) return "Good afternoon";
+    return "Good evening";
+};
+
+const HomeView = ({
+    entries,
+    totalEntries,
+    userName,
+    asideTotalEntries,
+    weeklyInsightsCount,
+    entryDates,
+}: HomeViewProps) => {
     const [isAsideOpen, setIsAsideOpen] = useState(false);
     const [selectedTags, setSelectedTags] = useState<Set<TagName>>(new Set());
     const [dateRange, setDateRange] = useState<DateRange | undefined>();
@@ -119,7 +136,7 @@ const HomeView = ({ entries, totalEntries, userName }: HomeViewProps) => {
                 <PageHeader>
                     <div>
                         <h1 className="font-serif text-4xl text-zinc-600 italic">
-                            Good evening {userName}!
+                            {getGreeting()} {userName}!
                         </h1>
                     </div>
                 </PageHeader>
@@ -176,7 +193,11 @@ const HomeView = ({ entries, totalEntries, userName }: HomeViewProps) => {
 
             {/* Right aside -- desktop (xl+) */}
             <aside className="hidden w-73 shrink-0 overflow-y-auto border-l xl:flex">
-                <HomeAside />
+                <HomeAside
+                    totalEntries={asideTotalEntries}
+                    weeklyInsightsCount={weeklyInsightsCount}
+                    entryDates={entryDates}
+                />
             </aside>
 
             {/* Right aside -- mobile/tablet Sheet (below xl) */}
@@ -188,7 +209,11 @@ const HomeView = ({ entries, totalEntries, userName }: HomeViewProps) => {
                             Date, stats, and calendar
                         </SheetDescription>
                     </SheetHeader>
-                    <HomeAside />
+                    <HomeAside
+                        totalEntries={asideTotalEntries}
+                        weeklyInsightsCount={weeklyInsightsCount}
+                        entryDates={entryDates}
+                    />
                 </SheetContent>
             </Sheet>
         </div>

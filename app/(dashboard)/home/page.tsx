@@ -1,7 +1,7 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { HomeView } from "@/components/home/home-view";
-import { getUserEntriesWithInsights } from "@/lib/entries/service";
+import { getHomePageData } from "@/lib/home/service";
 import { createSupabaseServer } from "@/lib/supabase/server";
 
 const HomePage = async () => {
@@ -11,17 +11,18 @@ const HomePage = async () => {
         redirect("/sign-in");
     }
 
-    const userName = user?.username;
-
     const supabase = await createSupabaseServer();
-    const { data } = await getUserEntriesWithInsights(supabase);
-    const entries = (data ?? []).map((entry) => ({ entry }));
+    const { entries, asideTotalEntries, weeklyInsightsCount, entryDates } =
+        await getHomePageData(supabase);
 
     return (
         <HomeView
-            entries={entries}
+            entries={entries.map((entry) => ({ entry }))}
             totalEntries={entries.length}
-            userName={userName ?? ""}
+            userName={user.username ?? ""}
+            asideTotalEntries={asideTotalEntries}
+            weeklyInsightsCount={weeklyInsightsCount}
+            entryDates={entryDates}
         />
     );
 };

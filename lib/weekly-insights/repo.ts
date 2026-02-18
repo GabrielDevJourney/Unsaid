@@ -263,6 +263,20 @@ export const getWeeklyInsightsPaginated = async (
 };
 
 /**
+ * Get total count of weekly insights for the authenticated user.
+ * RLS ensures only the user's own rows are counted.
+ */
+export const getWeeklyInsightsCount = async (
+    supabase: SupabaseClient,
+): Promise<{ count: number; error: Error | null }> => {
+    const { count, error } = await supabase
+        .from("weekly_insights")
+        .select("id", { count: "exact", head: true });
+
+    return { count: count ?? 0, error };
+};
+
+/**
  * Get patterns by type for a user (for filtering/analytics).
  * Decrypts pattern content.
  */

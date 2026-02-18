@@ -15,28 +15,44 @@ import {
     updateEntryEmbedding,
 } from "./repo";
 
-/**
- * Calculate word count by splitting on whitespace.
- */
 const calculateWordCount = (content: string): number => {
     return content.trim().split(/\s+/).filter(Boolean).length;
 };
 
-/**
- * Create a new journal entry with embedding generation.
- *
- * Flow:
- * 1. Check rate limit
- * 2. Calculate word count
- * 3. Insert entry (without embedding)
- * 4. Generate embedding async (non-blocking)
- * 5. Update entry with embedding
- * 6. Increment user_progress.total_entries
- * 7. Return created entry
- *
- * Returns error for expected failures (rate limit).
- * Throws for unexpected DB errors.
- */
+const attachEmbedding = async (
+    supabase: SupabaseClient,
+    entryId: string,
+    content: string,
+): Promise<void> => {
+    try {
+        const embedding = await generateEmbedding(content);
+        const { error } = await updateEntryEmbedding(
+            supabase,
+            entryId,
+            embedding,
+        );
+        if (error) console.error("Failed to update embedding:", error);
+    } catch (err) {
+        console.error("Failed to generate embedding:", err);
+    }
+};
+
+const updateProgress = async (
+    supabase: SupabaseClient,
+    userId: string,
+): Promise<void> => {
+    const { error } = await incrementUserProgress(supabase, userId);
+    if (error) console.error("Failed to increment user progress:", error);
+
+    void checkAndTriggerProgress(userId).then((result) => {
+        if (result.data?.triggered) {
+            console.log(
+                `[Progress] Auto-triggered insight for user ${userId}: ${result.data.reason}`,
+            );
+        }
+    });
+};
+
 export const createEntry = async (
     supabase: SupabaseClient,
     userId: string,
@@ -49,60 +65,17 @@ export const createEntry = async (
 
     const wordCount = calculateWordCount(payload.content);
 
-    // Insert entry (without embedding initially)
     const { data: entry, error: insertError } = await insertEntry(supabase, {
         userId,
         content: payload.content,
         wordCount,
     });
 
-    if (insertError) {
-        console.error("Failed to insert entry:", insertError);
-        throw insertError;
-    }
+    if (insertError) throw insertError;
+    if (!entry) throw new Error("Entry was not created");
 
-    if (!entry) {
-        throw new Error("Entry was not created");
-    }
-
-    // Generate embedding async - don't block entry creation
-    try {
-        const embedding = await generateEmbedding(payload.content);
-
-        const { error: embeddingError } = await updateEntryEmbedding(
-            supabase,
-            entry.id,
-            embedding,
-        );
-
-        if (embeddingError) {
-            // Log but don't fail - embedding can be regenerated later
-            console.error("Failed to update embedding:", embeddingError);
-        }
-    } catch (embeddingError) {
-        // Log but don't fail - embedding can be regenerated later
-        console.error("Failed to generate embedding:", embeddingError);
-    }
-
-    const { error: progressError } = await incrementUserProgress(
-        supabase,
-        userId,
-    );
-
-    if (progressError) {
-        // Log but don't fail - progress can be reconciled later
-        console.error("Failed to increment user progress:", progressError);
-    }
-
-    // Check if progress insight should be triggered (async, non-blocking)
-    // Using void to explicitly indicate fire-and-forget pattern
-    void checkAndTriggerProgress(userId).then((result) => {
-        if (result.data?.triggered) {
-            console.log(
-                `[Progress] Auto-triggered insight for user ${userId}: ${result.data.reason}`,
-            );
-        }
-    });
+    await attachEmbedding(supabase, entry.id, payload.content);
+    await updateProgress(supabase, userId);
 
     return { data: entry };
 };
