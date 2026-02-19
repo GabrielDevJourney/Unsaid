@@ -22,9 +22,10 @@ export const insertEntryInsight = async (
             encrypted_content: encryptedContent,
             content_iv: iv,
             content_tag: tag,
+            tags: data.tags,
         })
         .select(
-            "id, user_id, entry_id, encrypted_content, content_iv, content_tag, created_at, updated_at",
+            "id, user_id, entry_id, encrypted_content, content_iv, content_tag, tags, created_at, updated_at",
         )
         .single();
 
@@ -48,7 +49,7 @@ export const getEntryInsightByEntryId = async (
     const { data: insightRow, error } = await supabase
         .from("entry_insights")
         .select(
-            "id, user_id, entry_id, encrypted_content, content_iv, content_tag, created_at, updated_at",
+            "id, user_id, entry_id, encrypted_content, content_iv, content_tag, tags, created_at, updated_at",
         )
         .eq("entry_id", entryId)
         .single();

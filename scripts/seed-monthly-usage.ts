@@ -559,6 +559,7 @@ const createEntryInsights = async (
                 userId,
                 entryId: entries[i].id,
                 content: text,
+                tags: [],
             });
             count++;
         } catch (e) {
