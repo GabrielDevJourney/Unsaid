@@ -1,6 +1,10 @@
 import type { PatternTypeCode } from "@/lib/constants/pattern-types";
 import type { Tables } from "../database";
-import type { EntryMinimal, EntryMinimalWithSimilarity } from "./entries";
+import type {
+    EncryptedRowBase,
+    EntryMinimal,
+    EntryMinimalWithSimilarity,
+} from "./entries";
 
 // 1. RAW DATABASE TYPES (encrypted, snake_case)
 
@@ -25,32 +29,27 @@ export type WeeklyInsightPatternRow = Tables<"weekly_insight_patterns">;
 export type ProgressInsightRow = Tables<"progress_insights">;
 
 /**
+ * Base for full insight rows: encrypted content + user ownership + audit timestamps.
+ */
+export interface InsightRowBase extends EncryptedRowBase {
+    user_id: string;
+    updated_at: string;
+}
+
+/**
  * Entry insight row for transformer input.
  */
-export interface EntryInsightRowEncrypted {
-    id: string;
-    user_id: string;
+export interface EntryInsightRowEncrypted extends InsightRowBase {
     entry_id: string;
-    encrypted_content: string | null;
-    content_iv: string | null;
-    content_tag: string | null;
-    created_at: string;
-    updated_at: string;
+    tags: string[] | null;
 }
 
 /**
  * Progress insight row for transformer input.
  */
-export interface ProgressInsightRowEncrypted {
-    id: string;
-    user_id: string;
-    encrypted_content: string | null;
-    content_iv: string | null;
-    content_tag: string | null;
+export interface ProgressInsightRowEncrypted extends InsightRowBase {
     recent_entry_ids: string[];
     related_past_entry_ids: string[] | null;
-    created_at: string;
-    updated_at: string;
 }
 
 /**
@@ -99,6 +98,7 @@ export interface EntryInsight {
     userId: string;
     entryId: string;
     content: string;
+    tags: string[];
     createdAt: string;
     updatedAt: string;
 }
@@ -166,6 +166,7 @@ export interface InsertEntryInsightData {
     userId: string;
     entryId: string;
     content: string;
+    tags: string[];
 }
 
 // Weekly Insights

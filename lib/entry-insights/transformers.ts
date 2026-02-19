@@ -18,6 +18,7 @@ export const toEntryInsight = (
         userId: insightRow.user_id,
         entryId: insightRow.entry_id,
         content,
+        tags: insightRow.tags ?? [],
         createdAt: insightRow.created_at,
         updatedAt: insightRow.updated_at,
     };

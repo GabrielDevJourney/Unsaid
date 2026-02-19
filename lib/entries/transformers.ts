@@ -1,6 +1,7 @@
 import type {
     Entry,
     EntryInsightEmbed,
+    EntryInsightRowMinimal,
     EntryMinimal,
     EntryRowEncrypted,
     EntryRowEncryptedMinimal,
@@ -53,10 +54,10 @@ export const toEntryMinimal = (
 };
 
 /**
- * Transform encrypted entry insight DB row to domain EntryInsightEmbed.
+ * Transform insight join row to domain EntryInsightEmbed.
  */
 export const toEntryInsightEmbed = (
-    insightRow: EntryRowEncryptedMinimal,
+    insightRow: EntryInsightRowMinimal,
 ): EntryInsightEmbed => {
     const content = decrypt({
         encryptedContent: insightRow.encrypted_content ?? "",
@@ -67,6 +68,7 @@ export const toEntryInsightEmbed = (
     return {
         id: insightRow.id,
         content,
+        tags: insightRow.tags ?? [],
         createdAt: insightRow.created_at,
     };
 };

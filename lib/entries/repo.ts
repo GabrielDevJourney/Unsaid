@@ -127,7 +127,7 @@ export const getEntriesWithInsights = async (
         `
         id, user_id, encrypted_content, content_iv, content_tag, word_count, created_at, updated_at,
         entry_insights (
-            id, encrypted_content, content_iv, content_tag, created_at
+            id, encrypted_content, content_iv, content_tag, tags, created_at
         )
         `,
     );
@@ -164,7 +164,7 @@ export const getEntriesWithInsightsPaginated = async (
         `
         id, user_id, encrypted_content, content_iv, content_tag, word_count, created_at, updated_at,
         entry_insights (
-            id, encrypted_content, content_iv, content_tag, created_at
+            id, encrypted_content, content_iv, content_tag, tags, created_at
         )
         `,
         { count: "exact" },
@@ -208,7 +208,7 @@ export const getEntryWithInsightById = async (
             `
             id, user_id, encrypted_content, content_iv, content_tag, word_count, created_at, updated_at,
             entry_insights (
-                id, encrypted_content, content_iv, content_tag, created_at
+                id, encrypted_content, content_iv, content_tag, tags, created_at
             )
             `,
         )

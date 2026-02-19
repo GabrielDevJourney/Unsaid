@@ -4,13 +4,13 @@ import type { CreateEntryInsightPayload } from "@/types";
 import { insertEntryInsight } from "./repo";
 
 /**
- * Generate and stream an entry insight.
+ * Generate and stream a structured entry insight.
  *
- * STREAMING SERVICE: Returns StreamTextResult directly (not ServiceResult).
+ * STREAMING SERVICE: Returns StreamObjectResult directly (not ServiceResult).
  * Controller should call result.toTextStreamResponse() to send to client.
  *
  * Uses admin client for DB insert (bypasses RLS - insights are system-created).
- * Saves insight to DB via onFinish callback (errors logged, not thrown).
+ * Saves insight and tags to DB via onFinish callback (errors logged, not thrown).
  *
  * @throws If AI streaming fails
  */
@@ -19,13 +19,19 @@ export const generateEntryInsight = async (
     payload: CreateEntryInsightPayload,
 ) => {
     const result = await streamEntryInsight(payload.content, {
-        onFinish: async (completion) => {
+        onFinish: async ({ object }) => {
+            if (!object) {
+                console.error("Entry insight generation produced no output");
+                return;
+            }
+
             const supabase = createSupabaseAdmin();
 
             const { error } = await insertEntryInsight(supabase, {
                 userId,
                 entryId: payload.entryId,
-                content: completion.text,
+                content: object.insight,
+                tags: object.tags,
             });
 
             if (error) {

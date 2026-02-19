@@ -113,11 +113,10 @@ const HomeView = ({
     };
 
     const filteredEntries = entries.filter((item) => {
-        if (
-            selectedTags.size > 0 &&
-            !(item.tags ?? []).some((tag) => selectedTags.has(tag))
-        ) {
-            return false;
+        if (selectedTags.size > 0) {
+            const entryTags = (item.entry.entryInsight?.tags ??
+                []) as TagName[];
+            if (!entryTags.some((tag) => selectedTags.has(tag))) return false;
         }
 
         if (dateRange?.from) {
