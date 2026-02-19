@@ -4,14 +4,14 @@ import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 
 import { Separator } from "@/components/ui/separator";
+import type { InsightTagType } from "@/lib/constants/insight-tag-types";
 import { cn } from "@/lib/utils";
 import type { EntryWithInsight } from "@/types";
-import { EntryTag, type TagName } from "./entry-tag";
+import { EntryTag } from "./entry-tag";
 
 interface EntryCardProps {
     entry: EntryWithInsight;
     entryNumber: number;
-    tags?: TagName[];
 }
 
 const formatEntryDate = (dateString: string): string => {
@@ -22,9 +22,10 @@ const formatEntryDate = (dateString: string): string => {
     return `${day} ${month} ${year}`;
 };
 
-const EntryCard = ({ entry, entryNumber, tags = [] }: EntryCardProps) => {
+const EntryCard = ({ entry, entryNumber }: EntryCardProps) => {
     const [isInsightOpen, setIsInsightOpen] = useState(false);
     const hasInsight = !!entry.entryInsight;
+    const tags = (entry.entryInsight?.tags ?? []) as InsightTagType[];
 
     return (
         <div

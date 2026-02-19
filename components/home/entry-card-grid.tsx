@@ -1,11 +1,9 @@
 import { HomeEmptyState } from "@/components/home/empty-state";
 import { EntryCard } from "@/components/home/entry-card";
-import type { TagName } from "@/components/home/entry-tag";
 import type { EntryWithInsight } from "@/types";
 
 interface EntryItem {
     entry: EntryWithInsight;
-    tags?: TagName[];
 }
 
 interface EntryCardGridProps {
@@ -26,7 +24,6 @@ const EntryCardGrid = ({ entries, totalEntries }: EntryCardGridProps) => {
                         key={item.entry.id}
                         entry={item.entry}
                         entryNumber={totalEntries - index}
-                        tags={item.tags}
                     />
                 ))}
             </div>
