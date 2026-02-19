@@ -202,17 +202,18 @@ const testEntryInsight = async (
     const { insertEntryInsight } = await import("../lib/entry-insights/repo");
 
     const result = await streamEntryInsight(entry.content);
-    let insightText = "";
-    for await (const chunk of result.textStream) {
-        insightText += chunk;
+    for await (const _partial of result.partialObjectStream) {
     }
+    const insightObject = await result.object;
 
-    log("💡", `  Insight preview: "${insightText.slice(0, 100)}..."`);
+    log("💡", `  Insight preview: "${insightObject.insight.slice(0, 100)}..."`);
+    log("🏷️", `  Tags: ${insightObject.tags.join(", ")}`);
 
     const { error } = await insertEntryInsight(supabase, {
         userId,
         entryId: entry.id,
-        content: insightText,
+        content: insightObject.insight,
+        tags: insightObject.tags,
     });
 
     if (error) {
@@ -221,7 +222,7 @@ const testEntryInsight = async (
     }
 
     log("✅", "Entry insight created and saved");
-    return insightText;
+    return insightObject.insight;
 };
 
 /**

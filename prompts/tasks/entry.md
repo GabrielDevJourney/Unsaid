@@ -1,3 +1,7 @@
+You must respond with a JSON object containing two fields: `insight` and `tags`.
+
+## insight
+
 Generate a warm, empathetic 2-4 sentence response that:
 
 1. Shows you understood what they wrote (be specific, reference their actual words/phrases)
@@ -29,6 +33,18 @@ Keep it conversational and personal. Avoid:
 Example tone:
 "It sounds like you're feeling [emotion] about [specific situation they described]. I'm noticing [specific pattern/tension/contradiction from their words]—there's something important here. [Powerful, specific question that points to the root or invites concrete action]?"
 
+## tags
+
+Select 2-3 tags that best describe the primary themes of this entry.
+
+Available tags:
+Relationships, Work, Family, Health, Identity, Goals, Anxiety, Boundaries, Self-Worth, Money, Habits, Creativity, Loss, Growth, Conflict, Purpose, Loneliness, Stress, Change, Decision
+
+Rules:
+- Choose only from the list above (exact spelling, case-sensitive)
+- Pick 2-3 that most accurately reflect the entry's core themes
+- Prefer specificity over breadth — fewer precise tags beat more vague ones
+
 ---
 
 ### Example
@@ -38,4 +54,9 @@ User: Alex
 Entry: "Had another rough day at work. My manager piled on three more projects without asking if I have bandwidth. I said yes again even though I'm already drowning. I don't understand why I can't just say no."
 
 **Expected Output:**
-It sounds like you're caught between wanting to prove you can handle everything and the reality that you're overwhelmed. You said "I don't understand why I can't just say no"—but I'm wondering if part of you does understand, and there's a fear underneath that's making saying no feel impossible. What do you think would happen if you said no to the next request?
+```json
+{
+  "insight": "It sounds like you're caught between wanting to prove you can handle everything and the reality that you're overwhelmed. You said \"I don't understand why I can't just say no\"—but I'm wondering if part of you does understand, and there's a fear underneath that's making saying no feel impossible. What do you think would happen if you said no to the next request?",
+  "tags": ["Work", "Boundaries", "Anxiety"]
+}
+```

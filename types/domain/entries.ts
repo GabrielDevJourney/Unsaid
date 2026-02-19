@@ -24,10 +24,9 @@ export interface EntryRowEncrypted {
 }
 
 /**
- * Minimal entry row for lightweight queries.
- * Used when only id, content, and date are needed.
+ * Base fields shared by all minimal encrypted row types.
  */
-export interface EntryRowEncryptedMinimal {
+export interface EncryptedRowBase {
     id: string;
     encrypted_content: string | null;
     content_iv: string | null;
@@ -36,15 +35,25 @@ export interface EntryRowEncryptedMinimal {
 }
 
 /**
+ * Minimal entry row for lightweight queries.
+ * Used when only id, content, and date are needed.
+ */
+export interface EntryRowEncryptedMinimal extends EncryptedRowBase {}
+
+/**
+ * Minimal insight row returned from Supabase join queries.
+ */
+export interface EntryInsightRowMinimal extends EncryptedRowBase {
+    tags: string[] | null;
+}
+
+/**
  * Entry row with nested insight from Supabase join query.
  * PostgREST returns a single object (not array) when the FK has a UNIQUE
  * constraint (1:1 relation). Both cases must be handled at runtime.
  */
 export interface EntryRowWithInsights extends EntryRowEncrypted {
-    entry_insights:
-        | EntryRowEncryptedMinimal
-        | EntryRowEncryptedMinimal[]
-        | null;
+    entry_insights: EntryInsightRowMinimal | EntryInsightRowMinimal[] | null;
 }
 
 // 2. DOMAIN MODELS (decrypted, camelCase, frontend contract)
@@ -86,6 +95,7 @@ export interface EntryMinimalWithSimilarity extends EntryMinimal {
 export interface EntryInsightEmbed {
     id: string;
     content: string;
+    tags: string[];
     createdAt: string;
 }
 

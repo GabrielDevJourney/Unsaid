@@ -1,28 +1,9 @@
+import type { InsightTagType } from "@/lib/constants/insight-tag-types";
 import { cn } from "@/lib/utils";
 
-type TagName =
-    | "Relationships"
-    | "Work"
-    | "Family"
-    | "Health"
-    | "Identity"
-    | "Goals"
-    | "Anxiety"
-    | "Boundaries"
-    | "Self-Worth"
-    | "Money"
-    | "Habits"
-    | "Creativity"
-    | "Loss"
-    | "Growth"
-    | "Conflict"
-    | "Purpose"
-    | "Loneliness"
-    | "Stress"
-    | "Change"
-    | "Decision";
+type TagName = InsightTagType;
 
-// Each tag: border-{color}-400, bg-{color}-50, text-{color}-800
+// Pattern: bg-{color}-50, border-{color}-400, text-{color}-800
 const TAG_STYLES: Record<TagName, string> = {
     Relationships: "border-red-400 bg-red-50 text-red-800",
     Work: "border-amber-400 bg-amber-50 text-amber-800",
@@ -43,7 +24,7 @@ const TAG_STYLES: Record<TagName, string> = {
     Loneliness: "border-slate-400 bg-slate-50 text-slate-800",
     Stress: "border-rose-400 bg-rose-50 text-rose-800",
     Change: "border-stone-400 bg-stone-50 text-stone-800",
-    Decision: "border-pink-400 bg-pink-50 text-pink-800",
+    Decision: "border-gray-400 bg-gray-50 text-gray-800",
 };
 
 const INACTIVE_STYLE = "border-zinc-300 bg-zinc-100 text-zinc-500";
