@@ -1,0 +1,48 @@
+"use server";
+
+import { auth } from "@clerk/nextjs/server";
+import { createEntry, saveEntry } from "@/lib/entries/service";
+import { EntryCreateSchema } from "@/lib/schemas/entry";
+import { createSupabaseServer } from "@/lib/supabase/server";
+import type { Entry, ServiceResult } from "@/types";
+
+export const createEntryAction = async (
+    content: string,
+): Promise<ServiceResult<Entry>> => {
+    const { userId } = await auth();
+    if (!userId) return { error: "Unauthorized" };
+
+    const validated = EntryCreateSchema.safeParse({ content });
+    if (!validated.success) {
+        return { error: validated.error.issues[0]?.message ?? "Invalid input" };
+    }
+
+    try {
+        const supabase = await createSupabaseServer();
+        return createEntry(supabase, userId, validated.data);
+    } catch (err) {
+        console.error("createEntryAction failed:", err);
+        return { error: "Failed to create entry" };
+    }
+};
+
+export const saveEntryAction = async (
+    entryId: string,
+    content: string,
+): Promise<ServiceResult<Entry>> => {
+    const { userId } = await auth();
+    if (!userId) return { error: "Unauthorized" };
+
+    const validated = EntryCreateSchema.safeParse({ content });
+    if (!validated.success) {
+        return { error: validated.error.issues[0]?.message ?? "Invalid input" };
+    }
+
+    try {
+        const supabase = await createSupabaseServer();
+        return saveEntry(supabase, entryId, validated.data.content);
+    } catch (err) {
+        console.error("saveEntryAction failed:", err);
+        return { error: "Failed to save entry" };
+    }
+};

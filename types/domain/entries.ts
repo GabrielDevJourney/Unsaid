@@ -45,6 +45,7 @@ export interface EntryRowEncryptedMinimal extends EncryptedRowBase {}
  */
 export interface EntryInsightRowMinimal extends EncryptedRowBase {
     tags: string[] | null;
+    insight_count: number;
 }
 
 /**
@@ -92,10 +93,11 @@ export interface EntryMinimalWithSimilarity extends EntryMinimal {
 /**
  * Entry insight embed for nested relations.
  */
-export interface EntryInsightEmbed {
+export interface EntryInsightSummary {
     id: string;
     content: string;
     tags: string[];
+    insightCount: number;
     createdAt: string;
 }
 
@@ -103,7 +105,7 @@ export interface EntryInsightEmbed {
  * Entry with its associated insight (1:1 relation).
  */
 export interface EntryWithInsight extends Entry {
-    entryInsight: EntryInsightEmbed | null;
+    entryInsight: EntryInsightSummary | null;
 }
 
 // 3. SERVICE PAYLOADS (Inputs)

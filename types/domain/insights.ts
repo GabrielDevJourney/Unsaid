@@ -42,6 +42,7 @@ export interface InsightRowBase extends EncryptedRowBase {
 export interface EntryInsightRowEncrypted extends InsightRowBase {
     entry_id: string;
     tags: string[] | null;
+    insight_count: number;
 }
 
 /**
@@ -99,6 +100,7 @@ export interface EntryInsight {
     entryId: string;
     content: string;
     tags: string[];
+    insightCount: number;
     createdAt: string;
     updatedAt: string;
 }
@@ -162,11 +164,12 @@ export interface CreateEntryInsightPayload {
     entryId: string;
 }
 
-export interface InsertEntryInsightData {
+export interface UpsertEntryInsightData {
     userId: string;
     entryId: string;
     content: string;
     tags: string[];
+    insightCount: number;
 }
 
 // Weekly Insights

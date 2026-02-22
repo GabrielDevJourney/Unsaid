@@ -1,29 +1,30 @@
 import { anthropic } from "@ai-sdk/anthropic";
-import { streamObject } from "ai";
-import { z } from "zod";
-import { INSIGHT_TAG_TYPES } from "@/lib/constants/insight-tag-types";
+import { Output, smoothStream, streamText } from "ai";
+import { type InsightObject, insightSchema } from "@/lib/schemas/entry-insight";
 import { loadEntryTaskPrompt, loadSystemPrompt } from "./prompts";
 
-export const insightSchema = z.object({
-    insight: z.string(),
-    tags: z.array(z.enum(INSIGHT_TAG_TYPES)).max(3),
-});
-
-export type InsightObject = z.infer<typeof insightSchema>;
+export { insightSchema, type InsightObject };
 
 interface StreamEntryInsightOptions {
-    onFinish?: (event: {
-        object: InsightObject | undefined;
-    }) => Promise<void> | void;
+    previousInsight?: string;
+    previousTags?: string[];
+    onFinish?: (event: { text: string }) => Promise<void> | void;
 }
 
 /**
  * Stream a structured entry insight using Claude Haiku.
- * Returns { insight: string, tags: string[] } as a streamed object.
+ *
+ * Uses streamText + Output.object() instead of streamObject so the model
+ * outputs plain JSON text token-by-token (not via tool calls, which Anthropic
+ * buffers until complete). This lets useObject on the client receive partial
+ * string values and update the UI progressively.
+ *
+ * smoothStream slows token delivery to word-by-word so fast Haiku responses
+ * look like natural typing rather than appearing all at once.
  *
  * @param entryContent - The journal entry text to analyze
- * @param options - Optional callbacks (onFinish for saving)
- * @returns StreamObjectResult from Vercel AI SDK
+ * @param options - Optional previous insight context and onFinish callback
+ * @returns StreamTextResult — call .toTextStreamResponse() in the route handler
  */
 export const streamEntryInsight = async (
     entryContent: string,
@@ -34,14 +35,23 @@ export const streamEntryInsight = async (
         loadEntryTaskPrompt(),
     ]);
 
-    return streamObject({
+    const previousContext =
+        options?.previousInsight && options?.previousTags
+            ? `\n\n---\n\n**Previous insight (refine this):** ${options.previousInsight}\n**Previous tags:** ${options.previousTags.join(", ")}`
+            : "";
+
+    return streamText({
         model: anthropic("claude-haiku-4-5"),
-        schema: insightSchema,
+        experimental_output: Output.object({ schema: insightSchema }),
+        experimental_transform: smoothStream({
+            chunking: "word",
+            delayInMs: 20,
+        }),
         system: systemPrompt,
         messages: [
             {
                 role: "user",
-                content: `${taskPrompt}\n\n---\n\n${entryContent}`,
+                content: `${taskPrompt}\n\n---\n\n${entryContent}${previousContext}`,
             },
         ],
         onFinish: options?.onFinish,

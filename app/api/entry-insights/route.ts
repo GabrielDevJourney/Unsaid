@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { type NextRequest, NextResponse } from "next/server";
+import { MAX_INSIGHT_COUNT } from "@/lib/constants";
 import { generateEntryInsight } from "@/lib/entry-insights/service";
 import { EntryInsightGenerateSchema } from "@/lib/schemas/entry-insight";
 
@@ -27,6 +28,13 @@ export const POST = async (req: NextRequest) => {
             entryId: validated.data.entry_id,
             content: validated.data.content,
         });
+
+        if (!result) {
+            return NextResponse.json(
+                { error: `Insight limit reached (max ${MAX_INSIGHT_COUNT})` },
+                { status: 429 },
+            );
+        }
 
         return result.toTextStreamResponse();
     } catch (error) {

@@ -10,8 +10,10 @@ import type {
 } from "@/types";
 import {
     getEntriesWithInsights,
+    getEntryWithInsightById,
     incrementUserProgress,
     insertEntry,
+    updateEntryContent,
     updateEntryEmbedding,
 } from "./repo";
 
@@ -19,7 +21,7 @@ const calculateWordCount = (content: string): number => {
     return content.trim().split(/\s+/).filter(Boolean).length;
 };
 
-const attachEmbedding = async (
+const generateAndAttachEmbedding = async (
     supabase: SupabaseClient,
     entryId: string,
     content: string,
@@ -74,8 +76,29 @@ export const createEntry = async (
     if (insertError) throw insertError;
     if (!entry) throw new Error("Entry was not created");
 
-    await attachEmbedding(supabase, entry.id, payload.content);
+    await generateAndAttachEmbedding(supabase, entry.id, payload.content);
     await updateProgress(supabase, userId);
+
+    return { data: entry };
+};
+
+export const saveEntry = async (
+    supabase: SupabaseClient,
+    entryId: string,
+    content: string,
+): Promise<ServiceResult<Entry>> => {
+    const wordCount = calculateWordCount(content);
+
+    const { data: entry, error } = await updateEntryContent(supabase, entryId, {
+        content,
+        wordCount,
+    });
+
+    if (error || !entry) {
+        return { error: "Failed to save entry" };
+    }
+
+    void generateAndAttachEmbedding(supabase, entryId, content);
 
     return { data: entry };
 };
@@ -86,7 +109,20 @@ export const getUserEntriesWithInsights = async (
     const { data, error } = await getEntriesWithInsights(supabase);
 
     if (error) {
-        throw error;
+        return { error: "Failed to fetch entries" };
+    }
+
+    return { data };
+};
+
+export const getEntryWithInsight = async (
+    supabase: SupabaseClient,
+    entryId: string,
+): Promise<ServiceResult<EntryWithInsight>> => {
+    const { data, error } = await getEntryWithInsightById(supabase, entryId);
+
+    if (error || !data) {
+        return { error: "Entry not found" };
     }
 
     return { data };
