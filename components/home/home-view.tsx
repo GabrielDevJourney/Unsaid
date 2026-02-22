@@ -24,7 +24,7 @@ interface HomeViewProps {
     entries: EntryItem[];
     totalEntries: number;
     userName: string;
-    asideTotalEntries: number;
+    totalEntriesAllTime: number;
     weeklyInsightsCount: number;
     entryDates: string[];
 }
@@ -40,7 +40,7 @@ const HomeView = ({
     entries,
     totalEntries,
     userName,
-    asideTotalEntries,
+    totalEntriesAllTime,
     weeklyInsightsCount,
     entryDates,
 }: HomeViewProps) => {
@@ -78,8 +78,8 @@ const HomeView = ({
                 };
                 if (json.data) {
                     setSearchResults(
-                        json.data.entries.map((entry) => ({
-                            entry: { ...entry, entryInsight: null },
+                        json.data.entries.map((searchEntry) => ({
+                            entry: searchEntry,
                         })),
                     );
                 }
@@ -193,7 +193,7 @@ const HomeView = ({
             {/* Right aside -- desktop (xl+) */}
             <aside className="hidden w-73 shrink-0 overflow-y-auto border-l xl:flex">
                 <HomeAside
-                    totalEntries={asideTotalEntries}
+                    totalEntries={totalEntriesAllTime}
                     weeklyInsightsCount={weeklyInsightsCount}
                     entryDates={entryDates}
                 />
@@ -209,7 +209,7 @@ const HomeView = ({
                         </SheetDescription>
                     </SheetHeader>
                     <HomeAside
-                        totalEntries={asideTotalEntries}
+                        totalEntries={totalEntriesAllTime}
                         weeklyInsightsCount={weeklyInsightsCount}
                         entryDates={entryDates}
                     />

@@ -1,11 +1,12 @@
 "use client";
 
 import { ChevronDown } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 
 import { Separator } from "@/components/ui/separator";
 import type { InsightTagType } from "@/lib/constants/insight-tag-types";
-import { cn } from "@/lib/utils";
+import { cn, formatEntryDate } from "@/lib/utils";
 import type { EntryWithInsight } from "@/types";
 import { EntryTag } from "./entry-tag";
 
@@ -14,16 +15,8 @@ interface EntryCardProps {
     entryNumber: number;
 }
 
-const formatEntryDate = (dateString: string): string => {
-    const date = new Date(dateString);
-    const day = date.getDate();
-    const month = date.toLocaleString("en-US", { month: "long" }).toLowerCase();
-    const year = date.getFullYear();
-    return `${day} ${month} ${year}`;
-};
-
 const EntryCard = ({ entry, entryNumber }: EntryCardProps) => {
-    const [isInsightOpen, setIsInsightOpen] = useState(false);
+    const [isInsightExpanded, setIsInsightExpanded] = useState(false);
     const hasInsight = !!entry.entryInsight;
     const tags = (entry.entryInsight?.tags ?? []) as InsightTagType[];
 
@@ -31,7 +24,7 @@ const EntryCard = ({ entry, entryNumber }: EntryCardProps) => {
         <div
             className={cn(
                 "relative shadow-xs flex flex-col overflow-hidden rounded-xl bg-card transition-all duration-500",
-                isInsightOpen
+                isInsightExpanded
                     ? "border border-transparent [background:linear-gradient(var(--card),var(--card))_padding-box,linear-gradient(to_right,rgb(148,163,184),rgba(148,163,184,0.9),rgba(251,146,60,0.6))_border-box]"
                     : "border border-border",
             )}
@@ -44,12 +37,12 @@ const EntryCard = ({ entry, entryNumber }: EntryCardProps) => {
                 {hasInsight && (
                     <button
                         type="button"
-                        onClick={() => setIsInsightOpen((prev) => !prev)}
+                        onClick={() => setIsInsightExpanded((prev) => !prev)}
                         className="inline-flex h-6 cursor-pointer items-center gap-1 rounded-full border bg-background px-2.5 text-[11px] text-zinc-600 font-medium transition-colors hover:text-foreground"
                     >
                         Insights
                         <ChevronDown
-                            className={`size-2.5 transition-transform duration-300 ${isInsightOpen ? "rotate-180" : ""}`}
+                            className={`size-2.5 transition-transform duration-300 ${isInsightExpanded ? "rotate-180" : ""}`}
                         />
                     </button>
                 )}
@@ -78,8 +71,7 @@ const EntryCard = ({ entry, entryNumber }: EntryCardProps) => {
             {/* Insight overlay -- slides up from bottom */}
             {hasInsight && (
                 <div
-                    className={`absolute inset-x-0 bottom-0 z-20 rounded-t-xl border-t bg-neutral-100 transition-transform duration-500 ease-in-out ${isInsightOpen ? "translate-y-0" : "translate-y-full"}`}
-                    style={{ top: "3.5rem" }}
+                    className={`absolute inset-x-0 bottom-0 z-20 rounded-t-xl border-t bg-neutral-100 transition-transform duration-500 ease-in-out ${isInsightExpanded ? "translate-y-0" : "translate-y-full"}`}
                 >
                     {/* Insight content with fade */}
                     <div className="relative overflow-hidden px-5 pt-4 pb-2">
@@ -89,14 +81,14 @@ const EntryCard = ({ entry, entryNumber }: EntryCardProps) => {
                         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-linear-to-t from-neutral-100 to-transparent" />
                     </div>
 
-                    {/* Read more button */}
+                    {/* Read more — navigates to full entry */}
                     <div className="flex justify-end px-5 pb-4">
-                        <button
-                            type="button"
+                        <Link
+                            href={`/entries/${entry.id}`}
                             className="inline-flex h-8 cursor-pointer items-center rounded-full border-2 bg-card px-4 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
                         >
                             Read more
-                        </button>
+                        </Link>
                     </div>
                 </div>
             )}
