@@ -615,6 +615,13 @@ export type Database = {
                     created_at: string;
                     encrypted_content: string;
                     id: string;
+                    insight_content_iv: string;
+                    insight_content_tag: string;
+                    insight_count: number;
+                    insight_created_at: string;
+                    insight_encrypted_content: string;
+                    insight_id: string;
+                    insight_tags: string[];
                     similarity: number;
                     updated_at: string;
                     user_id: string;
