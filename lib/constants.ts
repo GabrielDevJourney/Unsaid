@@ -8,6 +8,12 @@ export const PROGRESS_TRIGGER_INTERVAL = 15;
 export const MAX_ENTRY_LENGTH = 16000;
 export const MIN_ENTRY_LENGTH = 10;
 
+// Entry insights - max regenerations per entry
+export const MAX_INSIGHT_COUNT = 3;
+
+// Word count display limit in editor UI
+export const MAX_WORD_COUNT = 20000;
+
 // Weekly insights - minimum entries required
 export const MIN_ENTRIES_FOR_WEEKLY_INSIGHT = 2;
 

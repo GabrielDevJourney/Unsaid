@@ -24,6 +24,8 @@ const buttonVariants = cva(
 
                     "hover:bg-slate-400 hover:text-white",
 
+                    "ring-4 ring-zinc-300",
+
                     "before:absolute before:top-[-10px] before:left-[-20px]",
                     "before:w-[210px] before:h-[230px]",
                     "before:content-['']",
