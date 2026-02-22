@@ -12,7 +12,7 @@ const HomePage = async () => {
     }
 
     const supabase = await createSupabaseServer();
-    const { entries, asideTotalEntries, weeklyInsightsCount, entryDates } =
+    const { entries, totalEntriesAllTime, weeklyInsightsCount, entryDates } =
         await getHomePageData(supabase);
 
     return (
@@ -20,7 +20,7 @@ const HomePage = async () => {
             entries={entries.map((entry) => ({ entry }))}
             totalEntries={entries.length}
             userName={user.username ?? ""}
-            asideTotalEntries={asideTotalEntries}
+            totalEntriesAllTime={totalEntriesAllTime}
             weeklyInsightsCount={weeklyInsightsCount}
             entryDates={entryDates}
         />
