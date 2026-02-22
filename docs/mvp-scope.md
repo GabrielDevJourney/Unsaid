@@ -2,7 +2,7 @@
 
 Complete reference for the MVP. What we're building, why, and how.
 
-**Last updated:** January 2025
+**Last updated:** February 2026
 
 ---
 
@@ -27,7 +27,7 @@ Complete reference for the MVP. What we're building, why, and how.
 
 ### The Bet
 
-People will pay $12.99/month for an AI that tells them the truth about themselves—especially when it has receipts from their own writing.
+People will pay $10.99/month for an AI that tells them the truth about themselves—especially when it has receipts from their own writing.
 
 ---
 
@@ -133,7 +133,7 @@ THE QUESTION: What's scarier—having limits or resenting yourself for not havin
 
 #### Subscription
 - 7-day free trial (no credit card)
-- $12.99/month or $99/year
+- $10.99/month or $99/year
 - Lemon Squeezy integration
 - Soft-block on expiry (can view, can't create)
 
@@ -274,7 +274,7 @@ Day 6 → Banner appears → Day 7 → Conversion screen → Lemon Squeezy check
 - Fullscreen modal
 - Shows: entries written, insights received, patterns identified
 - Quote their most powerful insight
-- $12.99/month or $99/year
+- $10.99/month or $99/year
 - "I need more time" → 3-day extension (one-time)
 
 ---
@@ -287,7 +287,7 @@ Day 6 → Banner appears → Day 7 → Conversion screen → Lemon Squeezy check
 |-------|---------|
 | `users` | Clerk sync, profile |
 | `entries` | Journal entries + embeddings |
-| `entry_insights` | Tier 1 insights (1:1 with entries) |
+| `entry_insights` | Tier 1 insights (1:1 with entries), includes AI-generated tags |
 | `weekly_insights` | Tier 2 weekly records |
 | `weekly_insight_patterns` | Pattern cards (1:many with weekly_insights) |
 | `progress_insights` | Tier 3 milestone reports |
@@ -297,6 +297,8 @@ Day 6 → Banner appears → Day 7 → Conversion screen → Lemon Squeezy check
 | `payment_events` | Webhook idempotency |
 | `feedback` | User feedback + comments |
 | `feedback_votes` | Upvotes (1 per user per feedback) |
+
+**Tags:** Stored as a column on `entry_insights` (AI-generated at Tier 1 time, derived and shown on entry cards in the home feed).
 
 ### Key Relationships
 
@@ -382,7 +384,7 @@ users (1) ──── (1) user_progress
 
 **Content:**
 - Entries written, insights received
-- CTA: "Continue your journey - $12.99/month"
+- CTA: "Continue your journey - $10.99/month"
 
 ### Weekly Patterns
 
@@ -598,10 +600,11 @@ FeedbackCreateSchema = z.object({
 
 ## 18. What's Built vs Missing
 
-### Built (Backend Complete)
+### Built (Backend + Auth UI Complete)
 
 - Entry creation with embeddings
 - Tier 1, 2, 3 insights working
+- Tags system (AI-generated per entry, shown on home cards)
 - Semantic search API
 - User sync via Clerk
 - Rate limiting
@@ -613,20 +616,22 @@ FeedbackCreateSchema = z.object({
 - All 3 email templates
 - Cron jobs configured
 - Centralized constants
+- Auth pages (sign-in, sign-up, route protection)
+- Home page (entry list with real data + tags)
 
 ### In Progress
 
-- Payment flow end-to-end testing
+- Entry editor (`/entries/new`, `/entries/[id]`) + tags wired to home
 
 ### Missing (MVP Critical)
 
-- Core UI (4 tabs + pages)
-- Waiting for design
+- Patterns page (Tier 2 weekly cards)
+- Progress page (Tier 3 milestone cards)
+- Settings + Feedback UI
 
 ### Post-MVP
 
 - PostHog analytics
-- Sentry error tracking
 - Voice journaling
 - Monthly evolution reports
 

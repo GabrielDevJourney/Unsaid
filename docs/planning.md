@@ -6,13 +6,13 @@ Build the AI journaling backend first, test with simple UI, add design later.
 
 **Core loop:** Write entry → Get insight → See patterns → Track progress
 
-**MVP Goal:** Validate that people will pay $12.99/month for an AI that tells them the truth about themselves.
+**MVP Goal:** Validate that people will pay $10.99/month for an AI that tells them the truth about themselves.
 
 ---
 
 ## AI Cost Model
 
-| User Type | Entries/Month | AI Cost | Margin @ $12.99 |
+| User Type | Entries/Month | AI Cost | Margin @ $10.99 |
 |-----------|---------------|---------|-----------------|
 | Average | 28 entries | ~$0.75 | **94%** |
 | Heavy | 90 entries | ~$2.25 | **83%** |
@@ -31,11 +31,12 @@ Costs are usage-capped by design—even power users can't abuse the system.
 | Database + RLS | ✅ Done |
 | Entry creation + embeddings | ✅ Done |
 | Tier 1, 2, 3 insights | ✅ Done |
+| Tags system (AI-generated on entry) | ✅ Done |
 | Semantic search | ✅ Done |
 | Email infrastructure | ✅ Done |
 | Cron jobs | ✅ Done |
 | Feedback forum API | ✅ Done |
-| Payment integration | ✅ Done (testing pending) |
+| Payment integration | ✅ Done |
 | User provisioning middleware | ✅ Done |
 | Heavy usage seeder (stress test) | ✅ Done |
 
@@ -48,31 +49,28 @@ Costs are usage-capped by design—even power users can't abuse the system.
 | Clerk (production + Google OAuth) | ✅ Done |
 | Resend DNS | ✅ Done |
 | Sentry error tracking | ✅ Done |
-| Domain (byunsaid.com) | ⏸️ Ticket created |
+| Domain (byunsaid.com) | ✅ Done |
 
-### Blocking
+### Frontend: In Progress ⏳
 
-- **Lemon Squeezy:** Account in review - can't test payments yet
-- **Design screens:** Needed for Phase 14 (Core UI)
+| Phase | Status | Notes |
+|-------|--------|-------|
+| Phase 1 — Auth pages | ✅ Done | Sign-in/up with Clerk, route protection |
+| Phase 2 — Entry editor + Tags | ⏳ In Progress | `/entries/new`, `/entries/[id]`, tags wired to home |
+| Phase 3 — Patterns page | ⬜ Pending | Weekly insights (Tier 2) |
+| Phase 4 — Progress page | ⬜ Pending | Milestone cards (Tier 3) |
+| Phase 5 — Settings + Feedback | ⬜ Pending | Profile, subscription, feedback UI |
 
 ---
 
 ## Current Focus
 
-### Immediate (Before Users)
-
-| Task | Status | Notes |
-|------|--------|-------|
-| Lemon Squeezy test flow | ⏸️ Blocked | Account in review |
-| Connect domain | ⬜ Ready | Vercel + Hostinger DNS |
-| Add Sentry.setUser() with Clerk | ⬜ P1 | Link errors to users |
-
-### Before Design Arrives
-
 | Task | Priority | Notes |
 |------|----------|-------|
-| Build minimal functional UI | P1 | Dogfood the product |
-| Write critical tests | P2 | AI parsing, Zod schemas, trigger logic |
+| Entry editor (write + view) | P1 | Active — branch `entry-editor-uns-298` |
+| Wire real tags into home cards | P1 | Replace mock tags with AI-generated tags |
+| Patterns page | P2 | After entry editor ships |
+| Write critical tests | P3 | AI parsing, Zod schemas, trigger logic |
 
 ### What NOT To Do Now
 
@@ -165,16 +163,18 @@ Costs are usage-capped by design—even power users can't abuse the system.
 
 ## Remaining MVP Phases
 
-### Phase 14: Core UI (Waiting for Design)
+### Phase 14: Core UI ⏳ In Progress
 
-5 pages + feedback:
+5 pages + feedback — built in phases (no longer waiting for design):
 
 ```
-app/(app)/
-├─ page.tsx              # Home - Entry list
-├─ write/page.tsx        # Write - Entry creation + insight
-├─ patterns/page.tsx     # Patterns - Weekly cards
-├─ progress/page.tsx     # Progress - Milestone cards
+app/(dashboard)/
+├─ page.tsx              # Home - Entry list with tags
+├─ entries/
+│   ├─ new/page.tsx      # Write - Entry creation + streaming insight
+│   └─ [id]/page.tsx     # Entry detail - full content + insight
+├─ patterns/page.tsx     # Patterns - Weekly cards (Tier 2)
+├─ progress/page.tsx     # Progress - Milestone cards (Tier 3)
 ├─ feedback/page.tsx     # Feedback - Forum
 ├─ settings/page.tsx     # Settings - Subscription + logout
 └─ layout.tsx            # Navigation
@@ -273,9 +273,12 @@ packages/
 - Heavy usage seeder (90 entries stress test)
 
 ### In Progress ⏳
+- Core UI — entry editor (Phase 2 of frontend build)
 
 ### Missing (MVP Critical) ❌
-- Core UI (waiting for design)
+- Patterns page (Phase 3)
+- Progress page (Phase 4)
+- Settings + Feedback UI (Phase 5)
 
 ### Post-MVP 🚫
 - PostHog analytics
