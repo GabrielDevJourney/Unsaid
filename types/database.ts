@@ -86,6 +86,8 @@ export type Database = {
                     encrypted_content: string | null;
                     entry_id: string;
                     id: string;
+                    insight_count: number;
+                    tags: string[];
                     updated_at: string;
                     user_id: string;
                 };
@@ -96,6 +98,8 @@ export type Database = {
                     encrypted_content?: string | null;
                     entry_id: string;
                     id?: string;
+                    insight_count?: number;
+                    tags?: string[];
                     updated_at?: string;
                     user_id: string;
                 };
@@ -106,6 +110,8 @@ export type Database = {
                     encrypted_content?: string | null;
                     entry_id?: string;
                     id?: string;
+                    insight_count?: number;
+                    tags?: string[];
                     updated_at?: string;
                     user_id?: string;
                 };
