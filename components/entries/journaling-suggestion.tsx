@@ -6,8 +6,17 @@ import {
     AccordionItem,
     AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Skeleton } from "@/components/ui/skeleton";
 
-export const JournalingSuggestion = () => {
+interface JournalingSuggestionProps {
+    suggestion: string | null;
+    isLoading: boolean;
+}
+
+export const JournalingSuggestion = ({
+    suggestion,
+    isLoading,
+}: JournalingSuggestionProps) => {
     return (
         <Accordion type="single" collapsible>
             <AccordionItem
@@ -20,11 +29,21 @@ export const JournalingSuggestion = () => {
                 >
                     Need a journaling suggestion?
                 </AccordionTrigger>
-                <AccordionContent className="px-5 pt-2">
-                    <p className="text-sm font-sans leading-relaxed text-muted-foreground">
-                        What&apos;s been on your mind lately that you
-                        haven&apos;t said out loud?
-                    </p>
+                <AccordionContent className="px-5 pt-2 pb-3">
+                    {isLoading ? (
+                        <div className="space-y-2">
+                            <Skeleton className="h-3.5 w-full" />
+                            <Skeleton className="h-3.5 w-3/4" />
+                        </div>
+                    ) : suggestion ? (
+                        <p className="text-sm font-sans leading-relaxed text-muted-foreground">
+                            {suggestion}
+                        </p>
+                    ) : (
+                        <p className="text-sm font-sans italic text-muted-foreground/60">
+                            No journaling suggestion was used for this entry.
+                        </p>
+                    )}
                 </AccordionContent>
             </AccordionItem>
         </Accordion>
