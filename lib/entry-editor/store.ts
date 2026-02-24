@@ -42,8 +42,14 @@ export const useEntryEditorStore = create<
 
     setContent: (content) => set({ content }),
 
-    loadExistingEntry: (entryId, content, insight) =>
-        set({ entryId, content, savedContent: content, insight }),
+    loadExistingEntry: (entryId, content, insight) => {
+        const { entryId: currentEntryId } = get();
+        if (currentEntryId === entryId) {
+            set({ insight });
+            return;
+        }
+        set({ entryId, content, savedContent: content, insight });
+    },
 
     setInsight: (insight) => set({ insight }),
 
