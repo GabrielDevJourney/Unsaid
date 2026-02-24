@@ -304,6 +304,7 @@ export type Database = {
             prompts: {
                 Row: {
                     created_at: string;
+                    entry_id: string | null;
                     id: string;
                     is_used: boolean | null;
                     prompt_text: string;
@@ -312,6 +313,7 @@ export type Database = {
                 };
                 Insert: {
                     created_at?: string;
+                    entry_id?: string | null;
                     id?: string;
                     is_used?: boolean | null;
                     prompt_text: string;
@@ -320,6 +322,7 @@ export type Database = {
                 };
                 Update: {
                     created_at?: string;
+                    entry_id?: string | null;
                     id?: string;
                     is_used?: boolean | null;
                     prompt_text?: string;
@@ -327,6 +330,13 @@ export type Database = {
                     user_id?: string;
                 };
                 Relationships: [
+                    {
+                        foreignKeyName: "prompts_entry_id_fkey";
+                        columns: ["entry_id"];
+                        isOneToOne: false;
+                        referencedRelation: "entries";
+                        referencedColumns: ["id"];
+                    },
                     {
                         foreignKeyName: "prompts_user_id_fkey";
                         columns: ["user_id"];
