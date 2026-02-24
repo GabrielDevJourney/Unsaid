@@ -21,7 +21,8 @@ const EntryCard = ({ entry, entryNumber }: EntryCardProps) => {
     const tags = (entry.entryInsight?.tags ?? []) as InsightTagType[];
 
     return (
-        <div
+        <Link
+            href={`/entries/${entry.id}`}
             className={cn(
                 "relative shadow-xs flex flex-col overflow-hidden rounded-xl bg-card transition-all duration-500",
                 isInsightExpanded
@@ -37,7 +38,11 @@ const EntryCard = ({ entry, entryNumber }: EntryCardProps) => {
                 {hasInsight && (
                     <button
                         type="button"
-                        onClick={() => setIsInsightExpanded((prev) => !prev)}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setIsInsightExpanded((prev) => !prev);
+                        }}
                         className="inline-flex h-6 cursor-pointer items-center gap-1 rounded-full border bg-background px-2.5 text-[11px] text-zinc-600 font-medium transition-colors hover:text-foreground"
                     >
                         Insights
@@ -81,18 +86,15 @@ const EntryCard = ({ entry, entryNumber }: EntryCardProps) => {
                         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-linear-to-t from-neutral-100 to-transparent" />
                     </div>
 
-                    {/* Read more — navigates to full entry */}
+                    {/* Read more label */}
                     <div className="flex justify-end px-5 pb-4">
-                        <Link
-                            href={`/entries/${entry.id}`}
-                            className="inline-flex h-8 cursor-pointer items-center rounded-full border-2 bg-card px-4 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-                        >
+                        <span className="inline-flex h-8 items-center rounded-full border-2 bg-card px-4 text-xs font-medium text-muted-foreground">
                             Read more
-                        </Link>
+                        </span>
                     </div>
                 </div>
             )}
-        </div>
+        </Link>
     );
 };
 
