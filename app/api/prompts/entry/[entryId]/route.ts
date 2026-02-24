@@ -8,16 +8,18 @@ export const GET = async (
     { params }: { params: Promise<{ entryId: string }> },
 ) => {
     try {
-        const { userId } = await auth();
+        const [{ userId }, { entryId }, supabase] = await Promise.all([
+            auth(),
+            params,
+            createSupabaseServer(),
+        ]);
+
         if (!userId) {
             return NextResponse.json(
                 { error: "Unauthorized" },
                 { status: 401 },
             );
         }
-
-        const { entryId } = await params;
-        const supabase = await createSupabaseServer();
         const promptText = await loadPromptForEntry(supabase, entryId);
 
         return NextResponse.json({ data: { promptText } });
