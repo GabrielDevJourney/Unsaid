@@ -2,7 +2,13 @@ import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-    /* config options here */
+    experimental: {
+        optimizePackageImports: [
+            "lucide-react",
+            "@hugeicons/react",
+            "@hugeicons/core-free-icons",
+        ],
+    },
 };
 
 // Skip Sentry webpack plugin when auth token is not available (e.g. local dev)
