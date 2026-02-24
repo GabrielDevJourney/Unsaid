@@ -4,7 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useEntryEditorStore } from "@/lib/entry-editor/store";
-import { formatEntryDate } from "@/lib/utils";
+import { cn, formatEntryDate } from "@/lib/utils";
 import type { EntryInsightSummary } from "@/types";
 import { PageHeader } from "../layout/page-header";
 import { EntryEditor } from "./entry-editor";
@@ -32,8 +32,14 @@ const formatRelativeTime = (date: Date): string => {
 
 export const EntryEditorPage = ({ initialEntry }: EntryEditorPageProps) => {
     const router = useRouter();
-    const { loadExistingEntry, reset, entryId, isSaving, lastSavedAt } =
-        useEntryEditorStore();
+    const {
+        loadExistingEntry,
+        reset,
+        entryId,
+        isSaving,
+        lastSavedAt,
+        saveError,
+    } = useEntryEditorStore();
 
     useEffect(() => {
         if (initialEntry) {
@@ -51,13 +57,15 @@ export const EntryEditorPage = ({ initialEntry }: EntryEditorPageProps) => {
         ? new Date(initialEntry.createdAt)
         : new Date();
 
-    const saveStatus = isSaving
-        ? "Saving..."
-        : lastSavedAt
-          ? `Saved ${formatRelativeTime(lastSavedAt)}`
-          : entryId || initialEntry?.id
-            ? "Saved"
-            : "";
+    const saveStatus = saveError
+        ? "Failed to save"
+        : isSaving
+          ? "Saving..."
+          : lastSavedAt
+            ? `Saved ${formatRelativeTime(lastSavedAt)}`
+            : entryId || initialEntry?.id
+              ? "Saved"
+              : "";
 
     const resolvedEntryId = initialEntry?.id ?? entryId ?? null;
 
@@ -77,7 +85,14 @@ export const EntryEditorPage = ({ initialEntry }: EntryEditorPageProps) => {
                         {formatEntryDate(date)}
                     </h1>
                 </div>
-                <span className="text-sm text-muted-foreground">
+                <span
+                    className={cn(
+                        "text-sm",
+                        saveError
+                            ? "text-destructive"
+                            : "text-muted-foreground",
+                    )}
+                >
                     {saveStatus}
                 </span>
             </PageHeader>
