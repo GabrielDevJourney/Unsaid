@@ -9,7 +9,7 @@ const PageHeader = ({ children, className }: PageHeaderProps) => {
     return (
         <header
             className={cn(
-                "flex h-24 shrink-0 items-center border-b px-6",
+                "flex h-24 shrink-0 items-center border-b px-10",
                 className,
             )}
         >
