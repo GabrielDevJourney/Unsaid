@@ -9,6 +9,8 @@ import type {
     ServiceResult,
 } from "@/types";
 import {
+    decrementUserProgress,
+    deleteEntry,
     getEntriesWithInsights,
     getEntryWithInsightById,
     incrementUserProgress,
@@ -101,6 +103,25 @@ export const saveEntry = async (
     void generateAndAttachEmbedding(supabase, entryId, content);
 
     return { data: entry };
+};
+
+export const deleteEntryById = async (
+    supabase: SupabaseClient,
+    userId: string,
+    entryId: string,
+): Promise<ServiceResult<null>> => {
+    const { error } = await deleteEntry(supabase, entryId);
+    if (error) return { error: "Failed to delete entry" };
+
+    const { error: progressError } = await decrementUserProgress(
+        supabase,
+        userId,
+    );
+    if (progressError) {
+        console.error("Failed to decrement user progress:", progressError);
+    }
+
+    return { data: null };
 };
 
 export const getUserEntriesWithInsights = async (

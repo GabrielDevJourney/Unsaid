@@ -279,6 +279,44 @@ export const updateEntryEmbedding = async (
 };
 
 /**
+ * Delete an entry by ID.
+ * RLS ensures users can only delete their own entries.
+ * Cascades to entry_insights and prompts automatically.
+ */
+export const deleteEntry = async (
+    supabase: SupabaseClient,
+    entryId: string,
+): Promise<{ error: Error | null }> => {
+    const { error } = await supabase.from("entries").delete().eq("id", entryId);
+
+    return { error: error as Error | null };
+};
+
+/**
+ * Decrement the total_entries count in user_progress.
+ * Floors at 0 to guard against data inconsistencies.
+ */
+export const decrementUserProgress = async (
+    supabase: SupabaseClient,
+    userId: string,
+) => {
+    const { data: progress } = await supabase
+        .from("user_progress")
+        .select("total_entries")
+        .eq("user_id", userId)
+        .single();
+
+    const newTotal = Math.max(0, (progress?.total_entries ?? 0) - 1);
+
+    return supabase
+        .from("user_progress")
+        .update({ total_entries: newTotal })
+        .eq("user_id", userId)
+        .select()
+        .single();
+};
+
+/**
  * Increment the total_entries count in user_progress.
  * The row is guaranteed to exist — created by the Clerk webhook on sign-up.
  * Uses UPDATE (not upsert) so the INSERT RLS policy (service_role only) is never triggered.

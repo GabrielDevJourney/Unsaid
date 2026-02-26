@@ -1,7 +1,7 @@
 "use server";
 
 import { auth } from "@clerk/nextjs/server";
-import { createEntry, saveEntry } from "@/lib/entries/service";
+import { createEntry, deleteEntryById, saveEntry } from "@/lib/entries/service";
 import { EntryCreateSchema } from "@/lib/schemas/entry";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import type { Entry, ServiceResult } from "@/types";
@@ -44,5 +44,20 @@ export const saveEntryAction = async (
     } catch (err) {
         console.error("saveEntryAction failed:", err);
         return { error: "Failed to save entry" };
+    }
+};
+
+export const deleteEntryAction = async (
+    entryId: string,
+): Promise<ServiceResult<null>> => {
+    const { userId } = await auth();
+    if (!userId) return { error: "Unauthorized" };
+
+    try {
+        const supabase = await createSupabaseServer();
+        return deleteEntryById(supabase, userId, entryId);
+    } catch (err) {
+        console.error("deleteEntryAction failed:", err);
+        return { error: "Failed to delete entry" };
     }
 };
