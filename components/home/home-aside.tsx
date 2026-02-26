@@ -1,3 +1,8 @@
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { getMonthName } from "@/lib/date-utils";
 import { HomeAsideIcon } from "../icons/home-aside-icon";
 
@@ -135,15 +140,26 @@ const HomeAside = ({
                         const hasEntry = entryDaySet.has(slot.day);
 
                         return (
-                            <div
-                                key={slot.key}
-                                className={`size-5 rounded-full ${
-                                    hasEntry
-                                        ? "border-3 border-zinc-300 bg-zinc-600"
-                                        : "bg-zinc-200"
-                                }`}
-                                title={`${monthLabel} ${slot.day}`}
-                            />
+                            <Tooltip key={slot.key}>
+                                <TooltipTrigger asChild>
+                                    <div
+                                        className={`size-5 rounded-full cursor-default ${
+                                            hasEntry
+                                                ? "border-3 border-zinc-300 bg-zinc-600"
+                                                : "bg-zinc-200"
+                                        }`}
+                                    />
+                                </TooltipTrigger>
+                                <TooltipContent
+                                    side="top"
+                                    align="start"
+                                    collisionPadding={8}
+                                    className="font-sans text-sm"
+                                >
+                                    {monthLabel} {slot.day}
+                                    {hasEntry ? " · journaled" : ""}
+                                </TooltipContent>
+                            </Tooltip>
                         );
                     })}
                 </div>
