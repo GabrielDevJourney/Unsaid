@@ -1,8 +1,9 @@
 "use client";
 
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useEntryEditorStore } from "@/lib/entry-editor/store";
 import { cn, formatEntryDate } from "@/lib/utils";
 import type { EntryInsightSummary } from "@/types";
@@ -40,6 +41,7 @@ export const EntryEditorPage = ({ initialEntry }: EntryEditorPageProps) => {
         lastSavedAt,
         saveError,
     } = useEntryEditorStore();
+    const [, setTick] = useState(0);
 
     useEffect(() => {
         if (initialEntry) {
@@ -52,6 +54,12 @@ export const EntryEditorPage = ({ initialEntry }: EntryEditorPageProps) => {
             reset();
         }
     }, [loadExistingEntry, initialEntry, reset]);
+
+    useEffect(() => {
+        if (!lastSavedAt) return;
+        const interval = setInterval(() => setTick((t) => t + 1), 30_000);
+        return () => clearInterval(interval);
+    }, [lastSavedAt]);
 
     const date = initialEntry?.createdAt
         ? new Date(initialEntry.createdAt)
@@ -71,33 +79,38 @@ export const EntryEditorPage = ({ initialEntry }: EntryEditorPageProps) => {
 
     return (
         <div className="flex h-full flex-col overflow-hidden">
-            {/* Header */}
             <PageHeader className="justify-between items-center">
-                <div className="flex items-center pl-4 gap-4">
+                <div className="flex items-center gap-4">
                     <button
                         type="button"
                         onClick={() => router.push("/home")}
                         className="text-muted-foreground hover:text-foreground transition-colors"
                     >
-                        <ArrowLeft className="size-4" />
+                        <HugeiconsIcon
+                            icon={ArrowLeft02Icon}
+                            size={18}
+                            strokeWidth={1.8}
+                            className="text-zinc-600"
+                        />
                     </button>
                     <h1 className="font-serif text-3xl italic text-zinc-600">
                         {formatEntryDate(date)}
                     </h1>
                 </div>
-                <span
-                    className={cn(
-                        "text-sm",
-                        saveError
-                            ? "text-destructive"
-                            : "text-muted-foreground",
-                    )}
-                >
-                    {saveStatus}
-                </span>
+                <div className="flex items-center gap-3 pr-4">
+                    <span
+                        className={cn(
+                            "text-sm",
+                            saveError
+                                ? "text-destructive"
+                                : "text-muted-foreground",
+                        )}
+                    >
+                        {saveStatus}
+                    </span>
+                </div>
             </PageHeader>
 
-            {/* Content */}
             <div className="flex flex-1 gap-4 overflow-hidden p-6">
                 <div className="min-w-0 flex-1">
                     <EntryEditor />

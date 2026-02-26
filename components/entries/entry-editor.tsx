@@ -20,6 +20,8 @@ export const EntryEditor = () => {
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const wordCount = countWords(content);
+    const isBelowMinLength =
+        content.length > 0 && content.trim().length < MIN_ENTRY_LENGTH;
 
     useEffect(() => {
         if (content.trim().length < MIN_ENTRY_LENGTH) return;
@@ -49,8 +51,11 @@ export const EntryEditor = () => {
                 // biome-ignore lint/a11y/noAutofocus: intentional for writing flow
                 autoFocus={!entryId}
             />
-            <div className="px-6 py-4 text-xs text-muted-foreground">
-                {wordCount}/{MAX_WORD_COUNT} words
+            <div className="flex items-center justify-between px-6 py-4 text-xs text-muted-foreground">
+                <span>{isBelowMinLength && "Keep writing to save..."}</span>
+                <span>
+                    {wordCount}/{MAX_WORD_COUNT} words
+                </span>
             </div>
         </div>
     );
