@@ -501,6 +501,7 @@ export type Database = {
                     encrypted_suggested_experiment: string | null;
                     evidence: string[];
                     id: string;
+                    is_viewed: boolean;
                     pattern_type: string;
                     question_iv: string | null;
                     question_tag: string | null;
@@ -518,6 +519,7 @@ export type Database = {
                     encrypted_suggested_experiment?: string | null;
                     evidence?: string[];
                     id?: string;
+                    is_viewed?: boolean;
                     pattern_type: string;
                     question_iv?: string | null;
                     question_tag?: string | null;
@@ -535,6 +537,7 @@ export type Database = {
                     encrypted_suggested_experiment?: string | null;
                     evidence?: string[];
                     id?: string;
+                    is_viewed?: boolean;
                     pattern_type?: string;
                     question_iv?: string | null;
                     question_tag?: string | null;
