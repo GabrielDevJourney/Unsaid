@@ -331,10 +331,10 @@ users (1) ──── (1) user_progress
 | Method | Route | Purpose |
 |--------|-------|---------|
 | POST | `/api/entry-insights` | Generate Tier 1 (streaming) |
-| GET | `/api/insights/weekly` | List weekly insights |
-| GET | `/api/insights/weekly/[weekStart]` | Specific week + patterns |
-| GET | `/api/insights/progress` | List progress insights |
-| POST | `/api/insights/progress/generate` | Manual Tier 3 trigger |
+| GET | `/api/weekly-insights` | List weekly insights |
+| GET | `/api/weekly-insights/[weekStart]` | Specific week + patterns |
+| GET | `/api/progress-insights` | List progress insights |
+| POST | `/api/progress-insights/generate` | Manual Tier 3 trigger |
 
 ### Prompts
 

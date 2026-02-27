@@ -6,7 +6,7 @@ import { createSupabaseServer } from "@/lib/supabase/server";
 import { getWeeklyInsightsPaginated } from "@/lib/weekly-insights/repo";
 
 /**
- * GET /api/insights/weekly - List weekly insights with pagination
+ * GET /api/weekly-insights/ - List weekly insights with pagination
  *
  * Returns weekly insights sorted by week_start (newest first).
  * Each insight includes entry_ids but NOT patterns (use specific week endpoint for that).

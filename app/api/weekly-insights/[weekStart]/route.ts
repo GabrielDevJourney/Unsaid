@@ -10,7 +10,7 @@ interface RouteParams {
 }
 
 /**
- * GET /api/insights/weekly/[weekStart] - Get weekly insight for a specific week
+ * GET /api/weekly-insights/[weekStart] - Get weekly insight for a specific week
  *
  * Returns the weekly insight with all patterns for the given week.
  * weekStart must be in YYYY-MM-DD format (start of week date).

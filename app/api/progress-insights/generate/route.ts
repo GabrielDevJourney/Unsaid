@@ -6,7 +6,7 @@ import { getProgressStatus } from "@/lib/triggers/check-progress-trigger";
 import { isServiceError } from "@/types";
 
 /**
- * POST /api/insights/progress/generate
+ * POST /api/progress-insights/generate
  *
  * Manually trigger generation of a progress insight.
  * Checks if requirements are met (15 entries since last insight).
@@ -84,7 +84,7 @@ export const POST = async (req: NextRequest) => {
 };
 
 /**
- * GET /api/insights/progress/generate
+ * GET /api/progress-insights/generate
  *
  * Check if a progress insight can be generated.
  * Returns current progress status without generating.
