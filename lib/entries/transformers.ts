@@ -1,7 +1,7 @@
 import type {
     Entry,
-    EntryInsightEmbed,
     EntryInsightRowMinimal,
+    EntryInsightSummary,
     EntryMinimal,
     EntryRowEncrypted,
     EntryRowEncryptedMinimal,
@@ -54,11 +54,11 @@ export const toEntryMinimal = (
 };
 
 /**
- * Transform insight join row to domain EntryInsightEmbed.
+ * Transform insight join row to domain EntryInsightSummary.
  */
-export const toEntryInsightEmbed = (
+export const toEntryInsightSummary = (
     insightRow: EntryInsightRowMinimal,
-): EntryInsightEmbed => {
+): EntryInsightSummary => {
     const content = decrypt({
         encryptedContent: insightRow.encrypted_content ?? "",
         iv: insightRow.content_iv ?? "",
@@ -69,6 +69,7 @@ export const toEntryInsightEmbed = (
         id: insightRow.id,
         content,
         tags: insightRow.tags ?? [],
+        insightCount: insightRow.insight_count,
         createdAt: insightRow.created_at,
     };
 };
@@ -85,12 +86,14 @@ export const toEntryWithInsight = (
     const insightData = Array.isArray(entryRow.entry_insights)
         ? entryRow.entry_insights[0]
         : entryRow.entry_insights;
-    const insight = insightData ? toEntryInsightEmbed(insightData) : null;
+    const insight = insightData ? toEntryInsightSummary(insightData) : null;
     return { ...entry, entryInsight: insight };
 };
 
 /**
  * Transform search result row (from RPC) to EntryWithSimilarity.
+ * Insight columns are present when the RPC LEFT JOIN finds a matching insight,
+ * and null when no insight exists for this entry.
  */
 export const toEntryWithSimilarity = (
     searchRow: SearchEntryRowResult,
@@ -101,6 +104,18 @@ export const toEntryWithSimilarity = (
         tag: searchRow.content_tag ?? "",
     });
 
+    const entryInsight = searchRow.insight_id
+        ? toEntryInsightSummary({
+              id: searchRow.insight_id,
+              encrypted_content: searchRow.insight_encrypted_content,
+              content_iv: searchRow.insight_content_iv,
+              content_tag: searchRow.insight_content_tag,
+              tags: searchRow.insight_tags,
+              insight_count: searchRow.insight_count ?? 0,
+              created_at: searchRow.insight_created_at ?? searchRow.created_at,
+          })
+        : null;
+
     return {
         id: searchRow.id,
         userId: searchRow.user_id,
@@ -109,5 +124,6 @@ export const toEntryWithSimilarity = (
         createdAt: searchRow.created_at,
         updatedAt: searchRow.updated_at,
         similarity: searchRow.similarity,
+        entryInsight,
     };
 };

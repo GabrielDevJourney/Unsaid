@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { generateEntryThemePrompt } from "@/lib/ai/generate-entry-theme";
 import { getEntriesPaginated } from "@/lib/entries/repo";
+import { getPromptByEntryId, savePromptForEntry } from "./repo";
 
 /**
  * Default prompts for users with no entries.
@@ -41,15 +42,16 @@ export const getEntryThemePrompt = async (
     supabase: SupabaseClient,
     userId?: string,
 ): Promise<EntryThemeResult> => {
-    // Fetch last 5 entries (or fewer if user has less)
+    const FIRST_PAGE = 1;
+    const RECENT_ENTRIES_FOR_CONTEXT = 5;
+
     const { data: entries, count } = await getEntriesPaginated(
         supabase,
-        1, // page
-        5, // pageSize
-        userId, // Pass userId for admin client (no RLS)
+        FIRST_PAGE,
+        RECENT_ENTRIES_FOR_CONTEXT,
+        userId,
     );
 
-    // No entries - return default prompt
     if (!entries || count === 0 || entries.length === 0) {
         return {
             promptText: getRandomDefaultPrompt(),
@@ -57,7 +59,6 @@ export const getEntryThemePrompt = async (
         };
     }
 
-    // Generate contextual prompt from recent entries
     const formattedEntries = entries.map((entry) => ({
         content: entry.content,
         createdAt: entry.createdAt,
@@ -65,7 +66,6 @@ export const getEntryThemePrompt = async (
 
     const generatedPrompt = await generateEntryThemePrompt(formattedEntries);
 
-    // Fallback to default if generation fails
     if (!generatedPrompt) {
         console.warn("Entry theme generation failed, using default prompt");
         return {
@@ -78,4 +78,20 @@ export const getEntryThemePrompt = async (
         promptText: generatedPrompt,
         isDefault: false,
     };
+};
+
+export const persistPromptForEntry = async (
+    supabase: SupabaseClient,
+    userId: string,
+    promptText: string,
+    entryId: string,
+): Promise<void> => {
+    await savePromptForEntry(supabase, userId, promptText, entryId);
+};
+
+export const loadPromptForEntry = async (
+    supabase: SupabaseClient,
+    entryId: string,
+): Promise<string | null> => {
+    return getPromptByEntryId(supabase, entryId);
 };

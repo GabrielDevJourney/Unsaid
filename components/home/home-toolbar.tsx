@@ -77,11 +77,7 @@ const HomeToolbar = (props: HomeToolbarProps) => {
             )}
 
             {/* New entry button — always visible */}
-            <Button
-                variant="sunrise"
-                className="ring-4 ring-zinc-300 gap-2"
-                asChild
-            >
+            <Button variant="sunrise" asChild>
                 <Link href="/entries/new">
                     <HugeiconsIcon
                         icon={Add01Icon}

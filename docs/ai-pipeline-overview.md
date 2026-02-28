@@ -35,7 +35,7 @@
     │  Model: Claude Sonnet 4.5            │
     │  Input: Mon-Sun entries              │
     │  Output: JSON (1-3 pattern cards)    │
-    │  Cost: ~$0.035/analysis             │
+    │  Cost: ~$0.084/analysis             │
     └──────────────────────────────────────┘
            ↓
     [Parse JSON → Store pattern cards]
@@ -114,7 +114,7 @@
 
 | Parameter | Value |
 | --- | --- |
-| **Model** | `claude-haiku-4-20250514` |
+| **Model** | `claude-haiku-4-5` |
 | **Trigger** | After every entry submission |
 | **Output Format** | Streaming text |
 | **Input tokens** | ~2,800 (entry 2,500 + system prompt 300) |
@@ -199,7 +199,7 @@
 
 | Parameter | Value |
 | --- | --- |
-| **Model** | `claude-sonnet-4-20250514` |
+| **Model** | `claude-sonnet-4-5` |
 | **Trigger** | Sunday 9pm (cron), if user wrote 2+ entries |
 | **Output Format** | JSON array |
 | **Input tokens** | ~18,000 (7 entries × 2,500 + system prompt 500) |
@@ -298,7 +298,7 @@
 
 | Parameter | Value |
 | --- | --- |
-| **Model** | `claude-sonnet-4-20250514` |
+| **Model** | `claude-sonnet-4-5` |
 | **Trigger** | After 15th, 30th, 45th entry |
 | **Output Format** | Structured text (specific format) |
 | **Input tokens** | ~63,000 (15 recent × 2,500 + 10 past × 2,500 + system prompt 500) |
@@ -481,7 +481,7 @@
 
 ### **Before Deploying New Prompt Version**
 
-1. **Test with real entries** (minimum 5 diverse examples)
+1. **Test with real entries**
 2. **Check output quality:**
     - Tier 1: Is insight personal? Does question invite depth?
     - Tier 2: Are patterns non-obvious? Is JSON valid?

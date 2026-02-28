@@ -1,32 +1,37 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { EntryInsight, InsertEntryInsightData } from "@/types";
+import type { EntryInsight, UpsertEntryInsightData } from "@/types";
 import { encrypt } from "../crypto";
 import { toEntryInsight } from "./transformers";
 
+const SELECT_FIELDS =
+    "id, user_id, entry_id, encrypted_content, content_iv, content_tag, tags, insight_count, created_at, updated_at";
+
 /**
- * Insert a new entry insight into the database.
+ * Upsert an entry insight (insert or update on conflict entry_id).
  * Encrypts content before storing.
  * RLS will verify the user owns this entry.
  */
-export const insertEntryInsight = async (
+export const upsertEntryInsight = async (
     supabase: SupabaseClient,
-    data: InsertEntryInsightData,
+    data: UpsertEntryInsightData,
 ): Promise<{ data: EntryInsight | null; error: Error | null }> => {
     const { encryptedContent, iv, tag } = encrypt(data.content);
 
     const { data: insightRow, error } = await supabase
         .from("entry_insights")
-        .insert({
-            user_id: data.userId,
-            entry_id: data.entryId,
-            encrypted_content: encryptedContent,
-            content_iv: iv,
-            content_tag: tag,
-            tags: data.tags,
-        })
-        .select(
-            "id, user_id, entry_id, encrypted_content, content_iv, content_tag, tags, created_at, updated_at",
+        .upsert(
+            {
+                user_id: data.userId,
+                entry_id: data.entryId,
+                encrypted_content: encryptedContent,
+                content_iv: iv,
+                content_tag: tag,
+                tags: data.tags,
+                insight_count: data.insightCount,
+            },
+            { onConflict: "entry_id" },
         )
+        .select(SELECT_FIELDS)
         .single();
 
     if (error || !insightRow) {
@@ -48,9 +53,7 @@ export const getEntryInsightByEntryId = async (
 ): Promise<{ data: EntryInsight | null; error: Error | null }> => {
     const { data: insightRow, error } = await supabase
         .from("entry_insights")
-        .select(
-            "id, user_id, entry_id, encrypted_content, content_iv, content_tag, tags, created_at, updated_at",
-        )
+        .select(SELECT_FIELDS)
         .eq("entry_id", entryId)
         .single();
 

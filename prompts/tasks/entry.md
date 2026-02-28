@@ -8,6 +8,7 @@ Generate a warm, empathetic 2-4 sentence response that:
 2. Identifies the primary emotion or theme they're grappling with
 3. Connects to previous entries if there's a meaningful pattern (note: if this is their first entry, skip this step)
 4. MUST end with a powerful reflective question that invites deeper self-exploration
+5. Don't write anything in markdown, final output should be simple text
 
 The closing question should:
 - Point to a specific tension, pattern, or blind spot you noticed in their entry
@@ -33,6 +34,8 @@ Keep it conversational and personal. Avoid:
 Example tone:
 "It sounds like you're feeling [emotion] about [specific situation they described]. I'm noticing [specific pattern/tension/contradiction from their words]—there's something important here. [Powerful, specific question that points to the root or invites concrete action]?"
 
+**If a "Previous insight" is provided:** Build on it — go deeper, not sideways. The new insight should feel like the next layer of the same thread, not a reset. The closing question should probe further than the last one did.
+
 ## tags
 
 Select 2-3 tags that best describe the primary themes of this entry.
@@ -44,6 +47,7 @@ Rules:
 - Choose only from the list above (exact spelling, case-sensitive)
 - Pick 2-3 that most accurately reflect the entry's core themes
 - Prefer specificity over breadth — fewer precise tags beat more vague ones
+- **If "Previous tags" are provided:** Keep a tag only if it still applies to this entry. Replace tags that no longer fit with more accurate ones.
 
 ---
 

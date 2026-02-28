@@ -6,19 +6,27 @@
 
 ### **Base Assumptions**
 
-- User writes **7 days/week** = **28 entries/month**
-- Average entry: **1,000 words** (~2,500 tokens)
-- This is **worst-case heavy user** scenario
+- **Average user:** 28 entries/month (4x/week)
+- **Heavy user:** 90 entries/month (7 days/week, 1,000 words each ~2,500 tokens)
+- Costs based on full-month real usage testing
+- AI usage is hard-capped by tier design
 
-### **Cost Formula Per User Per Month**
+### **Cost Formula Per User Per Month (Observed)**
 
 ```markdown
-Tier 1 Cost = 28 entries × $0.0011 = $0.031
-Tier 2 Cost = 4 weeks × $0.084 = $0.336
-Tier 3 Cost = 1.87 (28 entries ÷ 15) × $0.204 = $0.381
-Embeddings = 28 entries × $0.00005 = $0.0014
+Average User AI Cost ≈ $0.75 / month
+Heavy User AI Cost  ≈ $2.25 / month
+Blended (80% Avg / 20% Heavy) ≈ $1.05 / month
+```
 
-TOTAL AI COST PER USER = $0.75/month
+**Tier breakdown (average user, 28 entries/month):**
+```markdown
+Tier 1 Cost = 28 entries × $0.0011 = $0.031
+Tier 2 Cost = 4 weeks × $0.084   = $0.336
+Tier 3 Cost = 1.87 triggers × $0.204 = $0.381
+Embeddings  = 28 entries × $0.00005  = $0.001
+
+TOTAL AI COST (avg user) = ~$0.75/month
 ```
 
 ---
@@ -28,7 +36,7 @@ TOTAL AI COST PER USER = $0.75/month
 ### **Formula**
 
 ```markdown
-Revenue = Users × $12.99
+Revenue = Users × $10.99
 AI Costs = Users × $0.75
 Lemon Squeezy = Revenue × 0.05
 Infrastructure = (see tiers below)
@@ -39,17 +47,20 @@ Gross Margin = (Profit ÷ Revenue) × 100
 
 ---
 
-## Example: 100 Heavy Users (7 days/week)
+## Example: 100 Users (Blended — 80% avg / 20% heavy)
+
+### @ $10.99/month
 
 | Item | Calculation | Amount |
 | --- | --- | --- |
-| **Revenue** | 100 × $12.99 | $1,299 |
-| **AI costs** | 100 × $0.75 | $75 |
-| **Lemon Squeezy** | $1,299 × 0.05 | $65 |
+| **Revenue** | 100 × $10.99 | $1,099 |
+| **AI costs** | 100 × $1.05 | $105 |
+| **Lemon Squeezy** | $1,099 × 0.05 | $55 |
 | **Infrastructure** | Free tier | $0 |
-| **Total costs** | - | **$140** |
-| **Profit** | $1,299 - $140 | **$1,159** |
-| **Gross margin** | ($1,159 ÷ $1,299) × 100 | **89%** |
+| **Total costs** | - | **$160** |
+| **Gross profit** | $1,099 - $160 | **$939** |
+| **Gross margin** | - | **85%** |
+| **Net profit (after ~22.5% PT tax)** | $939 × 0.775 | **~$728** |
 
 ---
 
@@ -64,17 +75,20 @@ Gross Margin = (Profit ÷ Revenue) × 100
 
 ---
 
-## Quick Reference Table
+## Quick Reference Table — $10.99 (Blended Users, $1.05 AI)
 
-| Users | Revenue | AI Costs | Payment Fees | Infrastructure | **Total Costs** | **Profit** | **Margin** |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| 10 | $130 | $8 | $7 | $0 | $15 | $115 | 88% |
-| 50 | $650 | $38 | $33 | $0 | $71 | $579 | 89% |
-| 100 | $1,299 | $75 | $65 | $0 | $140 | $1,159 | 89% |
-| 500 | $6,495 | $375 | $325 | $20 | $720 | $5,775 | 89% |
-| 1,000 | $12,990 | $750 | $650 | $65 | $1,465 | $11,525 | 89% |
-| 5,000 | $64,950 | $3,750 | $3,248 | $116 | $7,114 | $57,836 | 89% |
-| 10,000 | $129,900 | $7,500 | $6,495 | $116 | $14,111 | $115,789 | 89% |
+| Users | Revenue | Gross Profit | Net Profit (PT) |
+| --- | --- | --- | --- |
+| 10 | $110 | $94 | ~$73 |
+| 50 | $550 | $470 | ~$364 |
+| 100 | $1,099 | $939 | ~$728 |
+| 500 | $5,495 | $4,695 | ~$3,638 |
+| 1,000 | $10,990 | $9,390 | ~$7,277 |
+| 5,000 | $54,950 | $46,952 | ~$36,388 |
+
+*Net profit = gross profit × 0.775 (after ~22.5% Portuguese corporate tax)*
+*AI cost = $1.05/user blended (80% avg @ $0.75 / 20% heavy @ $2.25)*
+*Lemon Squeezy = 5% of revenue per row*
 
 ---
 
@@ -100,19 +114,32 @@ Gross Margin = (Profit ÷ Revenue) × 100
 
 ---
 
+## Taxes & Net Profit (Portugal)
+
+**Entity:** Portuguese company (Lda)
+**Corporate tax:** ~22.5%
+**Net profit:** ~77.5% of gross profit
+
+Example: $844 gross × 0.775 = **~$654 net** (100 users @ $9.99)
+
+*Founder salary (if paid) reduces taxable profit further.*
+
+---
+
 ## Break-Even Analysis
 
 **Fixed costs:** ~$0 (everything scales with usage)
 
-**Variable cost per user:**
+**Variable cost per user (blended):**
 
-- AI: $0.75
-- Lemon Squeezy: $0.65 (5% of $12.99)
-- **Total: $1.40 per user**
+- AI: ~$1.05
+- Lemon Squeezy @ $10.99: ~$0.55
+- **Total @ $10.99: ~$1.60 per user**
 
-**Profit per user:** $12.99 - $1.40 = **$11.59**
+**Gross profit per user:**
+- @ $10.99: ~$9.39
 
-**Break-even:** Immediate (first paying user is profitable)
+**Break-even:** Immediate (first paying user is profitable at both price points)
 
 ---
 

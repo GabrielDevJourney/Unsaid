@@ -6,7 +6,7 @@ import type { EntryWithInsight } from "@/types";
 
 export interface HomePageData {
     entries: EntryWithInsight[];
-    asideTotalEntries: number;
+    totalEntriesAllTime: number;
     weeklyInsightsCount: number;
     entryDates: string[];
 }
@@ -34,7 +34,7 @@ export const getHomePageData = async (
 
     return {
         entries,
-        asideTotalEntries: progressData?.totalEntries ?? entries.length,
+        totalEntriesAllTime: progressData?.totalEntries ?? entries.length,
         weeklyInsightsCount: weeklyCount,
         entryDates: entries.map((entry) => entry.createdAt),
     };

@@ -9,11 +9,11 @@ const PageHeader = ({ children, className }: PageHeaderProps) => {
     return (
         <header
             className={cn(
-                "flex h-24 shrink-0 items-center border-b px-6",
+                "flex h-24 shrink-0 items-center border-b px-10",
                 className,
             )}
         >
-            <div className="w-full max-w-5xl">{children}</div>
+            {children}
         </header>
     );
 };

@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import type { DateRange } from "react-day-picker";
 import {
@@ -24,7 +25,7 @@ interface HomeViewProps {
     entries: EntryItem[];
     totalEntries: number;
     userName: string;
-    asideTotalEntries: number;
+    totalEntriesAllTime: number;
     weeklyInsightsCount: number;
     entryDates: string[];
 }
@@ -40,14 +41,16 @@ const HomeView = ({
     entries,
     totalEntries,
     userName,
-    asideTotalEntries,
+    totalEntriesAllTime,
     weeklyInsightsCount,
     entryDates,
 }: HomeViewProps) => {
+    const router = useRouter();
     const [isAsideOpen, setIsAsideOpen] = useState(false);
     const [selectedTags, setSelectedTags] = useState<Set<TagName>>(new Set());
     const [dateRange, setDateRange] = useState<DateRange | undefined>();
     const [isScrolled, setIsScrolled] = useState(false);
+    const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
 
     const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState<EntryItem[] | null>(
@@ -55,6 +58,23 @@ const HomeView = ({
     );
     const [isSearching, setIsSearching] = useState(false);
     const debouncedQuery = useDebounce(searchQuery, 400);
+
+    useEffect(() => {
+        setDeletedIds((prev) => {
+            if (prev.size === 0) return prev;
+            const serverIds = new Set(entries.map((e) => e.entry.id));
+            const next = new Set([...prev].filter((id) => serverIds.has(id)));
+            return next.size === prev.size ? prev : next;
+        });
+    }, [entries]);
+
+    const handleEntryDeleted = useCallback(
+        (entryId: string) => {
+            setDeletedIds((prev) => new Set([...prev, entryId]));
+            router.refresh();
+        },
+        [router],
+    );
 
     useEffect(() => {
         if (debouncedQuery.length < 3) {
@@ -78,8 +98,8 @@ const HomeView = ({
                 };
                 if (json.data) {
                     setSearchResults(
-                        json.data.entries.map((entry) => ({
-                            entry: { ...entry, entryInsight: null },
+                        json.data.entries.map((searchEntry) => ({
+                            entry: searchEntry,
                         })),
                     );
                 }
@@ -112,7 +132,10 @@ const HomeView = ({
         });
     };
 
-    const filteredEntries = entries.filter((item) => {
+    const activeEntries = entries.filter((e) => !deletedIds.has(e.entry.id));
+    const activeTotal = totalEntriesAllTime - deletedIds.size;
+
+    const filteredEntries = activeEntries.filter((item) => {
         if (selectedTags.size > 0) {
             const entryTags = (item.entry.entryInsight?.tags ??
                 []) as TagName[];
@@ -133,7 +156,7 @@ const HomeView = ({
             {/* Left column: page header + scrollable content */}
             <div className="flex flex-1 flex-col overflow-hidden">
                 <PageHeader>
-                    <div>
+                    <div className="px-2">
                         <h1 className="font-serif text-4xl text-zinc-600 italic">
                             {getGreeting()} {userName}!
                         </h1>
@@ -147,7 +170,7 @@ const HomeView = ({
                         onScroll={handleScroll}
                     >
                         <div className="w-full px-6 py-6 ">
-                            {entries.length === 0 ? (
+                            {activeEntries.length === 0 ? (
                                 <HomeToolbar
                                     isEmpty
                                     isScrolled={isScrolled}
@@ -178,8 +201,11 @@ const HomeView = ({
                                 <EntryCardGrid
                                     entries={searchResults ?? filteredEntries}
                                     totalEntries={
-                                        entries.length === 0 ? 0 : totalEntries
+                                        activeEntries.length === 0
+                                            ? 0
+                                            : totalEntries
                                     }
+                                    onEntryDeleted={handleEntryDeleted}
                                 />
                             )}
                         </div>
@@ -193,7 +219,7 @@ const HomeView = ({
             {/* Right aside -- desktop (xl+) */}
             <aside className="hidden w-73 shrink-0 overflow-y-auto border-l xl:flex">
                 <HomeAside
-                    totalEntries={asideTotalEntries}
+                    totalEntries={activeTotal}
                     weeklyInsightsCount={weeklyInsightsCount}
                     entryDates={entryDates}
                 />
@@ -209,7 +235,7 @@ const HomeView = ({
                         </SheetDescription>
                     </SheetHeader>
                     <HomeAside
-                        totalEntries={asideTotalEntries}
+                        totalEntries={activeTotal}
                         weeklyInsightsCount={weeklyInsightsCount}
                         entryDates={entryDates}
                     />

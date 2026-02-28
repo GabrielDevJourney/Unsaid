@@ -9,9 +9,14 @@ interface EntryItem {
 interface EntryCardGridProps {
     entries: EntryItem[];
     totalEntries: number;
+    onEntryDeleted: (entryId: string) => void;
 }
 
-const EntryCardGrid = ({ entries, totalEntries }: EntryCardGridProps) => {
+const EntryCardGrid = ({
+    entries,
+    totalEntries,
+    onEntryDeleted,
+}: EntryCardGridProps) => {
     if (totalEntries === 0) {
         return <HomeEmptyState />;
     }
@@ -24,6 +29,7 @@ const EntryCardGrid = ({ entries, totalEntries }: EntryCardGridProps) => {
                         key={item.entry.id}
                         entry={item.entry}
                         entryNumber={totalEntries - index}
+                        onEntryDeleted={onEntryDeleted}
                     />
                 ))}
             </div>

@@ -86,6 +86,8 @@ export type Database = {
                     encrypted_content: string | null;
                     entry_id: string;
                     id: string;
+                    insight_count: number;
+                    tags: string[];
                     updated_at: string;
                     user_id: string;
                 };
@@ -96,6 +98,8 @@ export type Database = {
                     encrypted_content?: string | null;
                     entry_id: string;
                     id?: string;
+                    insight_count?: number;
+                    tags?: string[];
                     updated_at?: string;
                     user_id: string;
                 };
@@ -106,6 +110,8 @@ export type Database = {
                     encrypted_content?: string | null;
                     entry_id?: string;
                     id?: string;
+                    insight_count?: number;
+                    tags?: string[];
                     updated_at?: string;
                     user_id?: string;
                 };
@@ -298,6 +304,7 @@ export type Database = {
             prompts: {
                 Row: {
                     created_at: string;
+                    entry_id: string | null;
                     id: string;
                     is_used: boolean | null;
                     prompt_text: string;
@@ -306,6 +313,7 @@ export type Database = {
                 };
                 Insert: {
                     created_at?: string;
+                    entry_id?: string | null;
                     id?: string;
                     is_used?: boolean | null;
                     prompt_text: string;
@@ -314,6 +322,7 @@ export type Database = {
                 };
                 Update: {
                     created_at?: string;
+                    entry_id?: string | null;
                     id?: string;
                     is_used?: boolean | null;
                     prompt_text?: string;
@@ -321,6 +330,13 @@ export type Database = {
                     user_id?: string;
                 };
                 Relationships: [
+                    {
+                        foreignKeyName: "prompts_entry_id_fkey";
+                        columns: ["entry_id"];
+                        isOneToOne: false;
+                        referencedRelation: "entries";
+                        referencedColumns: ["id"];
+                    },
                     {
                         foreignKeyName: "prompts_user_id_fkey";
                         columns: ["user_id"];
@@ -609,6 +625,13 @@ export type Database = {
                     created_at: string;
                     encrypted_content: string;
                     id: string;
+                    insight_content_iv: string;
+                    insight_content_tag: string;
+                    insight_count: number;
+                    insight_created_at: string;
+                    insight_encrypted_content: string;
+                    insight_id: string;
+                    insight_tags: string[];
                     similarity: number;
                     updated_at: string;
                     user_id: string;

@@ -78,7 +78,15 @@
 
 ---
 
-## 2. What We're NOT Using
+## 2. Dev Tooling
+
+- **Biome 2** — Linter + formatter (replaces ESLint + Prettier). Runs on every Edit/Write via a post-tool hook.
+- **Lefthook** — Pre-commit hooks: runs `biome check` + `tsc --noEmit` before every commit. Blocks bad code from landing.
+- **Vitest 4** — Unit and integration tests.
+
+---
+
+## 3. What We're NOT Using
 
 **❌ Redux** - Too much boilerplate, Zustand is simpler
 
@@ -97,6 +105,7 @@
 ---
 
 ## 4. Why This Stack Works
+
 
 **Speed:** No separate backend, everything in Next.js = faster iteration
 
@@ -127,8 +136,8 @@
 
 **Total: ~$26/month + 5% payment fees**
 
-At 100 paid users × $12.99/month:
+At 100 paid users × $10.99/month:
 
-- Revenue: $1,299
-- Costs: $26 (AI) + $65 (Lemon Squeezy)
-- **Profit: $1,208 (89% margin)**
+- Revenue: $1,099
+- Costs: $26 (AI) + $55 (Lemon Squeezy)
+- **Profit: $1,018 (93% margin)**

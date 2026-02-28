@@ -127,7 +127,7 @@ export const getEntriesWithInsights = async (
         `
         id, user_id, encrypted_content, content_iv, content_tag, word_count, created_at, updated_at,
         entry_insights (
-            id, encrypted_content, content_iv, content_tag, tags, created_at
+            id, encrypted_content, content_iv, content_tag, tags, insight_count, created_at
         )
         `,
     );
@@ -164,7 +164,7 @@ export const getEntriesWithInsightsPaginated = async (
         `
         id, user_id, encrypted_content, content_iv, content_tag, word_count, created_at, updated_at,
         entry_insights (
-            id, encrypted_content, content_iv, content_tag, tags, created_at
+            id, encrypted_content, content_iv, content_tag, tags, insight_count, created_at
         )
         `,
         { count: "exact" },
@@ -208,7 +208,7 @@ export const getEntryWithInsightById = async (
             `
             id, user_id, encrypted_content, content_iv, content_tag, word_count, created_at, updated_at,
             entry_insights (
-                id, encrypted_content, content_iv, content_tag, tags, created_at
+                id, encrypted_content, content_iv, content_tag, tags, insight_count, created_at
             )
             `,
         )
@@ -220,6 +220,38 @@ export const getEntryWithInsightById = async (
     }
 
     return { data: toEntryWithInsight(entryRow), error: null };
+};
+
+/**
+ * Update an entry's content (re-encrypts).
+ * RLS ensures user can only update their own entries.
+ */
+export const updateEntryContent = async (
+    supabase: SupabaseClient,
+    entryId: string,
+    data: { content: string; wordCount: number },
+): Promise<{ data: Entry | null; error: Error | null }> => {
+    const { encryptedContent, iv, tag } = encrypt(data.content);
+
+    const { data: entryRow, error } = await supabase
+        .from("entries")
+        .update({
+            encrypted_content: encryptedContent,
+            content_iv: iv,
+            content_tag: tag,
+            word_count: data.wordCount,
+        })
+        .eq("id", entryId)
+        .select(
+            "id, user_id, encrypted_content, content_iv, content_tag, word_count, created_at, updated_at",
+        )
+        .single();
+
+    if (error || !entryRow) {
+        return { data: null, error };
+    }
+
+    return { data: toEntry(entryRow), error: null };
 };
 
 /**
@@ -247,8 +279,47 @@ export const updateEntryEmbedding = async (
 };
 
 /**
+ * Delete an entry by ID.
+ * RLS ensures users can only delete their own entries.
+ * Cascades to entry_insights and prompts automatically.
+ */
+export const deleteEntry = async (
+    supabase: SupabaseClient,
+    entryId: string,
+): Promise<{ error: Error | null }> => {
+    const { error } = await supabase.from("entries").delete().eq("id", entryId);
+
+    return { error: error as Error | null };
+};
+
+/**
+ * Decrement the total_entries count in user_progress.
+ * Floors at 0 to guard against data inconsistencies.
+ */
+export const decrementUserProgress = async (
+    supabase: SupabaseClient,
+    userId: string,
+) => {
+    const { data: progress } = await supabase
+        .from("user_progress")
+        .select("total_entries")
+        .eq("user_id", userId)
+        .single();
+
+    const newTotal = Math.max(0, (progress?.total_entries ?? 0) - 1);
+
+    return supabase
+        .from("user_progress")
+        .update({ total_entries: newTotal })
+        .eq("user_id", userId)
+        .select()
+        .single();
+};
+
+/**
  * Increment the total_entries count in user_progress.
- * Creates row if it doesn't exist (handles manual user creation).
+ * The row is guaranteed to exist — created by the Clerk webhook on sign-up.
+ * Uses UPDATE (not upsert) so the INSERT RLS policy (service_role only) is never triggered.
  */
 export const incrementUserProgress = async (
     supabase: SupabaseClient,
@@ -260,19 +331,12 @@ export const incrementUserProgress = async (
         .eq("user_id", userId)
         .single();
 
-    const currentTotal = progress?.total_entries ?? 0;
-    const newTotal = currentTotal + 1;
+    const newTotal = (progress?.total_entries ?? 0) + 1;
 
     return supabase
         .from("user_progress")
-        .upsert(
-            {
-                user_id: userId,
-                total_entries: newTotal,
-                entry_count_at_last_progress: 0,
-            },
-            { onConflict: "user_id" },
-        )
+        .update({ total_entries: newTotal })
+        .eq("user_id", userId)
         .select()
         .single();
 };
