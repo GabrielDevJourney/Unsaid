@@ -1,29 +1,5 @@
 Analyze these journal entries and generate 1-3 insight cards. Each card reveals a pattern the user likely can't see on their own.
 
-## Card Categories
-
-Each insight card must be categorized. Choose ONE category per card:
-
-- **theme**: A topic or subject that appears across multiple entries
-  Example: "Work-life balance", "Family relationships"
-
-- **trigger**: Something that consistently causes an emotional response
-  Example: "Criticism from authority figures triggers defensiveness"
-
-- **thought_pattern**: A recurring way of thinking or interpreting events
-  Example: "Assuming the worst outcome", "All-or-nothing thinking"
-
-- **avoidance**: Something you consistently avoid or postpone
-  Example: "Avoiding difficult conversations", "Postponing health decisions"
-
-- **habit**: A repeated behavior, positive or negative
-  Example: "Late-night overthinking", "Sunday meal prep"
-
-- **need**: An underlying need that surfaces across entries
-  Example: "Need for validation", "Need for autonomy"
-
-- **growth**: Evidence of positive change or progress
-  Example: "Handling conflict better than last month"
 
 ## Insight Card Structure
 
