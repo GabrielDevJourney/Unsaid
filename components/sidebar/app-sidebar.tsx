@@ -21,7 +21,11 @@ import { brainNavItems, footerNavItems } from "@/config/sidebar";
 import { SidebarNavGroup } from "./sidebar-nav-group";
 import { SidebarUser } from "./sidebar-user";
 
-export const AppSidebar = () => {
+interface AppSidebarProps {
+    newPatternsCount?: number;
+}
+
+export const AppSidebar = ({ newPatternsCount = 0 }: AppSidebarProps) => {
     const { signOut } = useClerk();
     const { user } = useUser();
 
@@ -63,7 +67,11 @@ export const AppSidebar = () => {
                 </SidebarGroup>
 
                 <SidebarNavGroup
-                    items={brainNavItems}
+                    items={brainNavItems.map((item) =>
+                        item.url === "/patterns"
+                            ? { ...item, badge: newPatternsCount }
+                            : item,
+                    )}
                     label="Brain"
                     className="p-4"
                 />

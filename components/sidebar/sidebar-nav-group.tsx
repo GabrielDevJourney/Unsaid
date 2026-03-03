@@ -46,6 +46,11 @@ export const SidebarNavGroup = ({
                                     }
                                 />
                                 <span>{item.label}</span>
+                                {item.badge != null && item.badge > 0 && (
+                                    <span className="ml-auto inline-flex h-5 min-w-4 items-center justify-center rounded-full bg-slate-100 border border-slate-400 px-2 text-[12px] font-medium text-slate-800">
+                                        {item.badge}
+                                    </span>
+                                )}
                             </Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
