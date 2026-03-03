@@ -4,4 +4,5 @@ export interface NavItem {
     label: string;
     icon: IconSvgElement;
     url: string;
+    badge?: number;
 }

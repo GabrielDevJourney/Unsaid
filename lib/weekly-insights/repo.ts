@@ -1,13 +1,20 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { PostgrestError, SupabaseClient } from "@supabase/supabase-js";
 import type {
     InsertWeeklyInsightData,
     InsertWeeklyInsightPatternData,
     WeeklyInsight,
     WeeklyInsightPattern,
+    WeeklyInsightPatternRowResolved,
+    WeeklyInsightWithPatternRPCRow,
     WeeklyInsightWithPatterns,
 } from "@/types";
 import { encrypt } from "../crypto";
-import { toWeeklyInsight, toWeeklyInsightPattern } from "./transformers";
+import {
+    toWeeklyInsight,
+    toWeeklyInsightPattern,
+    toWeeklyInsightPatternResolved,
+    toWeeklyInsightWithPatternsFromRPC,
+} from "./transformers";
 
 /**
  * Insert a new weekly insight (without patterns).
@@ -35,52 +42,11 @@ export const insertWeeklyInsight = async (
 };
 
 /**
- * Insert a single pattern (insight card) for a weekly insight.
- * Encrypts description, question, and suggested_experiment.
- */
-export const insertWeeklyInsightPattern = async (
-    supabase: SupabaseClient,
-    data: InsertWeeklyInsightPatternData,
-): Promise<{ data: WeeklyInsightPattern | null; error: Error | null }> => {
-    const descriptionEncrypted = encrypt(data.description);
-
-    const questionEncrypted = data.question ? encrypt(data.question) : null;
-    const experimentEncrypted = data.suggestedExperiment
-        ? encrypt(data.suggestedExperiment)
-        : null;
-
-    const { data: patternRow, error } = await supabase
-        .from("weekly_insight_patterns")
-        .insert({
-            weekly_insight_id: data.weeklyInsightId,
-            title: data.title,
-            pattern_type: data.patternType,
-            encrypted_description: descriptionEncrypted.encryptedContent,
-            description_iv: descriptionEncrypted.iv,
-            description_tag: descriptionEncrypted.tag,
-            evidence: data.evidence,
-            encrypted_question: questionEncrypted?.encryptedContent ?? null,
-            question_iv: questionEncrypted?.iv ?? null,
-            question_tag: questionEncrypted?.tag ?? null,
-            encrypted_suggested_experiment:
-                experimentEncrypted?.encryptedContent ?? null,
-            suggested_experiment_iv: experimentEncrypted?.iv ?? null,
-            suggested_experiment_tag: experimentEncrypted?.tag ?? null,
-        })
-        .select()
-        .single();
-
-    if (error || !patternRow) {
-        return { data: null, error };
-    }
-
-    return { data: toWeeklyInsightPattern(patternRow), error: null };
-};
-
-/**
  * Insert multiple patterns (insight cards) for a weekly insight.
- * More efficient than inserting one by one.
+ * Accepts decrypted pattern data, encrypts it, and inserts into the DB.
+ * Returns the created patterns with their IDs.
  * Encrypts description, question, and suggested_experiment for each.
+ * The return shape can be used in emails or other places where we want to show the decrypted content immediately.
  */
 export const insertWeeklyInsightPatterns = async (
     supabase: SupabaseClient,
@@ -127,29 +93,6 @@ export const insertWeeklyInsightPatterns = async (
 };
 
 /**
- * Get weekly insight by week start date.
- * Returns null if no insight exists for that week.
- */
-export const getWeeklyInsightByWeekStart = async (
-    supabase: SupabaseClient,
-    userId: string,
-    weekStart: string,
-): Promise<{ data: WeeklyInsight | null; error: Error | null }> => {
-    const { data: insightRow, error } = await supabase
-        .from("weekly_insights")
-        .select("id, user_id, week_start, entry_ids, created_at, updated_at")
-        .eq("user_id", userId)
-        .eq("week_start", weekStart)
-        .single();
-
-    if (error || !insightRow) {
-        return { data: null, error };
-    }
-
-    return { data: toWeeklyInsight(insightRow), error: null };
-};
-
-/**
  * Get weekly insight with patterns by week start date.
  * Combines the insight and its patterns in a single return.
  * Decrypts pattern content.
@@ -190,40 +133,134 @@ export const getWeeklyInsightWithPatternsByWeekStart = async (
 };
 
 /**
- * Get weekly insight with its patterns (insight cards).
- * Decrypts pattern content.
+ * Get paginated weekly insights with patterns.
+ * Uses the get_weekly_insights_with_evidence RPC so evidence UUIDs are
+ * resolved to { entryId, label } (entry created_at date) in a single query —
+ * no second round trip needed in the service layer.
  */
-export const getWeeklyInsightWithPatterns = async (
+export const getWeeklyInsightWithPatternsPaginated = async (
     supabase: SupabaseClient,
-    weeklyInsightId: string,
-): Promise<{ data: WeeklyInsightWithPatterns | null; error: Error | null }> => {
-    const { data: insightRow, error: insightError } = await supabase
-        .from("weekly_insights")
-        .select("id, user_id, week_start, entry_ids, created_at, updated_at")
-        .eq("id", weeklyInsightId)
-        .single();
+    cursor: string | null,
+    limit: number,
+): Promise<{
+    data: WeeklyInsightWithPatterns[];
+    nextCursor: string | null;
+    error: PostgrestError | null;
+}> => {
+    const { data: rows, error } = await supabase.rpc(
+        "get_weekly_insights_with_evidence",
+        {
+            p_cursor: cursor ?? null,
+            p_limit: limit,
+        },
+    );
 
-    if (insightError || !insightRow) {
-        return { data: null, error: insightError };
+    if (error || !rows) {
+        return { data: [], nextCursor: null, error };
     }
 
-    const { data: patternRows, error: patternsError } = await supabase
+    const typedRows = rows as WeeklyInsightWithPatternRPCRow[];
+    const mapped = typedRows.map(toWeeklyInsightWithPatternsFromRPC);
+    const nextCursor =
+        typedRows.length === limit
+            ? typedRows[typedRows.length - 1].week_start
+            : null;
+
+    return { data: mapped, nextCursor, error: null };
+};
+
+/**
+ * Get a single pattern by ID with resolved evidence labels.
+ * RLS ensures the pattern belongs to the authenticated user.
+ * Evidence UUIDs are resolved to { entryId, label } via a second query.
+ */
+export const getPatternById = async (
+    supabase: SupabaseClient,
+    patternId: string,
+): Promise<{
+    data: WeeklyInsightPattern | null;
+    error: PostgrestError | null;
+}> => {
+    const { data: patternRow, error } = await supabase
         .from("weekly_insight_patterns")
         .select("*")
-        .eq("weekly_insight_id", weeklyInsightId)
-        .order("created_at", { ascending: true });
+        .eq("id", patternId)
+        .single();
 
-    if (patternsError) {
-        return { data: null, error: patternsError };
+    if (error || !patternRow) {
+        return { data: null, error };
     }
 
-    const insight = toWeeklyInsight(insightRow);
-    const patterns = (patternRows ?? []).map(toWeeklyInsightPattern);
+    const { data: entries } = await supabase
+        .from("entries")
+        .select("id, created_at")
+        .in("id", patternRow.evidence);
 
-    return {
-        data: { ...insight, patterns },
-        error: null,
+    const dateMap = new Map(
+        (entries ?? []).map((e) => [
+            e.id,
+            new Intl.DateTimeFormat("en-US", {
+                month: "long",
+                day: "numeric",
+            }).format(new Date(e.created_at)),
+        ]),
+    );
+
+    const resolved: WeeklyInsightPatternRowResolved = {
+        ...patternRow,
+        evidence: patternRow.evidence.map((entryId: string) => ({
+            entryId,
+            label: dateMap.get(entryId) ?? entryId,
+        })),
     };
+
+    return { data: toWeeklyInsightPatternResolved(resolved), error: null };
+};
+
+/**
+ * Update weekly insight pattern is_viewed flag to true.
+ * Used to track whether the user has viewed the insight card.
+ */
+export const markPatternAsViewed = async (
+    supabase: SupabaseClient,
+    patternId: string,
+): Promise<{ success: boolean; error: PostgrestError | null }> => {
+    const { error } = await supabase
+        .from("weekly_insight_patterns")
+        .update({ is_viewed: true })
+        .eq("id", patternId);
+
+    return { success: !error, error };
+};
+
+/**
+ * Get count of new (unviewed) patterns for the authenticated user.
+ * Useful for showing notifications or badges for new insights.
+ * RLS ensures only the user's own patterns are counted.
+ */
+export const getNewPatternsCount = async (
+    supabase: SupabaseClient,
+): Promise<{ count: number; error: PostgrestError | null }> => {
+    const { count, error } = await supabase
+        .from("weekly_insight_patterns")
+        .select("id", { count: "exact", head: true })
+        .eq("is_viewed", false);
+
+    return { count: count ?? 0, error };
+};
+
+/**
+ * Get total count of patterns across all weeks for the authenticated user.
+ * RLS ensures only the user's own patterns are counted.
+ */
+export const getTotalPatternsCount = async (
+    supabase: SupabaseClient,
+): Promise<{ count: number; error: PostgrestError | null }> => {
+    const { count, error } = await supabase
+        .from("weekly_insight_patterns")
+        .select("id", { count: "exact", head: true });
+
+    return { count: count ?? 0, error };
 };
 
 /**

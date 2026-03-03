@@ -615,6 +615,18 @@ export type Database = {
                     word_count: number;
                 }[];
             };
+            get_weekly_insights_with_evidence: {
+                Args: { p_cursor?: string; p_limit?: number };
+                Returns: {
+                    created_at: string;
+                    entry_ids: string[];
+                    id: string;
+                    patterns: Json;
+                    updated_at: string;
+                    user_id: string;
+                    week_start: string;
+                }[];
+            };
             search_entries_by_embedding: {
                 Args: {
                     match_count?: number;

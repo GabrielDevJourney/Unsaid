@@ -1,15 +1,20 @@
 import { auth } from "@clerk/nextjs/server";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { PaginationSchema } from "@/lib/schemas/entry";
 import { createSupabaseServer } from "@/lib/supabase/server";
-import { getWeeklyInsightsPaginated } from "@/lib/weekly-insights/repo";
+import { getWeeklyInsightWithPatternsPaginated } from "@/lib/weekly-insights/service";
+
+const DEFAULT_LIMIT = 5;
 
 /**
- * GET /api/weekly-insights/ - List weekly insights with pagination
+ * GET /api/weekly-insights?cursor=<week_start>&limit=<n>
  *
- * Returns weekly insights sorted by week_start (newest first).
- * Each insight includes entry_ids but NOT patterns (use specific week endpoint for that).
+ * Returns weekly insights with nested patterns, cursor-paginated newest first.
+ * Used by the patterns page infinite scroll after the initial server-rendered load.
+ *
+ * Query params:
+ *   cursor - week_start of the last fetched insight (omit for first page)
+ *   limit  - number of weeks to fetch (default 5)
  */
 export const GET = async (req: NextRequest) => {
     try {
@@ -22,27 +27,26 @@ export const GET = async (req: NextRequest) => {
         }
 
         const { searchParams } = new URL(req.url);
-        const paginationInput = {
-            page: searchParams.get("page") ?? "1",
-            pageSize: searchParams.get("pageSize") ?? "10",
-        };
+        const cursor = searchParams.get("cursor") ?? null;
+        const limitParam = searchParams.get("limit");
+        const limit = limitParam
+            ? Math.min(Number(limitParam), 20)
+            : DEFAULT_LIMIT;
 
-        const pagination = PaginationSchema.safeParse(paginationInput);
-        if (!pagination.success) {
+        if (Number.isNaN(limit) || limit < 1) {
             return NextResponse.json(
-                { error: pagination.error.issues },
+                { error: "Invalid limit" },
                 { status: 400 },
             );
         }
 
-        const { page, pageSize } = pagination.data;
-
         const supabase = await createSupabaseServer();
-        const {
-            data: insights,
-            count,
-            error,
-        } = await getWeeklyInsightsPaginated(supabase, userId, page, pageSize);
+        const { data, nextCursor, error } =
+            await getWeeklyInsightWithPatternsPaginated(
+                supabase,
+                cursor,
+                limit,
+            );
 
         if (error) {
             console.error("Failed to fetch weekly insights:", error);
@@ -52,18 +56,7 @@ export const GET = async (req: NextRequest) => {
             );
         }
 
-        const total = count ?? 0;
-        const offset = (page - 1) * pageSize;
-
-        return NextResponse.json({
-            data: insights ?? [],
-            pagination: {
-                page,
-                pageSize,
-                total,
-                hasMore: total > offset + pageSize,
-            },
-        });
+        return NextResponse.json({ data, nextCursor });
     } catch (error) {
         console.error("Failed to fetch weekly insights:", error);
         return NextResponse.json(

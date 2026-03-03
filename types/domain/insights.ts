@@ -65,6 +65,16 @@ export interface WeeklyInsightRowData {
     updated_at: string;
 }
 
+export interface WeeklyInsightWithPatternEncrypted {
+    id: string;
+    user_id: string;
+    week_start: string;
+    entry_ids: string[];
+    created_at: string;
+    updated_at: string;
+    weekly_insight_patterns: WeeklyInsightPatternRowEncrypted[];
+}
+
 /**
  * Weekly insight pattern row for transformer input.
  */
@@ -84,6 +94,26 @@ export interface WeeklyInsightPatternRowEncrypted {
     suggested_experiment_iv: string | null;
     suggested_experiment_tag: string | null;
     created_at: string;
+    is_viewed: boolean;
+}
+
+/**
+ * RPC row returned by get_weekly_insights_with_evidence.
+ * Evidence is already resolved to { entryId, label } by the Postgres function.
+ */
+export interface WeeklyInsightPatternRowResolved
+    extends Omit<WeeklyInsightPatternRowEncrypted, "evidence"> {
+    evidence: PatternEvidence[];
+}
+
+export interface WeeklyInsightWithPatternRPCRow {
+    id: string;
+    user_id: string;
+    week_start: string;
+    entry_ids: string[];
+    created_at: string;
+    updated_at: string;
+    patterns: WeeklyInsightPatternRowResolved[];
 }
 
 // Re-export EntryMinimal types for convenience
@@ -118,6 +148,16 @@ export interface WeeklyInsight {
 }
 
 /**
+ * A single evidence reference — entry ID for navigation, label for display.
+ * Label is resolved at the service layer (entry created_at formatted as a date).
+ * Falls back to the raw entryId until that join is implemented.
+ */
+export interface PatternEvidence {
+    entryId: string;
+    label: string;
+}
+
+/**
  * Decrypted weekly insight pattern for application use.
  */
 export interface WeeklyInsightPattern {
@@ -126,10 +166,11 @@ export interface WeeklyInsightPattern {
     title: string;
     patternType: PatternTypeCode;
     description: string;
-    evidence: string[];
+    evidence: PatternEvidence[];
     question: string | null;
     suggestedExperiment: string | null;
     createdAt: string;
+    isViewed: boolean;
 }
 
 /**
