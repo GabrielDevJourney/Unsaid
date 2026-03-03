@@ -5,7 +5,7 @@
  * for a given user. Uses real encryption. No AI API calls.
  *
  * Usage:
- *   npx tsx scripts/seed-dev.ts <clerk_user_id> [email] [username]
+ *   npx tsx scripts/seed-dev.ts <clerk_user_id> [email] [username] user_39eoGko5Yt34Ie2ebzrFkDwZfvt
  *
  * email and username default to dev placeholders if omitted.
  */
@@ -116,6 +116,11 @@ const main = async () => {
 
         const { encryptedContent, iv, tag } = encrypt(content);
 
+        const currentDate = new Date();
+        const lastWeekDate = new Date(
+            currentDate.getTime() - 7 * 24 * 60 * 60 * 1000,
+        ).toISOString();
+
         const { data: entryRow, error: entryError } = await supabase
             .from("entries")
             .insert({
@@ -125,6 +130,7 @@ const main = async () => {
                 content_tag: tag,
                 word_count: wordCount,
                 embedding: ZERO_EMBEDDING,
+                created_at: lastWeekDate,
             })
             .select("id")
             .single();
