@@ -26,7 +26,7 @@ interface HomeViewProps {
     totalEntries: number;
     userName: string;
     totalEntriesAllTime: number;
-    weeklyInsightsCount: number;
+    totalPatternsCount: number;
     entryDates: string[];
 }
 
@@ -42,7 +42,7 @@ const HomeView = ({
     totalEntries,
     userName,
     totalEntriesAllTime,
-    weeklyInsightsCount,
+    totalPatternsCount,
     entryDates,
 }: HomeViewProps) => {
     const router = useRouter();
@@ -220,7 +220,7 @@ const HomeView = ({
             <aside className="hidden w-73 shrink-0 overflow-y-auto border-l xl:flex">
                 <HomeAside
                     totalEntries={activeTotal}
-                    weeklyInsightsCount={weeklyInsightsCount}
+                    totalPatternsCount={totalPatternsCount}
                     entryDates={entryDates}
                 />
             </aside>
@@ -236,7 +236,7 @@ const HomeView = ({
                     </SheetHeader>
                     <HomeAside
                         totalEntries={activeTotal}
-                        weeklyInsightsCount={weeklyInsightsCount}
+                        totalPatternsCount={totalPatternsCount}
                         entryDates={entryDates}
                     />
                 </SheetContent>

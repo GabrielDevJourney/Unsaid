@@ -1,13 +1,13 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getUserEntriesWithInsights } from "@/lib/entries/service";
 import { getUserProgress } from "@/lib/users/repo";
-import { getWeeklyInsightsCount } from "@/lib/weekly-insights/repo";
+import { getTotalPatternsCount } from "@/lib/weekly-insights/repo";
 import type { EntryWithInsight } from "@/types";
 
 export interface HomePageData {
     entries: EntryWithInsight[];
     totalEntriesAllTime: number;
-    weeklyInsightsCount: number;
+    totalPatternsCount: number;
     entryDates: string[];
 }
 
@@ -23,11 +23,11 @@ export const getHomePageData = async (
     const [
         { data: entriesData },
         { data: progressData },
-        { count: weeklyCount },
+        { count: patternsCount },
     ] = await Promise.all([
         getUserEntriesWithInsights(supabase),
         getUserProgress(supabase),
-        getWeeklyInsightsCount(supabase),
+        getTotalPatternsCount(supabase),
     ]);
 
     const entries = entriesData ?? [];
@@ -35,7 +35,7 @@ export const getHomePageData = async (
     return {
         entries,
         totalEntriesAllTime: progressData?.totalEntries ?? entries.length,
-        weeklyInsightsCount: weeklyCount,
+        totalPatternsCount: patternsCount,
         entryDates: entries.map((entry) => entry.createdAt),
     };
 };
