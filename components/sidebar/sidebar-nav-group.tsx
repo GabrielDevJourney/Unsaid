@@ -31,6 +31,12 @@ export const SidebarNavGroup = ({
             <SidebarMenu>
                 {items.map((item) => (
                     <SidebarMenuItem key={item.label}>
+                        {item.badge != null && item.badge > 0 && (
+                            <span
+                                className="group-data-[state=expanded]:hidden absolute -top-1 -right-1 bg-slate-400         
+                                border-2 border-slate-200 w-3 h-3 rounded-full"
+                            ></span>
+                        )}
                         <SidebarMenuButton
                             asChild
                             isActive={pathname === item.url}
