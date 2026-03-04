@@ -25,7 +25,7 @@ const PageHeader = ({ children, className, backHref }: PageHeaderProps) => {
                 >
                     <HugeiconsIcon
                         icon={ArrowLeft02Icon}
-                        className="size-5"
+                        className="size-5 text-zinc-600"
                         strokeWidth={1.5}
                     />
                 </Link>

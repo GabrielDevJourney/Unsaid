@@ -13,7 +13,7 @@ export function cn(...inputs: ClassValue[]) {
  */
 export const formatEntryDate = (date: Date | string): string => {
     const d = typeof date === "string" ? new Date(date) : date;
-    return new Intl.DateTimeFormat(undefined, {
+    return new Intl.DateTimeFormat("en-US", {
         day: "numeric",
         month: "long",
         year: "numeric",
