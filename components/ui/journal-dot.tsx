@@ -1,5 +1,5 @@
 const JournalDot = () => (
-    <div className="relative z-30 size-5 shrink-0 rounded-full border-[3px] border-zinc-300 bg-zinc-600" />
+    <div className="relative size-5 shrink-0 rounded-full border-[3px] border-zinc-300 bg-neutral-500" />
 );
 
 export { JournalDot };

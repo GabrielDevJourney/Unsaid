@@ -46,7 +46,7 @@ const PatternDetailPage = ({ pattern }: PatternDetailPageProps) => {
                     </div>
 
                     {/* Right: pattern content */}
-                    <div className="flex flex-col gap-8 flex-1 min-w-0">
+                    <div className="flex flex-col gap-8 flex-1 min-w-0 max-w-2/3">
                         {/* Type badge */}
                         <span
                             className={`inline-flex h-7 items-center rounded-sm border px-2 text-xs font-medium self-start ${badgeStyle}`}
@@ -64,26 +64,25 @@ const PatternDetailPage = ({ pattern }: PatternDetailPageProps) => {
                             {pattern.description}
                         </p>
 
-                        {/* Reflect question (optional) */}
-                        {pattern.question && (
-                            <div className="flex flex-col gap-3 border-t border-border pt-8">
-                                <p className="text-[11px] font-medium uppercase tracking-widest text-zinc-400">
-                                    Reflect
+                        {/* Suggested experiment (optional) */}
+                        {pattern.suggestedExperiment && (
+                            <div className="flex flex-col gap-2 pt-8">
+                                <p className="font-sans font-bold text-neutral-500">
+                                    Small experiment{" "}
                                 </p>
-                                <p className="text-base italic text-zinc-700 leading-relaxed">
-                                    {pattern.question}
+                                <p className=" text-zinc-600 leading-relaxed">
+                                    {pattern.suggestedExperiment}
                                 </p>
                             </div>
                         )}
-
-                        {/* Suggested experiment (optional) */}
-                        {pattern.suggestedExperiment && (
-                            <div className="flex flex-col gap-3 border-t border-border pt-8">
-                                <p className="text-[11px] font-medium uppercase tracking-widest text-zinc-400">
-                                    The Experiment
+                        {/* Reflect question (optional) */}
+                        {pattern.question && (
+                            <div className="flex flex-col gap-2 pt-8">
+                                <p className="font-sans font-bold text-neutral-500">
+                                    Reflection Question{" "}
                                 </p>
-                                <p className="text-base text-zinc-600 leading-relaxed">
-                                    {pattern.suggestedExperiment}
+                                <p className="font-serif italic text-neutral-500 text-3xl leading-relaxed underline">
+                                    {pattern.question}
                                 </p>
                             </div>
                         )}

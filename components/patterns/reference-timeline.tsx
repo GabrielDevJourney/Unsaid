@@ -37,7 +37,7 @@ const ReferenceTimeline = ({
 
                 <div className="relative flex flex-col gap-3">
                     {visible.length > 1 && (
-                        <div className="absolute w-px bg-zinc-300 z-20 left-5 top-4 bottom-4" />
+                        <div className="absolute ring ring-neutral-500 z-10 left-5 top-4 bottom-4" />
                     )}
 
                     {visible.map((item) => (
