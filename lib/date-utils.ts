@@ -32,9 +32,11 @@ export const getWeekRange = (weekStart: string): { start: Date; end: Date } => {
     return { start, end };
 };
 
-
-export const formatDate = (date: Date | string, options: Intl.DateTimeFormatOptions, locale: string = "en-US"): string => {
+export const formatDate = (
+    date: Date | string,
+    options: Intl.DateTimeFormatOptions,
+    locale: string = "en-US",
+): string => {
     const d = typeof date === "string" ? new Date(date) : date;
-    return new Intl.DateTimeFormat(locale, options)
-        .format(d)
+    return new Intl.DateTimeFormat(locale, options).format(d);
 };

@@ -56,7 +56,7 @@ const PatternCard = ({
                         {typeLabel}
                     </span>
                     {!pattern.isViewed && (
-                        <span className="inline-flex h-7 items-center rounded-sm bg-zinc-800 px-2 text-xs font-medium text-white">
+                        <span className="inline-flex h-7 items-center rounded-sm bg-neutral-500 px-2 text-xs font-medium text-white">
                             New
                         </span>
                     )}

@@ -74,11 +74,11 @@ const PatternsView = ({ insights }: PatternsViewProps) => {
             <PageHeader backHref="/home">
                 <div className="flex flex-1 items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <h1 className="font-serif text-4xl italic text-zinc-800">
+                        <h1 className="font-serif text-4xl italic text-zinc-600">
                             Patterns
                         </h1>
                         {liveNewCount > 0 && (
-                            <span className="inline-flex items-center rounded-full bg-zinc-800 px-3 py-1 text-xs font-medium text-white">
+                            <span className="inline-flex items-center rounded-full bg-neutral-500 px-3 py-1 text-xs font-medium text-white">
                                 {liveNewCount} new{" "}
                                 {liveNewCount === 1 ? "insight" : "insights"}
                             </span>
