@@ -3,6 +3,7 @@
 import { ArrowDown01Icon, ArrowRight01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useState } from "react";
+import { formatDate } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
 import type { WeeklyInsightWithPatterns } from "@/types";
 import { PatternCard } from "./pattern-card";
@@ -15,11 +16,11 @@ interface WeeklySectionProps {
 
 const formatWeekLabel = (weekStart: string): string => {
     const date = new Date(weekStart);
-    return `Week of ${new Intl.DateTimeFormat("en-US", {
-        month: "long",
-        day: "numeric",
+    return formatDate(date, {
         year: "numeric",
-    }).format(date)}`;
+        month: "long",
+        day: "2-digit",
+    }).toLocaleLowerCase();
 };
 
 const WeeklySection = ({

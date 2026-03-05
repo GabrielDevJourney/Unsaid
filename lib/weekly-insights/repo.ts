@@ -9,6 +9,7 @@ import type {
     WeeklyInsightWithPatterns,
 } from "@/types";
 import { encrypt } from "../crypto";
+import { formatDate } from "../date-utils";
 import {
     toWeeklyInsight,
     toWeeklyInsightPattern,
@@ -199,10 +200,10 @@ export const getPatternById = async (
     const dateMap = new Map(
         (entries ?? []).map((e) => [
             e.id,
-            new Intl.DateTimeFormat("en-US", {
+            formatDate(new Date(e.created_at), {
                 month: "long",
-                day: "numeric",
-            }).format(new Date(e.created_at)),
+                day: "2-digit",
+            }).toLocaleLowerCase(),
         ]),
     );
 
