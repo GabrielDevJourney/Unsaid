@@ -2,9 +2,11 @@ import type { PostgrestError, SupabaseClient } from "@supabase/supabase-js";
 import type {
     InsertWeeklyInsightData,
     InsertWeeklyInsightPatternData,
+    SearchWeeklyInsightPatternRowResult,
     WeeklyInsight,
     WeeklyInsightPattern,
     WeeklyInsightPatternRowResolved,
+    WeeklyInsightPatternWithSimilarity,
     WeeklyInsightWithPatternRPCRow,
     WeeklyInsightWithPatterns,
 } from "@/types";
@@ -14,6 +16,7 @@ import {
     toWeeklyInsight,
     toWeeklyInsightPattern,
     toWeeklyInsightPatternResolved,
+    toWeeklyInsightPatternWithSimilarity,
     toWeeklyInsightWithPatternsFromRPC,
 } from "./transformers";
 
@@ -78,6 +81,7 @@ export const insertWeeklyInsightPatterns = async (
                 experimentEncrypted?.encryptedContent ?? null,
             suggested_experiment_iv: experimentEncrypted?.iv ?? null,
             suggested_experiment_tag: experimentEncrypted?.tag ?? null,
+            embedding: pattern.embedding ?? null,
         };
     });
 
@@ -340,4 +344,39 @@ export const getPatternsByType = async (
     }
 
     return { data: patternRows.map(toWeeklyInsightPattern), error: null };
+};
+
+/**
+ * Search weekly insights by embedding vector using semantic similarity.
+ * Calls the search_weekly_insight_patterns_by_embedding RPC function.
+ * Decrypts content for each result.
+ */
+export const searchWeeklyInsightsPatternsByEmbedding = async (
+    supabase: SupabaseClient,
+    userId: string,
+    queryEmbedding: string,
+    limit = 10,
+    threshold = 0.5,
+): Promise<{
+    data: WeeklyInsightPatternWithSimilarity[] | null;
+    error: Error | null;
+}> => {
+    const { data: searchRows, error } = await supabase.rpc(
+        "search_weekly_insight_patterns_by_embedding",
+        {
+            query_embedding: queryEmbedding,
+            user_id_param: userId,
+            match_threshold: threshold,
+            match_count: limit,
+        },
+    );
+
+    if (error || !searchRows) {
+        return { data: null, error };
+    }
+
+    const weeklyInsightsPatterns = (
+        searchRows as SearchWeeklyInsightPatternRowResult[]
+    ).map(toWeeklyInsightPatternWithSimilarity);
+    return { data: weeklyInsightsPatterns, error: null };
 };

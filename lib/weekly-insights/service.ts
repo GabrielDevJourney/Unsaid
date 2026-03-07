@@ -10,6 +10,7 @@ import type {
     WeeklyInsightPattern,
     WeeklyInsightWithPatterns,
 } from "@/types";
+import { generateEmbedding } from "../ai/embeddings";
 import { decrypt } from "../crypto";
 import {
     getNewPatternsCount as getNewPatternsCountRepo,
@@ -311,18 +312,31 @@ export const createWeeklyInsight = async (
         throw new Error("Weekly insight was not created");
     }
 
-    // Insert pattern cards
+    const patternsWithEmbeddings = await Promise.all(
+        patterns.map(async (p) => {
+            const contentForEmbedding = `${p.title}\n${p.description}\n${p.question ?? ""}\n${p.suggested_experiment ?? ""}`;
+            const patternEmbedding =
+                await generateEmbedding(contentForEmbedding);
+            return {
+                ...p,
+                embedding: patternEmbedding,
+            };
+        }),
+    );
+
+    // Insert patterns
     const { data: insertedPatterns, error: patternsError } =
         await insertWeeklyInsightPatterns(
             supabase,
             weeklyInsight.id,
-            patterns.map((p) => ({
+            patternsWithEmbeddings.map((p) => ({
                 title: p.title,
                 patternType: p.pattern_type,
                 description: p.description,
                 evidence: p.evidence,
                 question: p.question,
                 suggestedExperiment: p.suggested_experiment,
+                embedding: p.embedding,
             })),
         );
 

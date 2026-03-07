@@ -6,10 +6,12 @@ import {
     searchEntriesByEmbedding,
 } from "@/lib/entries/repo";
 import type {
+    EntriesSemanticSearchResult,
+    PatternsSemanticSearchResult,
     RelatedEntriesResult,
-    SemanticSearchResult,
     ServiceResult,
 } from "@/types";
+import { searchWeeklyInsightsPatternsByEmbedding } from "../weekly-insights/repo";
 
 /**
  * Search journal entries by semantic similarity to a text query.
@@ -28,7 +30,7 @@ export const searchEntries = async (
     query: string,
     limit = 10,
     threshold = 0.5,
-): Promise<ServiceResult<SemanticSearchResult>> => {
+): Promise<ServiceResult<EntriesSemanticSearchResult>> => {
     // Generate embedding for the search query
     let queryEmbedding: string;
     try {
@@ -117,6 +119,59 @@ export const getRelatedEntries = async (
         data: {
             entries: results,
             sourceEntryId: entryId,
+            totalFound: results.length,
+        },
+    };
+};
+
+/**
+ * Search journal patterns by semantic similarity to a text query.
+ *
+ * Flow:
+ * 1. Generate embedding for the search query
+ * 2. Call RPC function to find similar entries
+ * 3. Return results with similarity scores
+ *
+ * Returns error for expected failures (embedding failure).
+ * Throws for unexpected DB errors.
+ */
+export const searchPatterns = async (
+    supabase: SupabaseClient,
+    userId: string,
+    query: string,
+    limit = 10,
+    threshold = 0.5,
+): Promise<ServiceResult<PatternsSemanticSearchResult>> => {
+    // Generate embedding for the search query
+    let queryEmbedding: string;
+    try {
+        queryEmbedding = await generateEmbedding(query);
+    } catch (embeddingError) {
+        console.error("Failed to generate query embedding:", embeddingError);
+        return { error: "Failed to process search query" };
+    }
+
+    // Search for similar patterns
+    const { data: patterns, error: searchError } =
+        await searchWeeklyInsightsPatternsByEmbedding(
+            supabase,
+            userId,
+            queryEmbedding,
+            limit,
+            threshold,
+        );
+
+    if (searchError) {
+        console.error("Semantic search failed:", searchError);
+        throw searchError;
+    }
+
+    const results = patterns ?? [];
+
+    return {
+        data: {
+            patterns: results,
+            query,
             totalFound: results.length,
         },
     };

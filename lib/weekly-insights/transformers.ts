@@ -1,8 +1,10 @@
 import type {
+    SearchWeeklyInsightPatternRowResult,
     WeeklyInsight,
     WeeklyInsightPattern,
     WeeklyInsightPatternRowEncrypted,
     WeeklyInsightPatternRowResolved,
+    WeeklyInsightPatternWithSimilarity,
     WeeklyInsightRowData,
     WeeklyInsightWithPatternEncrypted,
     WeeklyInsightWithPatternRPCRow,
@@ -154,3 +156,14 @@ export const toWeeklyInsightWithPatternsFromRPC = (
     updatedAt: row.updated_at,
     patterns: row.patterns.map(toWeeklyInsightPatternResolved),
 });
+
+export const toWeeklyInsightPatternWithSimilarity = (
+    patternRow: SearchWeeklyInsightPatternRowResult,
+): WeeklyInsightPatternWithSimilarity => {
+    const basePattern = toWeeklyInsightPatternResolved(patternRow);
+    return {
+        ...basePattern,
+        similarity: patternRow.similarity,
+        weekStart: patternRow.week_start,
+    };
+};
