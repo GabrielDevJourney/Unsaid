@@ -3,28 +3,28 @@ import { cn } from "@/lib/utils";
 
 type TagName = InsightTagType;
 
-// Pattern: bg-{color}-50, border-{color}-400, text-{color}-800
+// Pattern: bg-{color}-50, border-{color}-300, text-{color}-800
 const TAG_STYLES: Record<TagName, string> = {
-    Relationships: "border-red-400 bg-red-50 text-red-800",
-    Work: "border-amber-400 bg-amber-50 text-amber-800",
-    Family: "border-orange-400 bg-orange-50 text-orange-800",
-    Health: "border-green-400 bg-green-50 text-green-800",
-    Identity: "border-purple-400 bg-purple-50 text-purple-800",
-    Goals: "border-blue-400 bg-blue-50 text-blue-800",
-    Anxiety: "border-yellow-400 bg-yellow-50 text-yellow-800",
-    Boundaries: "border-indigo-400 bg-indigo-50 text-indigo-800",
-    "Self-Worth": "border-lime-400 bg-lime-50 text-lime-800",
-    Money: "border-emerald-400 bg-emerald-50 text-emerald-800",
-    Habits: "border-teal-400 bg-teal-50 text-teal-800",
-    Creativity: "border-cyan-400 bg-cyan-50 text-cyan-800",
-    Loss: "border-pink-400 bg-pink-50 text-pink-800",
-    Growth: "border-sky-400 bg-sky-50 text-sky-800",
-    Conflict: "border-fuchsia-400 bg-fuchsia-50 text-fuchsia-800",
-    Purpose: "border-violet-400 bg-violet-50 text-violet-800",
-    Loneliness: "border-slate-400 bg-slate-50 text-slate-800",
-    Stress: "border-rose-400 bg-rose-50 text-rose-800",
-    Change: "border-stone-400 bg-stone-50 text-stone-800",
-    Decision: "border-gray-400 bg-gray-50 text-gray-800",
+    Relationships: "border-red-300 bg-red-100 text-red-800",
+    Work: "border-amber-300 bg-amber-100 text-amber-800",
+    Family: "border-orange-300 bg-orange-100 text-orange-800",
+    Health: "border-green-300 bg-green-100 text-green-800",
+    Identity: "border-purple-300 bg-purple-100 text-purple-800",
+    Goals: "border-blue-300 bg-blue-100 text-blue-800",
+    Anxiety: "border-yellow-300 bg-yellow-100 text-yellow-800",
+    Boundaries: "border-indigo-300 bg-indigo-100 text-indigo-800",
+    "Self-Worth": "border-lime-300 bg-lime-100 text-lime-800",
+    Money: "border-emerald-300 bg-emerald-100 text-emerald-800",
+    Habits: "border-teal-300 bg-teal-100 text-teal-800",
+    Creativity: "border-cyan-300 bg-cyan-100 text-cyan-800",
+    Loss: "border-pink-300 bg-pink-100 text-pink-800",
+    Growth: "border-sky-300 bg-sky-100 text-sky-800",
+    Conflict: "border-fuchsia-300 bg-fuchsia-100 text-fuchsia-800",
+    Purpose: "border-violet-300 bg-violet-100 text-violet-800",
+    Loneliness: "border-slate-300 bg-slate-100 text-slate-800",
+    Stress: "border-rose-300 bg-rose-100 text-rose-800",
+    Change: "border-stone-300 bg-stone-100 text-stone-800",
+    Decision: "border-gray-300 bg-gray-100 text-gray-800",
 };
 
 const INACTIVE_STYLE = "border-zinc-300 bg-zinc-100 text-zinc-500";
