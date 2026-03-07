@@ -234,6 +234,7 @@ export interface InsertWeeklyInsightPatternData {
     evidence: string[];
     question?: string;
     suggestedExperiment?: string;
+    embedding?: string;
 }
 
 // Progress Insights
