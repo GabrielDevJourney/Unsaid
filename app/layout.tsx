@@ -1,23 +1,21 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Libre_Baskerville } from "next/font/google";
+import { Libre_Baskerville } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
+
+const satoshi = localFont({
+    src: "../public/fonts/Satoshi-Variable.woff2",
+    variable: "--font-satoshi",
+    weight: "300 900",
+    display: "swap",
+});
 
 const libreBaskerville = Libre_Baskerville({
     variable: "--font-libre",
     subsets: ["latin"],
     weight: ["400", "700"],
     style: ["italic", "normal"],
-});
-
-const geistSans = Geist({
-    variable: "--font-geist-sans",
-    subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-    variable: "--font-geist-mono",
-    subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
@@ -49,7 +47,7 @@ const RootLayout = ({
         <ClerkProvider localization={localization}>
             <html lang="en">
                 <body
-                    className={`${geistSans.variable} ${geistMono.variable} ${libreBaskerville.variable} antialiased`}
+                    className={`${satoshi.variable} ${libreBaskerville.variable} antialiased`}
                 >
                     {children}
                 </body>

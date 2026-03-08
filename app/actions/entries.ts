@@ -1,7 +1,7 @@
 "use server";
 
 import { auth } from "@clerk/nextjs/server";
-import { createEntry, deleteEntryById, saveEntry } from "@/lib/entries/service";
+import { createEntry, deleteEntryById } from "@/lib/entries/service";
 import { EntryCreateSchema } from "@/lib/schemas/entry";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import type { Entry, ServiceResult } from "@/types";
