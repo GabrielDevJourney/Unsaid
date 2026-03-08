@@ -145,7 +145,11 @@ const HomeView = ({
         if (dateRange?.from) {
             const entryDate = new Date(item.entry.createdAt);
             if (entryDate < dateRange.from) return false;
-            if (dateRange.to && entryDate > dateRange.to) return false;
+            if (dateRange.to) {
+                const endOfDay = new Date(dateRange.to);
+                endOfDay.setHours(23, 59, 59, 999);
+                if (entryDate > endOfDay) return false;
+            }
         }
 
         return true;

@@ -33,7 +33,7 @@ const DateFilter = ({ dateRange, onDateRangeChange }: DateFilterProps) => (
             selected={dateRange}
             onSelect={onDateRangeChange}
             numberOfMonths={2}
-            defaultMonth={new Date(2025, 0)}
+            defaultMonth={new Date()}
         />
     </FilterButton>
 );
