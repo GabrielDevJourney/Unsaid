@@ -5,11 +5,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
 import { useState } from "react";
 import { deleteEntryAction } from "@/app/actions/entries";
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@/components/ui/popover";
+import { DeleteConfirmPopover } from "@/components/shared/delete-confirm-popover";
 import { Separator } from "@/components/ui/separator";
 import type { InsightTagType } from "@/lib/constants/insight-tag-types";
 import { cn, formatEntryDate } from "@/lib/utils";
@@ -81,7 +77,7 @@ const EntryCard = ({ entry, entryNumber, onEntryDeleted }: EntryCardProps) => {
 
             <Separator className="mt-3" />
 
-            {/* Footer: entry number + tags + delete — NOT a link */}
+            {/* Footer: entry number + tags + delete */}
             <div className="flex items-center justify-between px-6 py-4">
                 <div className="flex items-center gap-2">
                     <span className="inline-flex h-7 items-center rounded-md border border-zinc-400 bg-zinc-100 px-2 text-xs font-medium text-zinc-500">
@@ -92,45 +88,25 @@ const EntryCard = ({ entry, entryNumber, onEntryDeleted }: EntryCardProps) => {
                     ))}
                 </div>
 
-                <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-                    <PopoverTrigger asChild>
-                        <button
-                            type="button"
-                            className="text-muted-foreground transition-colors hover:text-destructive"
-                        >
-                            <HugeiconsIcon
-                                icon={Delete01Icon}
-                                className="size-4"
-                                strokeWidth={2}
-                            />
-                        </button>
-                    </PopoverTrigger>
-                    <PopoverContent className="p-4" side="top" align="end">
-                        <p className="text-sm font-medium font-sans text-foreground">
-                            Permanently delete this entry?
-                        </p>
-                        <p className="text-xs font-sans text-muted-foreground">
-                            This will permanently remove it from your records.
-                        </p>
-                        <div className="mt-4 flex justify-end gap-2">
-                            <button
-                                type="button"
-                                onClick={() => setIsPopoverOpen(false)}
-                                className="text-xs text-muted-foreground transition-colors hover:text-foreground"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="button"
-                                onClick={handleDelete}
-                                disabled={isDeleting}
-                                className="text-xs font-medium text-destructive transition-colors hover:text-destructive/70 disabled:opacity-50"
-                            >
-                                {isDeleting ? "Deleting..." : "Delete"}
-                            </button>
-                        </div>
-                    </PopoverContent>
-                </Popover>
+                <DeleteConfirmPopover
+                    open={isPopoverOpen}
+                    onOpenChange={setIsPopoverOpen}
+                    onConfirm={handleDelete}
+                    isDeleting={isDeleting}
+                    title="Permanently delete this entry?"
+                    description="This will remove it from your records. Are you sure?"
+                >
+                    <button
+                        type="button"
+                        className="text-neutral-400 transition-colors hover:text-red-500"
+                    >
+                        <HugeiconsIcon
+                            icon={Delete01Icon}
+                            className="size-4"
+                            strokeWidth={2}
+                        />
+                    </button>
+                </DeleteConfirmPopover>
             </div>
 
             {/* Insight overlay — slides up from bottom, fully clickable */}
