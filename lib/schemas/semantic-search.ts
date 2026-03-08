@@ -3,6 +3,7 @@ import { z } from "zod";
 /**
  * Schema for semantic search query parameters.
  * Used for GET /api/entries/search?q=...
+ * and GET /api/weekly-insights/search?q=...
  */
 export const SemanticSearchQuerySchema = z.object({
     q: z

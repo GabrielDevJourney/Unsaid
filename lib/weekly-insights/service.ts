@@ -1,3 +1,4 @@
+import type { PostgrestError, SupabaseClient } from "@supabase/supabase-js";
 import { generateWeeklyInsight } from "@/lib/ai/generate-weekly-insight";
 import { MIN_ENTRIES_FOR_WEEKLY_INSIGHT } from "@/lib/constants";
 import { getWeekRange, getWeekStart } from "@/lib/date-utils";
@@ -6,12 +7,18 @@ import { createSupabaseAdmin } from "@/lib/supabase/admin";
 import type {
     CreateWeeklyInsightPayload,
     ServiceResult,
+    WeeklyInsightPattern,
     WeeklyInsightWithPatterns,
 } from "@/types";
+import { generateEmbedding } from "../ai/embeddings";
+import { decrypt } from "../crypto";
 import {
-    getWeeklyInsightByWeekStart,
+    getNewPatternsCount as getNewPatternsCountRepo,
+    getPatternById as getPatternByIdRepo,
+    getWeeklyInsightWithPatternsPaginated as getWeeklyInsightWithPatternsPaginatedRepo,
     insertWeeklyInsight,
     insertWeeklyInsightPatterns,
+    markPatternAsViewed as markPatternAsViewedRepo,
 } from "./repo";
 
 export { getWeekRange, getWeekStart };
@@ -32,7 +39,9 @@ export interface WeeklyInsightsBatchResult {
 interface EntryRow {
     id: string;
     user_id: string;
-    content: string;
+    content_iv: string | null;
+    content_tag: string | null;
+    encrypted_content: string | null;
     created_at: string;
 }
 
@@ -62,7 +71,9 @@ export const processWeeklyInsightsForAllUsers = async (): Promise<
     // Fetch all entries from last week
     const { data: entries, error: entriesError } = await supabase
         .from("entries")
-        .select("id, user_id, content, created_at")
+        .select(
+            "id, user_id, encrypted_content, content_tag, content_iv, created_at",
+        )
         .gte("created_at", start.toISOString())
         .lte("created_at", end.toISOString())
         .order("created_at", { ascending: true });
@@ -174,7 +185,11 @@ const processUserWeeklyInsight = async (
             entryIds: entries.map((e) => e.id),
             entries: entries.map((e) => ({
                 id: e.id,
-                content: e.content,
+                content: decrypt({
+                    encryptedContent: e.encrypted_content ?? "",
+                    iv: e.content_iv ?? "",
+                    tag: e.content_tag ?? "",
+                }),
                 createdAt: e.created_at,
             })),
         });
@@ -262,17 +277,6 @@ export const createWeeklyInsight = async (
 ): Promise<ServiceResult<WeeklyInsightWithPatterns>> => {
     const supabase = createSupabaseAdmin();
 
-    // Check if insight already exists for this week
-    const { data: existing } = await getWeeklyInsightByWeekStart(
-        supabase,
-        userId,
-        payload.weekStart,
-    );
-
-    if (existing) {
-        return { error: "Weekly insight already exists for this week" };
-    }
-
     // Need at least 2 entries to find patterns
     if (payload.entries.length < 2) {
         return { error: "Not enough entries for weekly insight (minimum 2)" };
@@ -308,18 +312,31 @@ export const createWeeklyInsight = async (
         throw new Error("Weekly insight was not created");
     }
 
-    // Insert pattern cards
+    const patternsWithEmbeddings = await Promise.all(
+        patterns.map(async (p) => {
+            const contentForEmbedding = `${p.title}\n${p.description}\n${p.question ?? ""}\n${p.suggested_experiment ?? ""}`;
+            const patternEmbedding =
+                await generateEmbedding(contentForEmbedding);
+            return {
+                ...p,
+                embedding: patternEmbedding,
+            };
+        }),
+    );
+
+    // Insert patterns
     const { data: insertedPatterns, error: patternsError } =
         await insertWeeklyInsightPatterns(
             supabase,
             weeklyInsight.id,
-            patterns.map((p) => ({
+            patternsWithEmbeddings.map((p) => ({
                 title: p.title,
                 patternType: p.pattern_type,
                 description: p.description,
                 evidence: p.evidence,
                 question: p.question,
                 suggestedExperiment: p.suggested_experiment,
+                embedding: p.embedding,
             })),
         );
 
@@ -334,4 +351,66 @@ export const createWeeklyInsight = async (
             patterns: insertedPatterns ?? [],
         },
     };
+};
+
+export const getWeeklyInsightWithPatternsPaginated = async (
+    supabase: SupabaseClient,
+    cursor: string | null,
+    limit: number,
+): Promise<{
+    data: WeeklyInsightWithPatterns[];
+    nextCursor: string | null;
+    error: PostgrestError | null;
+}> => {
+    const { data, nextCursor, error } =
+        await getWeeklyInsightWithPatternsPaginatedRepo(
+            supabase,
+            cursor,
+            limit,
+        );
+
+    if (error) {
+        return { error, data: [], nextCursor: null };
+    }
+
+    return { data, nextCursor, error: null };
+};
+
+export const getPatternById = async (
+    supabase: SupabaseClient,
+    patternId: string,
+): Promise<ServiceResult<WeeklyInsightPattern>> => {
+    const { data, error } = await getPatternByIdRepo(supabase, patternId);
+
+    if (error || !data) {
+        return { error: "Pattern not found" };
+    }
+
+    return { data };
+};
+
+export const markPatternAsViewed = async (
+    supabase: SupabaseClient,
+    patternId: string,
+): Promise<ServiceResult<null>> => {
+    const { error } = await markPatternAsViewedRepo(supabase, patternId);
+
+    if (error) {
+        console.error(`Failed to mark pattern ${patternId} as viewed:`, error);
+        return { error: "Failed to update pattern" };
+    }
+
+    return { data: null };
+};
+
+export const getNewPatternsCount = async (
+    supabase: SupabaseClient,
+): Promise<ServiceResult<number>> => {
+    const { count, error } = await getNewPatternsCountRepo(supabase);
+
+    if (error) {
+        console.error(`Failed to get new patterns count:`, error);
+        return { error: "Failed to get new patterns count" };
+    }
+    return { data: count ?? 0 };
 };

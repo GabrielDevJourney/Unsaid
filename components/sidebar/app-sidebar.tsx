@@ -3,6 +3,7 @@
 import { useClerk, useUser } from "@clerk/nextjs";
 import { Add01Icon, Login01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import Image from "next/image";
 import Link from "next/link";
 import {
     Sidebar,
@@ -21,7 +22,11 @@ import { brainNavItems, footerNavItems } from "@/config/sidebar";
 import { SidebarNavGroup } from "./sidebar-nav-group";
 import { SidebarUser } from "./sidebar-user";
 
-export const AppSidebar = () => {
+interface AppSidebarProps {
+    newPatternsCount?: number;
+}
+
+export const AppSidebar = ({ newPatternsCount = 0 }: AppSidebarProps) => {
     const { signOut } = useClerk();
     const { user } = useUser();
 
@@ -31,14 +36,28 @@ export const AppSidebar = () => {
 
     return (
         <Sidebar collapsible="icon">
-            <SidebarHeader className="h-24 flex-row items-center justify-between border-b p-8 group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:relative group-data-[state=collapsed]:h-24">
+            <SidebarHeader className="h-24 flex-row items-center justify-between border-b py-8 px-4 group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:items-center group-data-[state=collapsed]:relative group-data-[state=collapsed]:h-24">
                 <Link
                     href="/home"
-                    className="font-serif text-2xl font-medium group-data-[state=collapsed]:hidden flex-2 text-center"
+                    className="font-serif text-2xl font-medium group-data-[state=open]:flex-2 text-center"
                 >
-                    unsaid.
+                    <div className="h-full flex gap-2 items-center">
+                        <Image
+                            src="logo-white-bg.svg"
+                            alt="Unsaid logo with white background"
+                            width={36}
+                            height={36}
+                        />
+                        <Image
+                            src="logo-text.svg"
+                            alt="Unsaid text logo with white background"
+                            width={76}
+                            height={36}
+                            className="group-data-[state=collapsed]:hidden"
+                        />
+                    </div>
                 </Link>
-                <SidebarTrigger className="group-data-[state=collapsed]:absolute group-data-[state=collapsed]:left-full group-data-[state=collapsed]:-translate-x-1/2 group-data-[state=collapsed]:top-1/2 group-data-[state=collapsed]:-translate-y-1/2 group-data-[state=collapsed]:z-20 flex-1 hover:bg-transparent" />
+                <SidebarTrigger className="group-data-[state=collapsed]:absolute group-data-[state=collapsed]:left-full group-data-[state=collapsed]:-translate-x-1/2 group-data-[state=collapsed]:top-5 group-data-[state=collapsed]:-translate-y-1/2 group-data-[state=collapsed]:z-20 group-data-[state=collapsed]:bg-neutral-100 group-data-[state=collapsed]:border group-data-[state=collapsed]:border-border" />
             </SidebarHeader>
 
             <SidebarContent className="group-data-[state=collapsed]:mt-4">
@@ -63,7 +82,11 @@ export const AppSidebar = () => {
                 </SidebarGroup>
 
                 <SidebarNavGroup
-                    items={brainNavItems}
+                    items={brainNavItems.map((item) =>
+                        item.url === "/patterns"
+                            ? { ...item, badge: newPatternsCount }
+                            : item,
+                    )}
                     label="Brain"
                     className="p-4"
                 />

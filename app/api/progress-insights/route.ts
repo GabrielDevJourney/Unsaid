@@ -10,7 +10,7 @@ const QuerySchema = z.object({
 });
 
 /**
- * GET /api/insights/progress
+ * GET /api/progress-insights/
  *
  * Get paginated progress insights for the authenticated user.
  * Returns insights ordered by creation date (newest first).

@@ -1,4 +1,8 @@
 import type { Entry, EntryInsightSummary, EntryRowEncrypted } from "./entries";
+import type {
+    WeeklyInsightPattern,
+    WeeklyInsightPatternRowResolved,
+} from "./insights";
 
 // 1. RAW DATABASE TYPES (from RPC functions)
 
@@ -18,6 +22,16 @@ export interface SearchEntryRowResult extends EntryRowEncrypted {
     insight_created_at: string | null;
 }
 
+/**
+ * Raw result from search_weekly_insight_patterns_by_embedding RPC.
+ * Extends WeeklyInsightPatternRowEncrypted with similarity score.
+ */
+export interface SearchWeeklyInsightPatternRowResult
+    extends WeeklyInsightPatternRowResolved {
+    similarity: number;
+    week_start: string; // ISO date string
+}
+
 // 2. DOMAIN MODELS (decrypted)
 
 /**
@@ -30,10 +44,19 @@ export interface EntryWithSimilarity extends Entry {
 }
 
 /**
- * Semantic search result payload.
+ * Semantic search result payload for entries.
  */
-export interface SemanticSearchResult {
+export interface EntriesSemanticSearchResult {
     entries: EntryWithSimilarity[];
+    query: string;
+    totalFound: number;
+}
+
+/**
+ * Semantic search result payload for patterns.
+ */
+export interface PatternsSemanticSearchResult {
+    patterns: WeeklyInsightPatternWithSimilarity[];
     query: string;
     totalFound: number;
 }
@@ -45,4 +68,14 @@ export interface RelatedEntriesResult {
     entries: EntryWithSimilarity[];
     sourceEntryId: string;
     totalFound: number;
+}
+
+/**
+ * Pattern with similarity score and optional pattern from semantic search.
+ * Decrypted and ready for application use.
+ */
+export interface WeeklyInsightPatternWithSimilarity
+    extends WeeklyInsightPattern {
+    similarity: number;
+    weekStart: string; // ISO date string
 }

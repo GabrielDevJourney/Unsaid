@@ -496,11 +496,13 @@ export type Database = {
                     created_at: string;
                     description_iv: string | null;
                     description_tag: string | null;
+                    embedding: string | null;
                     encrypted_description: string | null;
                     encrypted_question: string | null;
                     encrypted_suggested_experiment: string | null;
                     evidence: string[];
                     id: string;
+                    is_viewed: boolean;
                     pattern_type: string;
                     question_iv: string | null;
                     question_tag: string | null;
@@ -513,11 +515,13 @@ export type Database = {
                     created_at?: string;
                     description_iv?: string | null;
                     description_tag?: string | null;
+                    embedding?: string | null;
                     encrypted_description?: string | null;
                     encrypted_question?: string | null;
                     encrypted_suggested_experiment?: string | null;
                     evidence?: string[];
                     id?: string;
+                    is_viewed?: boolean;
                     pattern_type: string;
                     question_iv?: string | null;
                     question_tag?: string | null;
@@ -530,11 +534,13 @@ export type Database = {
                     created_at?: string;
                     description_iv?: string | null;
                     description_tag?: string | null;
+                    embedding?: string | null;
                     encrypted_description?: string | null;
                     encrypted_question?: string | null;
                     encrypted_suggested_experiment?: string | null;
                     evidence?: string[];
                     id?: string;
+                    is_viewed?: boolean;
                     pattern_type?: string;
                     question_iv?: string | null;
                     question_tag?: string | null;
@@ -612,6 +618,18 @@ export type Database = {
                     word_count: number;
                 }[];
             };
+            get_weekly_insights_with_evidence: {
+                Args: { p_cursor?: string; p_limit?: number };
+                Returns: {
+                    created_at: string;
+                    entry_ids: string[];
+                    id: string;
+                    patterns: Json;
+                    updated_at: string;
+                    user_id: string;
+                    week_start: string;
+                }[];
+            };
             search_entries_by_embedding: {
                 Args: {
                     match_count?: number;
@@ -636,6 +654,34 @@ export type Database = {
                     updated_at: string;
                     user_id: string;
                     word_count: number;
+                }[];
+            };
+            search_weekly_insight_patterns_by_embedding: {
+                Args: {
+                    match_count?: number;
+                    match_threshold?: number;
+                    query_embedding: string;
+                    user_id_param: string;
+                };
+                Returns: {
+                    created_at: string;
+                    description_iv: string;
+                    description_tag: string;
+                    encrypted_description: string;
+                    encrypted_question: string;
+                    encrypted_suggested_experiment: string;
+                    evidence: Json;
+                    id: string;
+                    is_viewed: boolean;
+                    pattern_type: string;
+                    question_iv: string;
+                    question_tag: string;
+                    similarity: number;
+                    suggested_experiment_iv: string;
+                    suggested_experiment_tag: string;
+                    title: string;
+                    week_start: string;
+                    weekly_insight_id: string;
                 }[];
             };
         };

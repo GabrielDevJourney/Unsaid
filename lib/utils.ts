@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { formatDate } from "./date-utils";
 
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -12,12 +13,9 @@ export function cn(...inputs: ClassValue[]) {
  * Example (en-US): "february 22, 2026"
  */
 export const formatEntryDate = (date: Date | string): string => {
-    const d = typeof date === "string" ? new Date(date) : date;
-    return new Intl.DateTimeFormat(undefined, {
-        day: "numeric",
-        month: "long",
+    return formatDate(date, {
         year: "numeric",
-    })
-        .format(d)
-        .toLowerCase();
+        month: "long",
+        day: "2-digit",
+    }).toLocaleLowerCase();
 };

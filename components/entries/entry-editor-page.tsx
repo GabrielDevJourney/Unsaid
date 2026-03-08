@@ -1,8 +1,6 @@
 "use client";
 
-import { ArrowLeft02Icon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useEntryEditorStore } from "@/lib/entry-editor/store";
 import { cn, formatEntryDate } from "@/lib/utils";
@@ -32,7 +30,7 @@ const formatRelativeTime = (date: Date): string => {
 };
 
 export const EntryEditorPage = ({ initialEntry }: EntryEditorPageProps) => {
-    const router = useRouter();
+    const searchParams = useSearchParams();
     const {
         loadExistingEntry,
         reset,
@@ -76,38 +74,27 @@ export const EntryEditorPage = ({ initialEntry }: EntryEditorPageProps) => {
               : "";
 
     const resolvedEntryId = initialEntry?.id ?? entryId ?? null;
+    const backHref = searchParams.get("from") ?? "/home";
 
     return (
         <div className="flex h-full flex-col overflow-hidden">
-            <PageHeader className="justify-between items-center">
-                <div className="flex items-center gap-4">
-                    <button
-                        type="button"
-                        onClick={() => router.push("/home")}
-                        className="text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                        <HugeiconsIcon
-                            icon={ArrowLeft02Icon}
-                            size={18}
-                            strokeWidth={1.8}
-                            className="text-zinc-600"
-                        />
-                    </button>
+            <PageHeader backHref={backHref}>
+                <div className="flex flex-1 items-center justify-between">
                     <h1 className="font-serif text-3xl italic text-zinc-600">
                         {formatEntryDate(date)}
                     </h1>
-                </div>
-                <div className="flex items-center gap-3 pr-4">
-                    <span
-                        className={cn(
-                            "text-sm",
-                            saveError
-                                ? "text-destructive"
-                                : "text-muted-foreground",
-                        )}
-                    >
-                        {saveStatus}
-                    </span>
+                    <div className="flex items-center gap-3 pr-4">
+                        <span
+                            className={cn(
+                                "text-sm",
+                                saveError
+                                    ? "text-destructive"
+                                    : "text-muted-foreground",
+                            )}
+                        >
+                            {saveStatus}
+                        </span>
+                    </div>
                 </div>
             </PageHeader>
 

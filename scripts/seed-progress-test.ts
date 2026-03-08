@@ -390,11 +390,11 @@ const main = async () => {
     console.log("\nNext steps:");
     if (!shouldTrigger) {
         console.log(
-            "  1. Trigger manually: POST /api/insights/progress/generate",
+            "  1. Trigger manually: POST /api/progress-insights/generate",
         );
     }
-    console.log("  2. View insights: GET /api/insights/progress");
-    console.log("  3. Check status: GET /api/insights/progress/generate");
+    console.log("  2. View insights: GET /api/progress-insights");
+    console.log("  3. Check status: GET /api/progress-insights/generate");
 };
 
 main().catch(console.error);

@@ -2,6 +2,7 @@ import { anthropic } from "@ai-sdk/anthropic";
 import { generateText } from "ai";
 import type { Pattern } from "@/lib/schemas/weekly-insight";
 import { WeeklyInsightResponseSchema } from "@/lib/schemas/weekly-insight";
+import { generatePatternTypesPromptSection } from "../constants/pattern-types";
 import { loadSystemPrompt, loadWeeklyTaskPrompt } from "./prompts";
 
 interface EntryForAnalysis {
@@ -40,6 +41,8 @@ export const generateWeeklyInsight = async (
     ]);
 
     const formattedEntries = formatEntriesForPrompt(entries);
+    const patternTypesSection = generatePatternTypesPromptSection();
+    const finalPrompt = `${taskPrompt}\n\n${patternTypesSection}\n\nEntries to analyze:\n${formattedEntries}`;
 
     try {
         const { text } = await generateText({
@@ -48,11 +51,12 @@ export const generateWeeklyInsight = async (
             messages: [
                 {
                     role: "user",
-                    content: `${taskPrompt}\n${formattedEntries}`,
+                    content: finalPrompt,
                 },
             ],
         });
 
+        console.log("Raw AI response:", text);
         // Strip markdown code fences if presented (AI sometimes wraps JSON)
         const jsonText = text
             .replace(/^```(?:json)?\s*\n?/i, "")

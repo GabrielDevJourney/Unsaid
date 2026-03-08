@@ -1,20 +1,19 @@
 "use client";
 
-import {
-    Add01Icon,
-    PanelLeftOpenIcon,
-    Search01Icon,
-} from "@hugeicons/core-free-icons";
+import { Add01Icon, PanelLeftOpenIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
 import type { DateRange } from "react-day-picker";
-
-import { DateFilter } from "@/components/home/date-filter";
-import type { TagName } from "@/components/home/entry-tag";
 import { HomeEmptyBanner } from "@/components/home/home-empty-banner";
-import { TagFilter } from "@/components/home/tag-filter";
+import { Toolbar } from "@/components/shared/toolbar";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { ALL_TAG_NAMES, TAG_STYLES, type TagName } from "./entry-tag";
+
+const TAG_OPTIONS = ALL_TAG_NAMES.map((tag) => ({
+    value: tag,
+    label: tag,
+    color: TAG_STYLES[tag],
+}));
 
 interface HomeToolbarBase {
     isScrolled: boolean;
@@ -39,44 +38,8 @@ interface HomeToolbarWithFilters extends HomeToolbarBase {
 type HomeToolbarProps = HomeToolbarEmpty | HomeToolbarWithFilters;
 
 const HomeToolbar = (props: HomeToolbarProps) => {
-    return (
-        <div
-            className={`sticky top-0 z-30 mb-6 flex items-center gap-3 bg-background py-2 ${props.isScrolled ? "border-b border-border" : ""}`}
-        >
-            {props.isEmpty ? (
-                <HomeEmptyBanner />
-            ) : (
-                <>
-                    {/* Search input */}
-                    <div className="relative flex-1">
-                        <HugeiconsIcon
-                            icon={Search01Icon}
-                            className="pointer-events-none absolute top-1/2 left-3 size-5 -translate-y-1/2 text-muted-foreground"
-                        />
-                        <Input
-                            placeholder="Search entries..."
-                            value={props.searchQuery}
-                            onChange={(e) =>
-                                props.onSearchChange(e.target.value)
-                            }
-                            className="h-10 rounded-lg bg-card pl-9 text-muted-foreground font-medium"
-                        />
-                    </div>
-
-                    <TagFilter
-                        selectedTags={props.selectedTags}
-                        onToggleTag={props.onToggleTag}
-                        onClearTags={props.onClearTags}
-                    />
-
-                    <DateFilter
-                        dateRange={props.dateRange}
-                        onDateRangeChange={props.onDateRangeChange}
-                    />
-                </>
-            )}
-
-            {/* New entry button — always visible */}
+    const actions = (
+        <>
             <Button variant="sunrise" asChild>
                 <Link href="/entries/new">
                     <HugeiconsIcon
@@ -89,7 +52,6 @@ const HomeToolbar = (props: HomeToolbarProps) => {
                 </Link>
             </Button>
 
-            {/* Aside toggle — visible only below xl */}
             <Button
                 variant="outline"
                 size="icon"
@@ -99,7 +61,35 @@ const HomeToolbar = (props: HomeToolbarProps) => {
                 <HugeiconsIcon icon={PanelLeftOpenIcon} className="size-5" />
                 <span className="sr-only">Open aside panel</span>
             </Button>
-        </div>
+        </>
+    );
+
+    if (props.isEmpty) {
+        return (
+            <div
+                className={`sticky top-0 z-30 mb-6 flex items-center gap-3 bg-background py-2 ${props.isScrolled ? "border-b border-border" : ""}`}
+            >
+                <HomeEmptyBanner />
+                {actions}
+            </div>
+        );
+    }
+
+    return (
+        <Toolbar
+            isScrolled={props.isScrolled}
+            searchQuery={props.searchQuery}
+            onSearchChange={props.onSearchChange}
+            searchPlaceholder="Search entries..."
+            filterOptions={TAG_OPTIONS}
+            selectedFilters={props.selectedTags as Set<string>}
+            onToggleFilter={props.onToggleTag as (value: string) => void}
+            onClearFilters={props.onClearTags}
+            filterLabel="tag"
+            dateRange={props.dateRange}
+            onDateRangeChange={props.onDateRangeChange}
+            actions={actions}
+        />
     );
 };
 
