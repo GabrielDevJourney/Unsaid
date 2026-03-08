@@ -28,7 +28,9 @@ const isWeekInRange = (weekStart: string, range: DateRange): boolean => {
     const start = new Date(weekStart);
     const end = new Date(weekStart);
     end.setDate(end.getDate() + 6);
-    const to = range.to ?? range.from;
+    end.setHours(23, 59, 59, 999);
+    const to = range.to ? new Date(range.to) : new Date(range.from);
+    to.setHours(23, 59, 59, 999);
     return start <= to && end >= range.from;
 };
 
