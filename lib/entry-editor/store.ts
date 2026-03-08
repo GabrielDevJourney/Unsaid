@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { createEntryAction, saveEntryAction } from "@/app/actions/entries";
+import { createEntryAction } from "@/app/actions/entries";
 import type { EntryInsightSummary } from "@/types";
 import { isServiceError } from "@/types";
 
@@ -79,9 +79,17 @@ export const useEntryEditorStore = create<
                 return { entryId: newId, isNew: true };
             }
 
-            const result = await saveEntryAction(entryId, content);
-            if (isServiceError(result)) {
-                set({ isSaving: false, saveError: result.error });
+            const res = await fetch(`/api/entries/${entryId}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ content }),
+            });
+            if (!res.ok) {
+                const json = (await res.json()) as { error?: string };
+                set({
+                    isSaving: false,
+                    saveError: json.error ?? "Failed to save",
+                });
                 return { entryId, isNew: false };
             }
             set({

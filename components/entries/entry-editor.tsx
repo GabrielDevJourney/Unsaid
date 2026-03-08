@@ -16,8 +16,16 @@ const countWords = (text: string): number =>
 
 export const EntryEditor = () => {
     const router = useRouter();
-    const { content, setContent, saveNow, entryId } = useEntryEditorStore();
+    const { content, setContent, saveNow } = useEntryEditorStore();
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    useEffect(() => {
+        const el = textareaRef.current;
+        if (!el) return;
+        const len = el.value.length;
+        el.setSelectionRange(len, len);
+    }, []);
 
     const wordCount = countWords(content);
     const isBelowMinLength =
@@ -40,16 +48,43 @@ export const EntryEditor = () => {
         };
     }, [content, saveNow, router]);
 
+    useEffect(() => {
+        const handleBeforeUnload = () => {
+            const {
+                entryId: id,
+                content: latest,
+                savedContent,
+            } = useEntryEditorStore.getState();
+            if (
+                !id ||
+                latest === savedContent ||
+                latest.trim().length < MIN_ENTRY_LENGTH
+            )
+                return;
+            fetch(`/api/entries/${id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ content: latest }),
+                keepalive: true,
+            });
+        };
+
+        window.addEventListener("beforeunload", handleBeforeUnload);
+        return () =>
+            window.removeEventListener("beforeunload", handleBeforeUnload);
+    }, []);
+
     return (
         <div className="flex h-full flex-col overflow-hidden rounded-xl bg-card shadow-sm">
             <textarea
+                ref={textareaRef}
                 className="flex-1 resize-none p-12 text-base text-neutral-500 leading-relaxed bg-transparent outline-none placeholder:text-muted-foreground/50 font-serif"
                 placeholder="What's on your mind?"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 maxLength={MAX_ENTRY_LENGTH + 100}
                 // biome-ignore lint/a11y/noAutofocus: intentional for writing flow
-                autoFocus={!entryId}
+                autoFocus
             />
             <div className="flex items-center justify-between px-6 py-4 text-xs text-muted-foreground">
                 <span>{isBelowMinLength && "Keep writing to save..."}</span>
