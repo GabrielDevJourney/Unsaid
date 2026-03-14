@@ -264,6 +264,8 @@ export type Database = {
                     created_at: string;
                     encrypted_content: string | null;
                     id: string;
+                    is_viewed: boolean;
+                    key_entry_ids: string[] | null;
                     recent_entry_ids: string[];
                     related_past_entry_ids: string[] | null;
                     updated_at: string;
@@ -275,6 +277,8 @@ export type Database = {
                     created_at?: string;
                     encrypted_content?: string | null;
                     id?: string;
+                    is_viewed?: boolean;
+                    key_entry_ids?: string[] | null;
                     recent_entry_ids?: string[];
                     related_past_entry_ids?: string[] | null;
                     updated_at?: string;
@@ -286,6 +290,8 @@ export type Database = {
                     created_at?: string;
                     encrypted_content?: string | null;
                     id?: string;
+                    is_viewed?: boolean;
+                    key_entry_ids?: string[] | null;
                     recent_entry_ids?: string[];
                     related_past_entry_ids?: string[] | null;
                     updated_at?: string;
