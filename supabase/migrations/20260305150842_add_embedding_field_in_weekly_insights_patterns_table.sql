@@ -1,8 +1,8 @@
 -- Add embedding field to weekly_insight_patterns table
 ALTER TABLE public.weekly_insight_patterns
-    ADD COLUMN embedding vector(1536);
+    ADD COLUMN embedding extensions.vector(1536);
 
-CREATE INDEX ON public.weekly_insight_patterns USING ivfflat(embedding vector_cosine_ops) WITH (lists = 100);
+CREATE INDEX ON public.weekly_insight_patterns USING ivfflat(embedding extensions.vector_cosine_ops) WITH (lists = 100);
 
 -- SEMANTIC SEARCH RPC FUNCTIONS
 -- Search weekly_insight_patterns by embedding vector using cosine similarity
