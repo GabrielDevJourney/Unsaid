@@ -17,7 +17,6 @@ interface RawProgressInsightJSON {
     experiment: string;
     the_question: string;
     key_entry_numbers: number[];
-    is_milestone?: boolean;
 }
 
 /**
@@ -45,7 +44,6 @@ const parseStructuredContent = (
                 experiment: raw.experiment,
                 theQuestion: raw.the_question,
                 keyEntryNumbers: raw.key_entry_numbers,
-                isMilestone: raw.is_milestone ?? false,
             };
         }
         return null;

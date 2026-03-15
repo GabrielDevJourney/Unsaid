@@ -24,7 +24,6 @@ import type {
 type DbClient = SupabaseClient;
 
 import {
-    countProgressInsights,
     countUnviewedProgressInsights,
     getProgressInsightById,
     getProgressInsightsPaginated,
@@ -224,22 +223,12 @@ export const createProgressInsight = async (
         return { error: "AI failed to generate progress insight" };
     }
 
-    // Compute milestone: every 5th insight is a milestone (including the 1st)
-    const existingCount = await countProgressInsights(supabase, userId);
-    const isMilestone = existingCount % 5 === 0;
-
-    // Build full structured content with milestone flag (stored as snake_case JSON in DB)
-    const structured = {
-        ...aiOutput,
-        is_milestone: isMilestone,
-    };
-
     // Map key_entry_numbers (1-indexed) to actual entry IDs
     const keyEntryIds = aiOutput.key_entry_numbers
         .map((n) => recentEntries[n - 1]?.id)
         .filter((id): id is string => id !== undefined);
 
-    const content = JSON.stringify(structured);
+    const content = JSON.stringify(aiOutput);
 
     // Save to database
     const { data: insight, error: insertError } = await insertProgressInsight(

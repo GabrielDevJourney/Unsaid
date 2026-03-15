@@ -194,7 +194,6 @@ export interface ProgressInsightStructured {
     experiment: string;
     theQuestion: string;
     keyEntryNumbers: number[];
-    isMilestone: boolean;
 }
 
 /**
