@@ -1,7 +1,7 @@
 "use client";
 
 import { useClerk, useUser } from "@clerk/nextjs";
-import { Add01Icon, Login01Icon } from "@hugeicons/core-free-icons";
+import { Add01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import Image from "next/image";
 import Link from "next/link";
@@ -13,9 +13,6 @@ import {
     SidebarGroupContent,
     SidebarGroupLabel,
     SidebarHeader,
-    SidebarMenu,
-    SidebarMenuButton,
-    SidebarMenuItem,
     SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { brainNavItems, footerNavItems } from "@/config/sidebar";
@@ -24,9 +21,13 @@ import { SidebarUser } from "./sidebar-user";
 
 interface AppSidebarProps {
     newPatternsCount?: number;
+    newProgressCount?: number;
 }
 
-export const AppSidebar = ({ newPatternsCount = 0 }: AppSidebarProps) => {
+export const AppSidebar = ({
+    newPatternsCount = 0,
+    newProgressCount = 0,
+}: AppSidebarProps) => {
     const { signOut } = useClerk();
     const { user } = useUser();
 
@@ -53,14 +54,14 @@ export const AppSidebar = ({ newPatternsCount = 0 }: AppSidebarProps) => {
                             alt="Unsaid text logo with white background"
                             width={76}
                             height={36}
-                            className="group-data-[state=collapsed]:hidden"
+                            className="transition-opacity duration-400 ease-in-out group-data-[state=collapsed]:opacity-0"
                         />
                     </div>
                 </Link>
                 <SidebarTrigger className="group-data-[state=collapsed]:absolute group-data-[state=collapsed]:left-full group-data-[state=collapsed]:-translate-x-1/2 group-data-[state=collapsed]:top-5 group-data-[state=collapsed]:-translate-y-1/2 group-data-[state=collapsed]:z-20 group-data-[state=collapsed]:bg-neutral-100 group-data-[state=collapsed]:border group-data-[state=collapsed]:border-border" />
             </SidebarHeader>
 
-            <SidebarContent className="group-data-[state=collapsed]:mt-4">
+            <SidebarContent>
                 <SidebarGroup className="p-4">
                     <SidebarGroupLabel>Journaling</SidebarGroupLabel>
                     <SidebarGroupContent>
@@ -82,11 +83,13 @@ export const AppSidebar = ({ newPatternsCount = 0 }: AppSidebarProps) => {
                 </SidebarGroup>
 
                 <SidebarNavGroup
-                    items={brainNavItems.map((item) =>
-                        item.url === "/patterns"
-                            ? { ...item, badge: newPatternsCount }
-                            : item,
-                    )}
+                    items={brainNavItems.map((item) => {
+                        if (item.url === "/patterns")
+                            return { ...item, badge: newPatternsCount };
+                        if (item.url === "/progress")
+                            return { ...item, badge: newProgressCount };
+                        return item;
+                    })}
                     label="Brain"
                     className="p-4"
                 />
@@ -94,25 +97,12 @@ export const AppSidebar = ({ newPatternsCount = 0 }: AppSidebarProps) => {
 
             <SidebarFooter>
                 <SidebarNavGroup items={footerNavItems} className="p-4" />
-                <SidebarMenu className="px-4">
-                    <SidebarMenuItem>
-                        <SidebarMenuButton
-                            onClick={() => signOut({ redirectUrl: "/sign-in" })}
-                        >
-                            <HugeiconsIcon
-                                strokeWidth={1.5}
-                                icon={Login01Icon}
-                                className="text-muted-foreground"
-                            />
-                            <span>Logout</span>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                </SidebarMenu>
                 <SidebarUser
                     name={displayName}
                     email={userEmail}
                     initials={userInitials}
                     avatarUrl={user?.imageUrl}
+                    onSignOut={() => signOut({ redirectUrl: "/sign-in" })}
                 />
             </SidebarFooter>
         </Sidebar>

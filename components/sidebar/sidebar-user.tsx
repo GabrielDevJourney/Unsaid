@@ -1,10 +1,31 @@
+"use client";
+
+import {
+    ArrowUp01Icon,
+    Login01Icon,
+    Settings01Icon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import Link from "next/link";
+import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
+} from "@/components/ui/sidebar";
 
 interface SidebarUserProps {
     name: string;
     email: string;
     avatarUrl?: string;
     initials: string;
+    onSignOut: () => void;
 }
 
 export const SidebarUser = ({
@@ -12,21 +33,80 @@ export const SidebarUser = ({
     email,
     avatarUrl,
     initials,
+    onSignOut,
 }: SidebarUserProps) => {
+    const [open, setOpen] = useState(false);
+
     return (
-        <div className="flex items-center border-t gap-3 p-6 group-data-[state=collapsed]:justify-center">
-            <Avatar className="size-10 group-data-[state=collapsed]:size-8">
-                <AvatarImage src={avatarUrl} alt={`${name} avatar`} />
-                <AvatarFallback className="bg-neutral-700 text-white">
-                    {initials}
-                </AvatarFallback>
-            </Avatar>
-            <div className="flex min-w-0 flex-col group-data-[state=collapsed]:hidden">
-                <span className="truncate text-sm font-medium">{name}</span>
-                <span className="truncate text-xs text-muted-foreground">
-                    {email}
-                </span>
-            </div>
-        </div>
+        <Popover open={open} onOpenChange={setOpen}>
+            <SidebarMenu className="p-6 border-t border-border">
+                <SidebarMenuItem>
+                    <PopoverTrigger asChild>
+                        <SidebarMenuButton
+                            size="lg"
+                            className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground transition-[width,height,gap]"
+                        >
+                            <Avatar className="size-10 shrink-0 flex!">
+                                <AvatarImage
+                                    src={avatarUrl}
+                                    alt={`${name} avatar`}
+                                />
+                                <AvatarFallback className="bg-neutral-700 text-white text-xs">
+                                    {initials}
+                                </AvatarFallback>
+                            </Avatar>
+                            <div className="flex min-w-0 flex-col text-left overflow-hidden max-w-40 transition-[max-width,opacity] duration-400 ease-in-out group-data-[state=collapsed]:max-w-0 group-data-[state=collapsed]:opacity-0">
+                                <span className="truncate text-sm font-medium">
+                                    {name}
+                                </span>
+                                <span className="truncate text-xs text-muted-foreground">
+                                    {email}
+                                </span>
+                            </div>
+                            <HugeiconsIcon
+                                icon={ArrowUp01Icon}
+                                className={`ml-auto size-5 shrink-0 text-muted-foreground overflow-hidden max-w-6 transition-[max-width,opacity] duration-400 ease-in-out group-data-[state=collapsed]:max-w-0 group-data-[state=collapsed]:opacity-0 ${open ? "rotate-0" : "rotate-180"}`}
+                                strokeWidth={1.5}
+                            />
+                        </SidebarMenuButton>
+                    </PopoverTrigger>
+                </SidebarMenuItem>
+            </SidebarMenu>
+
+            <PopoverContent
+                side="top"
+                align="start"
+                sideOffset={8}
+                className="w-56 p-1"
+            >
+                <Link
+                    href="/settings"
+                    onClick={() => setOpen(false)}
+                    className="flex w-full items-center gap-2 rounded-sm px-2 py-2 text-sm text-zinc-600 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
+                >
+                    <HugeiconsIcon
+                        icon={Settings01Icon}
+                        strokeWidth={1.5}
+                        className="size-5 shrink-0 text-muted-foreground"
+                    />
+                    <span>Settings</span>
+                </Link>
+                <button
+                    type="button"
+                    onClick={() => {
+                        setOpen(false);
+                        onSignOut();
+                    }}
+                    className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-zinc-600 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
+                >
+                    <HugeiconsIcon
+                        icon={Login01Icon}
+                        strokeWidth={1.5}
+                        className="size-5 shrink-0 text-muted-foreground"
+                    />
+                    <span>Logout</span>
+                </button>
+            </PopoverContent>
+        </Popover>
     );
 };

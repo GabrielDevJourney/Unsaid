@@ -5,4 +5,5 @@ export interface NavItem {
     icon: IconSvgElement;
     url: string;
     badge?: number;
+    badgeColor?: "slate" | "orange";
 }
