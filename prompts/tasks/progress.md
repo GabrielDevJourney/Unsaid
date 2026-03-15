@@ -30,6 +30,7 @@ CONSTRAINTS:
 - No fluff phrases like "It's worth noting" or "You might consider"
 - Every sentence must earn its place
 - Write like you're texting a friend, not writing a report
+- When referencing a specific entry in text, use its date (e.g., "on Mar 3") — never use entry numbers or IDs
 
 TONE: 70% direct, 30% encouraging. Like a coach who believes in them but won't coddle them.
 
@@ -46,7 +47,7 @@ Related past entries: [3 entries from 2 months ago with same themes]
 {
   "headline": "You've mastered the language of boundaries but haven't actually used one yet.",
   "whats_on_repeat": "\"I need to set boundaries\" appears in 6 entries. \"I said yes again\" in 4. You've diagnosed the problem perfectly—you even wrote \"I don't understand why I can't just say no.\" But knowing isn't doing.",
-  "what_changed": "Your inner voice softened. Around entry 8, the harsh self-criticism shifted to curiosity—you started asking \"why\" instead of \"what's wrong with me.\" That self-compassion is the foundation you'll need.",
+  "what_changed": "Your inner voice softened. Around Jan 12, the harsh self-criticism shifted to curiosity—you started asking \"why\" instead of \"what's wrong with me.\" That self-compassion is the foundation you'll need.",
   "reality_check": "But here's the gap: you're kinder to yourself about failing to set boundaries, which makes it easier to keep failing. The softer voice hasn't translated to a firmer \"no.\"",
   "experiment": "This week: say \"Let me check my calendar and get back to you\" to ONE request. Don't say yes or no immediately. Just pause.",
   "the_question": "What's scarier—being seen as someone with limits, or staying comfortable in the cycle you've learned to forgive yourself for?",
