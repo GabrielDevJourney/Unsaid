@@ -56,9 +56,9 @@ Costs are usage-capped by design—even power users can't abuse the system.
 | Phase | Status | Notes |
 |-------|--------|-------|
 | Phase 1 — Auth pages | ✅ Done | Sign-in/up with Clerk, route protection |
-| Phase 2 — Entry editor + Tags | ⏳ In Progress | `/entries/new`, `/entries/[id]`, tags wired to home |
-| Phase 3 — Patterns page | ⬜ Pending | Weekly insights (Tier 2) |
-| Phase 4 — Progress page | ⬜ Pending | Milestone cards (Tier 3) |
+| Phase 2 — Entry editor + Tags | ✅ Done | `/entries/new`, `/entries/[id]`, tags wired to home |
+| Phase 3 — Patterns page | ✅ Done | Weekly insights (Tier 2) |
+| Phase 4 — Progress page | ⏳ In Progress| Milestone cards (Tier 3) |
 | Phase 5 — Settings + Feedback | ⬜ Pending | Profile, subscription, feedback UI |
 
 ---

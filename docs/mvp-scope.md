@@ -8,7 +8,7 @@ Complete reference for the MVP. What we're building, why, and how.
 
 ## 1. What Is Unsaid?
 
-> An AI coach that doesn't let you bullshit yourself. Write about anything—the AI spots patterns you can't see, tracks your progress, and asks the questions you're avoiding.
+> Unsaid doesn't let you bullshit yourself. Write about anything—the we spot patterns you can't see, tracks your progress, and asks the questions you're avoiding.
 
 ### What Makes It Different
 

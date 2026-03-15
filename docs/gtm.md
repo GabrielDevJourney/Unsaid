@@ -15,9 +15,9 @@ Remaining pages before v1 is shippable:
 
 | Page | Status |
 |------|--------|
-| Entry editor (`/entries/new`, `/entries/[id]`) | In progress |
-| Patterns page (Tier 2) | Not started |
-| Progress page (Tier 3) | Not started |
+| Entry editor (`/entries/new`, `/entries/[id]`) | Done |
+| Patterns page (Tier 2) | Done |
+| Progress page (Tier 3) | In progress |
 | Settings + Feedback UI | Not started |
 | Onboarding flow | Not started |
 | Landing page (Cathy / Framer) | Cathy's responsibility |
