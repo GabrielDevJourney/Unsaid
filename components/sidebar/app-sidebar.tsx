@@ -16,6 +16,7 @@ import {
     SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { brainNavItems, footerNavItems } from "@/config/sidebar";
+import { useSidebarBadgeStore } from "@/lib/stores/sidebar-badge-store";
 import { SidebarNavGroup } from "./sidebar-nav-group";
 import { SidebarUser } from "./sidebar-user";
 
@@ -30,10 +31,16 @@ export const AppSidebar = ({
 }: AppSidebarProps) => {
     const { signOut } = useClerk();
     const { user } = useUser();
+    const { progressAdjustment } = useSidebarBadgeStore();
 
     const displayName = user?.username ?? user?.firstName ?? "User";
     const userEmail = user?.primaryEmailAddress?.emailAddress ?? "";
     const userInitials = displayName.charAt(0).toUpperCase();
+
+    const effectiveProgressCount = Math.max(
+        0,
+        newProgressCount - progressAdjustment,
+    );
 
     return (
         <Sidebar collapsible="icon">
@@ -44,13 +51,13 @@ export const AppSidebar = ({
                 >
                     <div className="h-full flex gap-2 items-center">
                         <Image
-                            src="logo-white-bg.svg"
+                            src="/logo-white-bg.svg"
                             alt="Unsaid logo with white background"
                             width={36}
                             height={36}
                         />
                         <Image
-                            src="logo-text.svg"
+                            src="/logo-text.svg"
                             alt="Unsaid text logo with white background"
                             width={76}
                             height={36}
@@ -87,7 +94,7 @@ export const AppSidebar = ({
                         if (item.url === "/patterns")
                             return { ...item, badge: newPatternsCount };
                         if (item.url === "/progress")
-                            return { ...item, badge: newProgressCount };
+                            return { ...item, badge: effectiveProgressCount };
                         return item;
                     })}
                     label="Brain"

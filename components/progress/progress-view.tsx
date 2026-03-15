@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import type { DateRange } from "react-day-picker";
 import { DateFilter } from "@/components/home/date-filter";
 import { PageHeader } from "@/components/layout/page-header";
+import { useSidebarBadgeStore } from "@/lib/stores/sidebar-badge-store";
 import type { ProgressInsight } from "@/types";
 import { ProgressCard } from "./progress-card";
 import { ProgressEmptyState } from "./progress-empty-state";
@@ -31,15 +32,31 @@ const ProgressView = ({
     entryCountAtLastProgress,
 }: ProgressViewProps) => {
     const [dateRange, setDateRange] = useState<DateRange | undefined>();
+    const [viewedIds, setViewedIds] = useState<Set<string>>(new Set());
+    const { decrementProgress } = useSidebarBadgeStore();
+
+    const handleInsightViewed = (id: string) => {
+        setViewedIds((prev) => new Set([...prev, id]));
+        decrementProgress();
+    };
+
+    const enrichedInsights = useMemo(
+        () =>
+            insights.map((insight) => ({
+                ...insight,
+                isViewed: insight.isViewed || viewedIds.has(insight.id),
+            })),
+        [insights, viewedIds],
+    );
 
     const filtered = useMemo(
         () =>
             dateRange?.from
-                ? insights.filter((i) =>
+                ? enrichedInsights.filter((i) =>
                       isInsightInRange(i.createdAt, dateRange),
                   )
-                : insights,
-        [insights, dateRange],
+                : enrichedInsights,
+        [enrichedInsights, dateRange],
     );
 
     return (
@@ -91,6 +108,7 @@ const ProgressView = ({
                                     <ProgressCard
                                         key={insight.id}
                                         insight={insight}
+                                        onViewed={handleInsightViewed}
                                     />
                                 ))}
                             </div>
