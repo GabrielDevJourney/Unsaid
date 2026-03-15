@@ -12,6 +12,7 @@ interface FilterButtonProps {
     icon: IconSvgElement;
     label: string;
     isActive: boolean;
+    showLabel?: boolean;
     popoverAlign?: "start" | "end";
     popoverClassName?: string;
     children: React.ReactNode;
@@ -21,6 +22,7 @@ const FilterButton = ({
     icon,
     label,
     isActive,
+    showLabel = false,
     popoverAlign = "start",
     popoverClassName,
     children,
@@ -29,11 +31,15 @@ const FilterButton = ({
         <PopoverTrigger asChild>
             <Button
                 variant="outline"
-                size="icon-lg"
+                size={showLabel ? "sm" : "icon-lg"}
                 className={`bg-accent hover:bg-white ${isActive ? "border-slate-500 bg-white" : ""}`}
             >
-                <HugeiconsIcon icon={icon} className="size-5" />
-                <span className="sr-only">{label}</span>
+                <HugeiconsIcon icon={icon} className="size-4" />
+                {showLabel ? (
+                    <span className="text-sm text-zinc-600">{label}</span>
+                ) : (
+                    <span className="sr-only">{label}</span>
+                )}
             </Button>
         </PopoverTrigger>
         <PopoverContent align={popoverAlign} className={popoverClassName}>
