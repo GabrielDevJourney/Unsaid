@@ -45,7 +45,7 @@ const ProgressDetail = ({ insight, keyEntryData }: ProgressDetailProps) => {
             </PageHeader>
 
             <div className="flex-1 overflow-hidden">
-                <div className="flex h-full gap-16 px-10 bg-[radial-gradient(circle,#dddcdc_1px,transparent_1px)] bg-size-[10px_10px]">
+                <div className="flex h-full gap-12 pl-12 bg-[radial-gradient(circle,#dddcdc_1px,transparent_1px)] bg-size-[10px_10px]">
                     {/* Left: reference panel — stays in place while content scrolls */}
                     {referenceItems.length > 0 && (
                         <div className="shrink-0 py-10">
@@ -60,9 +60,9 @@ const ProgressDetail = ({ insight, keyEntryData }: ProgressDetailProps) => {
                     )}
 
                     {/* Right: card itself scrolls */}
-                    <div className="flex-1 flex flex-col pt-10 pr-6 min-w-0 overflow-hidden">
+                    <div className="flex-1 flex flex-col pt-10 pr-26 min-w-0 overflow-hidden">
                         {parsedContent ? (
-                            <div className="w-full h-full rounded-2xl overflow-hidden">
+                            <div className="w-full h-full rounded-t-2xl overflow-hidden">
                                 <div className="flex flex-col gap-10 h-full overflow-y-auto bg-zinc-50 p-8 [&::-webkit-scrollbar]:w-0">
                                     {/* Headline */}
                                     <h2 className="font-serif text-4xl italic text-neutral-500 leading-relaxed">
@@ -107,7 +107,7 @@ const ProgressDetail = ({ insight, keyEntryData }: ProgressDetailProps) => {
                                     {/* The question */}
                                     <div className="flex flex-col pt-2">
                                         <p className="font-serif text-3xl italic text-zinc-600 leading-snug -mt-6">
-                                            {parsedContent.theQuestion}
+                                            "{parsedContent.theQuestion}
                                         </p>
                                     </div>
                                 </div>
