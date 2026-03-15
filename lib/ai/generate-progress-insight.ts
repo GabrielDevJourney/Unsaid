@@ -1,16 +1,42 @@
 import { anthropic } from "@ai-sdk/anthropic";
-import { generateText } from "ai";
-import type {
-    EntryForProgress,
-    RelatedPastEntry,
+import { generateObject } from "ai";
+import {
+    type EntryForProgress,
+    type ProgressInsightAIOutput,
+    ProgressInsightAIOutputSchema,
+    type RelatedPastEntry,
 } from "@/lib/schemas/progress-insight";
 import { loadProgressTaskPrompt, loadSystemPrompt } from "./prompts";
 
+export interface EntryInsightContext {
+    entryIndex: number; // 0-based, matches position in recentEntries array
+    summary: string;
+    tags: string[];
+}
+
+export interface WeeklyPatternContext {
+    title: string;
+    description: string;
+}
+
+interface GenerateProgressInsightParams {
+    recentEntries: EntryForProgress[];
+    relatedPastEntries?: RelatedPastEntry[];
+    entryInsights?: EntryInsightContext[];
+    weeklyPatterns?: WeeklyPatternContext[];
+    userName?: string;
+}
+
 /**
  * Format recent entries for the prompt.
- * Format: [Entry N, date] content
+ * Entry 1 = most recent. Includes insight summary + tags if available.
  */
-const formatRecentEntries = (entries: EntryForProgress[]): string => {
+const formatRecentEntries = (
+    entries: EntryForProgress[],
+    insights: EntryInsightContext[],
+): string => {
+    const insightByIndex = new Map(insights.map((i) => [i.entryIndex, i]));
+
     return entries
         .map((entry, index) => {
             const date = new Date(entry.createdAt);
@@ -18,14 +44,19 @@ const formatRecentEntries = (entries: EntryForProgress[]): string => {
                 month: "short",
                 day: "numeric",
             });
-            return `[Entry ${index + 1}, ${formattedDate}] ${entry.content}`;
+
+            const insight = insightByIndex.get(index);
+            const insightLine = insight
+                ? `\n  [Insight: ${insight.tags.join(", ")} — ${insight.summary}]`
+                : "";
+
+            return `[Entry ${index + 1}, ${formattedDate}] ${entry.content}${insightLine}`;
         })
         .join("\n\n");
 };
 
 /**
  * Format related past entries for the prompt.
- * Shows older entries with similarity context.
  */
 const formatRelatedPastEntries = (entries: RelatedPastEntry[]): string => {
     if (entries.length === 0) {
@@ -45,116 +76,66 @@ const formatRelatedPastEntries = (entries: RelatedPastEntry[]): string => {
         .join("\n\n");
 };
 
-interface GenerateProgressInsightParams {
-    recentEntries: EntryForProgress[];
-    relatedPastEntries?: RelatedPastEntry[];
-    userName?: string;
-}
+/**
+ * Format weekly patterns for the prompt.
+ */
+const formatWeeklyPatterns = (patterns: WeeklyPatternContext[]): string => {
+    if (patterns.length === 0) return "";
+
+    const lines = patterns
+        .map((p) => `- "${p.title}": ${p.description}`)
+        .join("\n");
+    return `\n\nRecent patterns identified across entries (use as additional context):\n${lines}`;
+};
 
 /**
- * Generate a progress insight using Claude Sonnet.
- * Returns structured text (not JSON) following the progress prompt format.
- *
- * @param params - Recent entries, related past entries, and optional user name
- * @returns Generated progress insight text, or null on failure
+ * Generate a structured progress insight using Claude Sonnet.
+ * Returns a validated ProgressInsightAIOutput object or null on failure.
  */
 export const generateProgressInsight = async (
     params: GenerateProgressInsightParams,
-): Promise<string | null> => {
-    const { recentEntries, relatedPastEntries = [], userName } = params;
+): Promise<ProgressInsightAIOutput | null> => {
+    const {
+        recentEntries,
+        relatedPastEntries = [],
+        entryInsights = [],
+        weeklyPatterns = [],
+        userName,
+    } = params;
 
     const [systemPrompt, taskPrompt] = await Promise.all([
         loadSystemPrompt(),
         loadProgressTaskPrompt(),
     ]);
 
-    const formattedRecent = formatRecentEntries(recentEntries);
+    const formattedRecent = formatRecentEntries(recentEntries, entryInsights);
     const formattedPast = formatRelatedPastEntries(relatedPastEntries);
+    const formattedPatterns = formatWeeklyPatterns(weeklyPatterns);
 
-    // Build the user prompt with context
-    const userPrompt = buildUserPrompt({
-        taskPrompt,
-        userName,
-        recentEntries: formattedRecent,
-        relatedPastEntries: formattedPast,
-        entryCount: recentEntries.length,
-    });
+    const userSection = userName ? `User: ${userName}\n` : "";
+    const userPrompt = `${taskPrompt}
+
+---
+
+${userSection}Recent ${recentEntries.length} entries (Entry 1 = most recent):
+${formattedRecent}
+
+---
+
+Related past entries (for context on recurring patterns):
+${formattedPast}${formattedPatterns}`;
 
     try {
-        const { text } = await generateText({
+        const { object } = await generateObject({
             model: anthropic("claude-sonnet-4-5"),
+            schema: ProgressInsightAIOutputSchema,
             system: systemPrompt,
-            messages: [
-                {
-                    role: "user",
-                    content: userPrompt,
-                },
-            ],
+            messages: [{ role: "user", content: userPrompt }],
         });
 
-        // Validate the response has the expected sections
-        if (!validateProgressInsightFormat(text)) {
-            console.error("Progress insight missing expected sections");
-            return null;
-        }
-
-        return text;
+        return object;
     } catch (error) {
         console.error("Failed to generate progress insight:", error);
         return null;
     }
-};
-
-/**
- * Build the complete user prompt for progress insight generation.
- */
-const buildUserPrompt = ({
-    taskPrompt,
-    userName,
-    recentEntries,
-    relatedPastEntries,
-    entryCount,
-}: {
-    taskPrompt: string;
-    userName?: string;
-    recentEntries: string;
-    relatedPastEntries: string;
-    entryCount: number;
-}): string => {
-    const userSection = userName ? `User: ${userName}\n` : "";
-
-    return `${taskPrompt}
-
----
-
-${userSection}Recent ${entryCount} entries:
-${recentEntries}
-
----
-
-Related past entries (for context on patterns):
-${relatedPastEntries}`;
-};
-
-/**
- * Validate that the generated text contains expected sections.
- * The progress insight should have specific headers.
- */
-const validateProgressInsightFormat = (text: string): boolean => {
-    const requiredSections = [
-        "THE HEADLINE",
-        "WHAT'S ON REPEAT",
-        "WHAT CHANGED",
-        "THE REALITY CHECK",
-        "Experiment Suggestion",
-        "THE QUESTION",
-    ];
-
-    // Check that at least 4 of 6 sections are present
-    // (allows for some flexibility in AI output)
-    const foundSections = requiredSections.filter((section) =>
-        text.includes(section),
-    );
-
-    return foundSections.length >= 4;
 };
