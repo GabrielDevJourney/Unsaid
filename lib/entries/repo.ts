@@ -117,6 +117,23 @@ export const getEntriesPaginated = async (
     };
 };
 
+/**
+ * Fetch only created_at dates for all user entries.
+ * Lightweight query used to populate the calendar without loading full entry data.
+ * RLS filters to the authenticated user automatically.
+ */
+export const getEntryDates = async (
+    supabase: SupabaseClient,
+): Promise<{ data: string[]; error: Error | null }> => {
+    const { data, error } = await supabase
+        .from("entries")
+        .select("created_at")
+        .order("created_at", { ascending: false });
+
+    if (error || !data) return { data: [], error };
+    return { data: data.map((e) => e.created_at as string), error: null };
+};
+
 export const getEntriesWithInsights = async (
     supabase: SupabaseClient,
 ): Promise<{
@@ -378,6 +395,36 @@ export const searchEntriesByEmbedding = async (
  * Calls the find_related_entries RPC function.
  * Decrypts content for each result.
  */
+/**
+ * Get entry id + created_at for a list of entry IDs.
+ * Used to resolve entry dates for progress insight reference panels.
+ * RLS ensures only the user's own entries are returned.
+ * No decryption needed — only metadata is fetched.
+ */
+export const getEntryDatesByIds = async (
+    supabase: SupabaseClient,
+    ids: string[],
+): Promise<{
+    data: { id: string; createdAt: string }[];
+    error: Error | null;
+}> => {
+    if (ids.length === 0) return { data: [], error: null };
+
+    const { data: rows, error } = await supabase
+        .from("entries")
+        .select("id, created_at")
+        .in("id", ids);
+
+    if (error || !rows) {
+        return { data: [], error };
+    }
+
+    return {
+        data: rows.map((r) => ({ id: r.id, createdAt: r.created_at })),
+        error: null,
+    };
+};
+
 export const findRelatedEntries = async (
     supabase: SupabaseClient,
     userId: string,

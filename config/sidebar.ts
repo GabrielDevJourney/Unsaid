@@ -3,7 +3,6 @@ import {
     BookOpen01Icon,
     DashboardSquare01Icon,
     SentIcon,
-    Settings01Icon,
 } from "@hugeicons/core-free-icons";
 import type { NavItem } from "@/types/navigation";
 
@@ -22,15 +21,11 @@ export const brainNavItems: NavItem[] = [
         label: "Progress",
         icon: Activity01Icon,
         url: "/progress",
+        badgeColor: "orange",
     },
 ];
 
 export const footerNavItems: NavItem[] = [
-    {
-        label: "Settings",
-        icon: Settings01Icon,
-        url: "/settings",
-    },
     {
         label: "Feedback",
         icon: SentIcon,

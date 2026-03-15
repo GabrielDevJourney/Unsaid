@@ -9,12 +9,25 @@ import type { ServiceResult } from "@/types";
 
 /**
  * Extract the headline from progress insight content.
- * Looks for "THE HEADLINE" section and extracts the text after it.
+ * Handles both new JSON format and old text format.
  */
 const extractHeadline = (content: string): string => {
-    const headlineMatch = content.match(/THE HEADLINE[:\s]*\n+([^\n]+)/i);
-    if (headlineMatch?.[1]) {
-        return headlineMatch[1].replace(/^[#*>\s]+/, "").trim();
+    try {
+        const parsed = JSON.parse(content) as unknown;
+        if (
+            parsed !== null &&
+            typeof parsed === "object" &&
+            "headline" in parsed &&
+            typeof (parsed as Record<string, unknown>).headline === "string"
+        ) {
+            return (parsed as Record<string, string>).headline;
+        }
+    } catch {
+        // Old text format fallback
+        const headlineMatch = content.match(/THE HEADLINE[:\s]*\n+([^\n]+)/i);
+        if (headlineMatch?.[1]) {
+            return headlineMatch[1].replace(/^[#*>\s]+/, "").trim();
+        }
     }
     return "Your progress insight is ready";
 };
@@ -153,12 +166,8 @@ export const getProgressStatus = async (
         };
     }
 
-    // We need to fetch user_progress to get entry_count_at_last_progress
-    // Since shouldTriggerProgressInsight already does this, we can refactor later
-    // For now, estimate based on total and whether trigger would fire
-    const entriesSinceLastProgress = data.shouldTrigger
-        ? PROGRESS_TRIGGER_INTERVAL
-        : data.totalEntries % PROGRESS_TRIGGER_INTERVAL;
+    const entriesSinceLastProgress =
+        data.totalEntries - data.entryCountAtLastProgress;
 
     const entriesUntilNext = data.shouldTrigger
         ? 0

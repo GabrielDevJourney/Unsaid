@@ -7,14 +7,20 @@ import { Calendar } from "@/components/ui/calendar";
 interface DateFilterProps {
     dateRange: DateRange | undefined;
     onDateRangeChange: (range: DateRange | undefined) => void;
+    popoverAlign?: "start" | "end";
 }
 
-const DateFilter = ({ dateRange, onDateRangeChange }: DateFilterProps) => (
+const DateFilter = ({
+    dateRange,
+    onDateRangeChange,
+    popoverAlign = "end",
+}: DateFilterProps) => (
     <FilterButton
         icon={Calendar04Icon}
-        label="Filter by date"
+        label="Calendar"
         isActive={!!dateRange?.from}
-        popoverAlign="end"
+        showLabel
+        popoverAlign={popoverAlign}
         popoverClassName="w-auto p-0 rounded-xl shadow-lg"
     >
         <div className="flex items-center justify-between px-4 pt-3">

@@ -9,6 +9,7 @@ import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
+    useSidebar,
 } from "@/components/ui/sidebar";
 import type { NavItem } from "@/types/navigation";
 
@@ -24,43 +25,62 @@ export const SidebarNavGroup = ({
     className,
 }: SidebarNavGroupProps) => {
     const pathname = usePathname();
+    const { state } = useSidebar();
+
+    const badgeStyles = {
+        slate: {
+            dot: "bg-slate-400 border-white",
+            pill: "bg-slate-100 border-slate-400 text-slate-800",
+        },
+        orange: {
+            dot: "bg-orange-400 border-white",
+            pill: "bg-orange-100 border-orange-400 text-orange-500",
+        },
+    } as const;
 
     return (
         <SidebarGroup className={className}>
             {label && <SidebarGroupLabel>{label}</SidebarGroupLabel>}
             <SidebarMenu>
-                {items.map((item) => (
-                    <SidebarMenuItem key={item.label}>
-                        {item.badge != null && item.badge > 0 && (
-                            <span
-                                className="group-data-[state=expanded]:hidden absolute -top-1 -right-1 bg-slate-400         
-                                border-2 border-slate-200 w-3 h-3 rounded-full"
-                            ></span>
-                        )}
-                        <SidebarMenuButton
-                            asChild
-                            isActive={pathname === item.url}
-                        >
-                            <Link href={item.url}>
-                                <HugeiconsIcon
-                                    strokeWidth={1.5}
-                                    icon={item.icon}
-                                    className={
-                                        pathname === item.url
-                                            ? "text-zinc-600"
-                                            : "text-muted-foreground"
-                                    }
+                {items.map((item) => {
+                    const colors = badgeStyles[item.badgeColor ?? "slate"];
+                    const hasBadge = item.badge != null && item.badge > 0;
+                    return (
+                        <SidebarMenuItem key={item.label}>
+                            {/* Dot — only visible in collapsed state */}
+                            {hasBadge && (
+                                <span
+                                    className={`absolute top-1 right-1 border-2 w-3 h-3 rounded-full transition-opacity duration-150 ${state === "collapsed" ? "opacity-100" : "opacity-0"} ${colors.dot}`}
                                 />
-                                <span>{item.label}</span>
-                                {item.badge != null && item.badge > 0 && (
-                                    <span className="ml-auto inline-flex h-5 min-w-4 items-center justify-center rounded-full bg-slate-100 border border-slate-400 px-2 text-[12px] font-medium text-slate-800">
-                                        {item.badge}
-                                    </span>
-                                )}
-                            </Link>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                ))}
+                            )}
+                            <SidebarMenuButton
+                                asChild
+                                isActive={pathname === item.url}
+                            >
+                                <Link href={item.url}>
+                                    <HugeiconsIcon
+                                        strokeWidth={1}
+                                        icon={item.icon}
+                                        className={
+                                            pathname === item.url
+                                                ? "text-zinc-600"
+                                                : "text-muted-foreground"
+                                        }
+                                    />
+                                    <span>{item.label}</span>
+                                    {/* Pill — only rendered in expanded state */}
+                                    {hasBadge && state === "expanded" && (
+                                        <span
+                                            className={`ml-auto inline-flex h-5 min-w-6 items-center justify-center rounded-full border px-2 text-[12px] font-medium ${colors.pill}`}
+                                        >
+                                            {item.badge}
+                                        </span>
+                                    )}
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    );
+                })}
             </SidebarMenu>
         </SidebarGroup>
     );

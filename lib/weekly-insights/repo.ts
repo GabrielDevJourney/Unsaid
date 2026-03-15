@@ -347,6 +347,45 @@ export const getPatternsByType = async (
 };
 
 /**
+ * Get weekly insight patterns created within a date range for a user.
+ * Used to enrich progress insight generation with recent pattern context.
+ * Admin client bypasses RLS — filters by user_id explicitly.
+ */
+export const getWeeklyPatternsForDateRange = async (
+    supabase: SupabaseClient,
+    userId: string,
+    fromDate: string,
+    toDate: string,
+    limit = 3,
+): Promise<{ data: WeeklyInsightPattern[]; error: Error | null }> => {
+    const { data: weeklyRows, error: weeklyError } = await supabase
+        .from("weekly_insights")
+        .select("id")
+        .eq("user_id", userId)
+        .gte("week_start", fromDate.slice(0, 10))
+        .lte("week_start", toDate.slice(0, 10));
+
+    if (weeklyError || !weeklyRows || weeklyRows.length === 0) {
+        return { data: [], error: weeklyError };
+    }
+
+    const weeklyIds = weeklyRows.map((r) => r.id);
+
+    const { data: patternRows, error: patternsError } = await supabase
+        .from("weekly_insight_patterns")
+        .select("*")
+        .in("weekly_insight_id", weeklyIds)
+        .order("created_at", { ascending: false })
+        .limit(limit);
+
+    if (patternsError || !patternRows) {
+        return { data: [], error: patternsError };
+    }
+
+    return { data: patternRows.map(toWeeklyInsightPattern), error: null };
+};
+
+/**
  * Search weekly insights by embedding vector using semantic similarity.
  * Calls the search_weekly_insight_patterns_by_embedding RPC function.
  * Decrypts content for each result.

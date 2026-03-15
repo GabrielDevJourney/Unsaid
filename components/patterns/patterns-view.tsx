@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Toolbar } from "@/components/shared/toolbar";
 import { PATTERN_TYPES } from "@/lib/constants/pattern-types";
 import { useDebounce } from "@/lib/hooks/use-debounce";
+import { useInfiniteScroll } from "@/lib/hooks/use-infinite-scroll";
 import type {
     WeeklyInsightPatternWithSimilarity,
     WeeklyInsightWithPatterns,
@@ -21,6 +22,8 @@ const PATTERN_TYPE_OPTIONS = Object.values(PATTERN_TYPES).map((type) => ({
 
 interface PatternsViewProps {
     insights: WeeklyInsightWithPatterns[];
+    initialCursor: string | null;
+    initialNewCount: number;
 }
 
 const isWeekInRange = (weekStart: string, range: DateRange): boolean => {
@@ -55,7 +58,16 @@ const groupSearchResultsByWeek = (
     }));
 };
 
-const PatternsView = ({ insights }: PatternsViewProps) => {
+const PatternsView = ({
+    insights: initialInsights,
+    initialCursor,
+    initialNewCount,
+}: PatternsViewProps) => {
+    const [insights, setInsights] =
+        useState<WeeklyInsightWithPatterns[]>(initialInsights);
+    const [cursor, setCursor] = useState<string | null>(initialCursor);
+    const [newCount, setNewCount] = useState(initialNewCount);
+
     const [dateRange, setDateRange] = useState<DateRange | undefined>();
     const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set());
     const [viewedIds, setViewedIds] = useState<Set<string>>(new Set());
@@ -67,6 +79,30 @@ const PatternsView = ({ insights }: PatternsViewProps) => {
     const [isSearching, setIsSearching] = useState(false);
 
     const debouncedQuery = useDebounce(searchQuery, 400);
+
+    const fetchMore = useCallback(async () => {
+        if (cursor === null) return;
+
+        const res = await fetch(
+            `/api/weekly-insights?cursor=${encodeURIComponent(cursor)}`,
+        );
+        if (!res.ok) return;
+
+        const json = (await res.json()) as {
+            data?: WeeklyInsightWithPatterns[];
+            nextCursor?: string | null;
+        };
+        if (json.data && json.data.length > 0) {
+            setInsights((prev) => [...prev, ...(json.data ?? [])]);
+        }
+        setCursor(json.nextCursor ?? null);
+    }, [cursor]);
+
+    const { sentinelRef, isFetching } = useInfiniteScroll({
+        hasMore: cursor !== null,
+        fetchMore,
+        enabled: searchResults === null,
+    });
 
     useEffect(() => {
         if (debouncedQuery.length < 3) {
@@ -104,6 +140,7 @@ const PatternsView = ({ insights }: PatternsViewProps) => {
 
     const handlePatternViewed = (id: string) => {
         setViewedIds((prev) => new Set([...prev, id]));
+        setNewCount((prev) => Math.max(0, prev - 1));
     };
 
     const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
@@ -160,14 +197,6 @@ const PatternsView = ({ insights }: PatternsViewProps) => {
         [searchResults],
     );
 
-    const liveNewCount = useMemo(
-        () =>
-            insightsWithPatterns
-                .flatMap((i) => i.patterns)
-                .filter((p) => !p.isViewed).length,
-        [insightsWithPatterns],
-    );
-
     const displayInsights = searchGrouped ?? filtered;
 
     return (
@@ -178,10 +207,10 @@ const PatternsView = ({ insights }: PatternsViewProps) => {
                         <h1 className="font-serif text-4xl italic text-zinc-600">
                             Patterns
                         </h1>
-                        {liveNewCount > 0 && (
+                        {newCount > 0 && (
                             <span className="inline-flex items-center rounded-full bg-neutral-500 px-3 py-1 text-xs font-medium text-white">
-                                {liveNewCount} new{" "}
-                                {liveNewCount === 1 ? "insight" : "insights"}
+                                {newCount} new{" "}
+                                {newCount === 1 ? "insight" : "insights"}
                             </span>
                         )}
                     </div>
@@ -231,6 +260,15 @@ const PatternsView = ({ insights }: PatternsViewProps) => {
                                     onPatternViewed={handlePatternViewed}
                                 />
                             ))
+                        )}
+
+                        {/* Sentinel: triggers fetchMore when visible */}
+                        <div ref={sentinelRef} className="h-1" />
+
+                        {isFetching && (
+                            <div className="flex justify-center py-4">
+                                <div className="size-5 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
+                            </div>
                         )}
                     </div>
                 )}

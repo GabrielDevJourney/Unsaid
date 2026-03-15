@@ -1,8 +1,10 @@
-import { PATTERN_TYPES } from "@/lib/constants/pattern-types";
+import { ReferenceTimeline } from "@/components/shared/reference-timeline";
+import {
+    PATTERN_TYPE_BADGE_STYLES,
+    PATTERN_TYPES,
+} from "@/lib/constants/pattern-types";
 import type { WeeklyInsightPattern } from "@/types";
 import { PageHeader } from "../layout/page-header";
-import { TYPE_BADGE_STYLES } from "./pattern-badge-styles";
-import { ReferenceTimeline } from "./reference-timeline";
 
 interface PatternDetailPageProps {
     pattern: WeeklyInsightPattern;
@@ -10,11 +12,10 @@ interface PatternDetailPageProps {
 
 const PatternDetailPage = ({ pattern }: PatternDetailPageProps) => {
     const badgeStyle =
-        TYPE_BADGE_STYLES[pattern.patternType] ??
+        PATTERN_TYPE_BADGE_STYLES[pattern.patternType] ??
         "border-zinc-300 bg-zinc-100 text-zinc-600";
     const typeLabel =
         PATTERN_TYPES[pattern.patternType]?.label ?? pattern.patternType;
-
     return (
         <div className="flex h-full flex-col overflow-hidden">
             <PageHeader backHref="/patterns">
@@ -31,14 +32,16 @@ const PatternDetailPage = ({ pattern }: PatternDetailPageProps) => {
                     </p>
                 </div>
             </PageHeader>
-
             <div className="flex-1 overflow-y-auto">
                 <div className="flex gap-16 px-10 py-10">
                     {/* Left: sticky reference panel — shows all evidence */}
                     <div className="shrink-0 self-start sticky top-10">
                         <div className="rounded-xl border border-border overflow-hidden">
                             <ReferenceTimeline
-                                items={pattern.evidence}
+                                items={pattern.evidence.map((e) => ({
+                                    id: e.entryId,
+                                    label: e.label,
+                                }))}
                                 from={`/patterns/${pattern.id}`}
                                 showAll
                             />
@@ -81,7 +84,7 @@ const PatternDetailPage = ({ pattern }: PatternDetailPageProps) => {
                                 <p className="font-sans font-bold text-neutral-500">
                                     Reflection Question{" "}
                                 </p>
-                                <p className="font-serif italic text-neutral-500 text-3xl leading-relaxed underline">
+                                <p className="font-serif italic text-neutral-500 text-3xl leading-relaxed">
                                     {pattern.question}
                                 </p>
                             </div>

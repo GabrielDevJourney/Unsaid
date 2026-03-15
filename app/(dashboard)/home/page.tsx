@@ -12,13 +12,18 @@ const HomePage = async () => {
     }
 
     const supabase = await createSupabaseServer();
-    const { entries, totalEntriesAllTime, totalPatternsCount, entryDates } =
-        await getHomePageData(supabase);
+    const {
+        entries,
+        hasMore,
+        totalEntriesAllTime,
+        totalPatternsCount,
+        entryDates,
+    } = await getHomePageData(supabase);
 
     return (
         <HomeView
             entries={entries.map((entry) => ({ entry }))}
-            totalEntries={entries.length}
+            initialHasMore={hasMore}
             userName={user.username ?? ""}
             totalEntriesAllTime={totalEntriesAllTime}
             totalPatternsCount={totalPatternsCount}

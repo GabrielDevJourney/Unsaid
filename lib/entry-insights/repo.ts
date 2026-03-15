@@ -42,6 +42,29 @@ export const upsertEntryInsight = async (
 };
 
 /**
+ * Get entry insights for a batch of entry IDs.
+ * Used during progress insight generation (admin client, bypasses RLS).
+ * Decrypts content for each result.
+ */
+export const getEntryInsightsByEntryIds = async (
+    supabase: SupabaseClient,
+    entryIds: string[],
+): Promise<{ data: EntryInsight[]; error: Error | null }> => {
+    if (entryIds.length === 0) return { data: [], error: null };
+
+    const { data: insightRows, error } = await supabase
+        .from("entry_insights")
+        .select(SELECT_FIELDS)
+        .in("entry_id", entryIds);
+
+    if (error || !insightRows) {
+        return { data: [], error };
+    }
+
+    return { data: insightRows.map(toEntryInsight), error: null };
+};
+
+/**
  * Get entry insight by entry ID.
  * Returns the insight associated with a specific entry.
  * Decrypts content before returning.

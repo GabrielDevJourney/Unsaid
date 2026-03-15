@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { markPatternAsViewedAction } from "@/app/actions/weekly-insights";
-import { PATTERN_TYPES } from "@/lib/constants/pattern-types";
+import { ReferenceTimeline } from "@/components/shared/reference-timeline";
+import {
+    PATTERN_TYPE_BADGE_STYLES,
+    PATTERN_TYPES,
+} from "@/lib/constants/pattern-types";
 import type { WeeklyInsightPattern } from "@/types";
-import { TYPE_BADGE_STYLES } from "./pattern-badge-styles";
-import { ReferenceTimeline } from "./reference-timeline";
 
 interface PatternCardProps {
     pattern: WeeklyInsightPattern;
@@ -19,7 +21,7 @@ const PatternCard = ({
     onViewed,
 }: PatternCardProps) => {
     const badgeStyle =
-        TYPE_BADGE_STYLES[pattern.patternType] ??
+        PATTERN_TYPE_BADGE_STYLES[pattern.patternType] ??
         "border-zinc-300 bg-zinc-100 text-zinc-600";
     const typeLabel =
         PATTERN_TYPES[pattern.patternType]?.label ?? pattern.patternType;
@@ -37,7 +39,10 @@ const PatternCard = ({
             {/* Left: each pill is its own Link to the referenced entry */}
             <div className="border-r border-border">
                 <ReferenceTimeline
-                    items={pattern.evidence}
+                    items={pattern.evidence.map((e) => ({
+                        id: e.entryId,
+                        label: e.label,
+                    }))}
                     from={from}
                     className="h-full"
                 />
