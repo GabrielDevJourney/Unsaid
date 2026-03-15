@@ -49,8 +49,10 @@ export interface EntryInsightRowEncrypted extends InsightRowBase {
  * Progress insight row for transformer input.
  */
 export interface ProgressInsightRowEncrypted extends InsightRowBase {
+    is_viewed: boolean;
     recent_entry_ids: string[];
     related_past_entry_ids: string[] | null;
+    key_entry_ids: string[] | null;
 }
 
 /**
@@ -181,14 +183,32 @@ export interface WeeklyInsightWithPatterns extends WeeklyInsight {
 }
 
 /**
+ * Structured content from a progress insight (new JSON format).
+ * Old records (text format) will have parsedContent = null.
+ */
+export interface ProgressInsightStructured {
+    headline: string;
+    whatsOnRepeat: string;
+    whatChanged: string;
+    realityCheck: string;
+    experiment: string;
+    theQuestion: string;
+    keyEntryNumbers: number[];
+    isMilestone: boolean;
+}
+
+/**
  * Decrypted progress insight for application use.
  */
 export interface ProgressInsight {
     id: string;
     userId: string;
     content: string;
+    parsedContent: ProgressInsightStructured | null;
+    isViewed: boolean;
     recentEntryIds: string[];
     relatedPastEntryIds: string[] | null;
+    keyEntryIds: string[] | null;
     createdAt: string;
     updatedAt: string;
 }
@@ -249,4 +269,5 @@ export interface InsertProgressInsightData {
     content: string;
     recentEntryIds: string[];
     relatedPastEntryIds?: string[];
+    keyEntryIds?: string[];
 }

@@ -26,6 +26,7 @@ export const INSIGHT_TAG_TYPES = [
     "Stress",
     "Change",
     "Decision",
+    "Vulnerability",
 ] as const;
 
 export type InsightTagType = (typeof INSIGHT_TAG_TYPES)[number];
