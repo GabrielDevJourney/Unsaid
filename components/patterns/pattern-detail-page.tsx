@@ -84,7 +84,7 @@ const PatternDetailPage = ({ pattern }: PatternDetailPageProps) => {
                                 <p className="font-sans font-bold text-neutral-500">
                                     Reflection Question{" "}
                                 </p>
-                                <p className="font-serif italic text-neutral-500 text-3xl leading-relaxed underline">
+                                <p className="font-serif italic text-neutral-500 text-3xl leading-relaxed">
                                     {pattern.question}
                                 </p>
                             </div>
