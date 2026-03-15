@@ -1,4 +1,4 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { PostgrestError, SupabaseClient } from "@supabase/supabase-js";
 import type {
     Entry,
     EntryMinimal,
@@ -7,6 +7,21 @@ import type {
 } from "@/types";
 import { encrypt } from "../crypto";
 import { toEntry, toEntryMinimal, toProgressInsight } from "./transformers";
+
+/**
+ * Count total progress insights for a user.
+ * Used to compute milestone status at generation time.
+ */
+export const countProgressInsights = async (
+    supabase: SupabaseClient,
+    userId: string,
+): Promise<number> => {
+    const { count } = await supabase
+        .from("progress_insights")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId);
+    return count ?? 0;
+};
 
 /**
  * Insert a new progress insight into the database.
@@ -28,9 +43,10 @@ export const insertProgressInsight = async (
             content_tag: tag,
             recent_entry_ids: data.recentEntryIds,
             related_past_entry_ids: data.relatedPastEntryIds ?? [],
+            key_entry_ids: data.keyEntryIds ?? null,
         })
         .select(
-            "id, user_id, encrypted_content, content_iv, content_tag, recent_entry_ids, related_past_entry_ids, created_at, updated_at",
+            "id, user_id, encrypted_content, content_iv, content_tag, is_viewed, recent_entry_ids, related_past_entry_ids, key_entry_ids, created_at, updated_at",
         )
         .single();
 
@@ -53,7 +69,7 @@ export const getLatestProgressInsight = async (
     const { data: insightRow, error } = await supabase
         .from("progress_insights")
         .select(
-            "id, user_id, encrypted_content, content_iv, content_tag, recent_entry_ids, related_past_entry_ids, created_at, updated_at",
+            "id, user_id, encrypted_content, content_iv, content_tag, is_viewed, recent_entry_ids, related_past_entry_ids, key_entry_ids, created_at, updated_at",
         )
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
@@ -79,7 +95,7 @@ export const getProgressInsightById = async (
     const { data: insightRow, error } = await supabase
         .from("progress_insights")
         .select(
-            "id, user_id, encrypted_content, content_iv, content_tag, recent_entry_ids, related_past_entry_ids, created_at, updated_at",
+            "id, user_id, encrypted_content, content_iv, content_tag, is_viewed, recent_entry_ids, related_past_entry_ids, key_entry_ids, created_at, updated_at",
         )
         .eq("id", insightId)
         .single();
@@ -110,7 +126,7 @@ export const getProgressInsightsPaginated = async (
     } = await supabase
         .from("progress_insights")
         .select(
-            "id, user_id, encrypted_content, content_iv, content_tag, recent_entry_ids, related_past_entry_ids, created_at, updated_at",
+            "id, user_id, encrypted_content, content_iv, content_tag, is_viewed, recent_entry_ids, related_past_entry_ids, key_entry_ids, created_at, updated_at",
             { count: "exact" },
         )
         .eq("user_id", userId)
@@ -126,6 +142,35 @@ export const getProgressInsightsPaginated = async (
         error: null,
         count: count ?? 0,
     };
+};
+
+/**
+ * Count unviewed progress insights for the authenticated user.
+ * RLS ensures only the user's own insights are counted.
+ * Used to drive the sidebar notification badge.
+ */
+export const countUnviewedProgressInsights = async (
+    supabase: SupabaseClient,
+): Promise<{ count: number; error: PostgrestError | null }> => {
+    const { count, error } = await supabase
+        .from("progress_insights")
+        .select("id", { count: "exact", head: true })
+        .eq("is_viewed", false);
+    return { count: count ?? 0, error };
+};
+
+/**
+ * Mark a progress insight as viewed.
+ * RLS ensures users can only update their own rows.
+ */
+export const markProgressInsightAsViewed = async (
+    supabase: SupabaseClient,
+    insightId: string,
+): Promise<void> => {
+    await supabase
+        .from("progress_insights")
+        .update({ is_viewed: true })
+        .eq("id", insightId);
 };
 
 /**

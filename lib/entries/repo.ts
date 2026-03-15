@@ -378,6 +378,36 @@ export const searchEntriesByEmbedding = async (
  * Calls the find_related_entries RPC function.
  * Decrypts content for each result.
  */
+/**
+ * Get entry id + created_at for a list of entry IDs.
+ * Used to resolve entry dates for progress insight reference panels.
+ * RLS ensures only the user's own entries are returned.
+ * No decryption needed — only metadata is fetched.
+ */
+export const getEntryDatesByIds = async (
+    supabase: SupabaseClient,
+    ids: string[],
+): Promise<{
+    data: { id: string; createdAt: string }[];
+    error: Error | null;
+}> => {
+    if (ids.length === 0) return { data: [], error: null };
+
+    const { data: rows, error } = await supabase
+        .from("entries")
+        .select("id, created_at")
+        .in("id", ids);
+
+    if (error || !rows) {
+        return { data: [], error };
+    }
+
+    return {
+        data: rows.map((r) => ({ id: r.id, createdAt: r.created_at })),
+        error: null,
+    };
+};
+
 export const findRelatedEntries = async (
     supabase: SupabaseClient,
     userId: string,

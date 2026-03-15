@@ -1,8 +1,17 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { generateEmbedding } from "@/lib/ai/embeddings";
-import { generateProgressInsight } from "@/lib/ai/generate-progress-insight";
+import {
+    generateProgressInsight,
+    type WeeklyPatternContext,
+} from "@/lib/ai/generate-progress-insight";
 import { PROGRESS_TRIGGER_INTERVAL } from "@/lib/constants";
-import { searchEntriesByEmbedding } from "@/lib/entries/repo";
+import {
+    getEntryDatesByIds,
+    searchEntriesByEmbedding,
+} from "@/lib/entries/repo";
+import { getEntryInsightsByEntryIds } from "@/lib/entry-insights/repo";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
+import { getWeeklyPatternsForDateRange } from "@/lib/weekly-insights/repo";
 import type {
     CreateProgressInsightPayload,
     EntryMinimal,
@@ -10,14 +19,41 @@ import type {
     ProgressInsight,
     ServiceResult,
 } from "@/types";
+
+// SupabaseClient alias accepted by both server and admin clients
+type DbClient = SupabaseClient;
+
 import {
+    countProgressInsights,
+    countUnviewedProgressInsights,
+    getProgressInsightById,
+    getProgressInsightsPaginated,
     getRecentEntries,
     getUserProgress,
     insertProgressInsight,
+    markProgressInsightAsViewed,
     updateUserProgressAfterInsight,
 } from "./repo";
 
 export { PROGRESS_TRIGGER_INTERVAL };
+
+export const getUnviewedProgressInsightsCount = async (
+    supabase: DbClient,
+): Promise<ServiceResult<number>> => {
+    const { count, error } = await countUnviewedProgressInsights(supabase);
+    if (error) {
+        console.error("Failed to get unviewed progress count:", error);
+        return { error: "Failed to get unviewed progress count" };
+    }
+    return { data: count };
+};
+
+export const markProgressInsightViewed = async (
+    supabase: DbClient,
+    insightId: string,
+): Promise<void> => {
+    await markProgressInsightAsViewed(supabase, insightId);
+};
 
 /** Number of related past entries to include for context */
 const RELATED_ENTRIES_LIMIT = 7;
@@ -34,7 +70,13 @@ const SIMILARITY_THRESHOLD = 0.3;
  */
 export const shouldTriggerProgressInsight = async (
     userId: string,
-): Promise<ServiceResult<{ shouldTrigger: boolean; totalEntries: number }>> => {
+): Promise<
+    ServiceResult<{
+        shouldTrigger: boolean;
+        totalEntries: number;
+        entryCountAtLastProgress: number;
+    }>
+> => {
     const supabase = createSupabaseAdmin();
 
     const { data: progress, error: progressError } = await getUserProgress(
@@ -45,14 +87,26 @@ export const shouldTriggerProgressInsight = async (
     if (progressError) {
         // PGRST116 = no rows (user has no progress record yet)
         if (progressError.code === "PGRST116") {
-            return { data: { shouldTrigger: false, totalEntries: 0 } };
+            return {
+                data: {
+                    shouldTrigger: false,
+                    totalEntries: 0,
+                    entryCountAtLastProgress: 0,
+                },
+            };
         }
         console.error("Failed to fetch user progress:", progressError);
         throw progressError;
     }
 
     if (!progress) {
-        return { data: { shouldTrigger: false, totalEntries: 0 } };
+        return {
+            data: {
+                shouldTrigger: false,
+                totalEntries: 0,
+                entryCountAtLastProgress: 0,
+            },
+        };
     }
 
     const entriesSinceLastProgress =
@@ -66,6 +120,7 @@ export const shouldTriggerProgressInsight = async (
         data: {
             shouldTrigger,
             totalEntries: progress.total_entries,
+            entryCountAtLastProgress: progress.entry_count_at_last_progress,
         },
     };
 };
@@ -76,9 +131,10 @@ export const shouldTriggerProgressInsight = async (
  * Flow:
  * 1. Fetch last 15 entries
  * 2. Find semantically related past entries
- * 3. Generate insight using AI
- * 4. Save to database
- * 5. Update user progress tracking
+ * 3. Enrich with entry insights (Tier 1 summaries + tags) and weekly patterns
+ * 4. Generate structured JSON insight using AI
+ * 5. Compute is_milestone, serialize, save to database
+ * 6. Update user progress tracking
  *
  * Uses admin client (bypasses RLS - insights are system-created).
  *
@@ -134,8 +190,21 @@ export const createProgressInsight = async (
         );
     }
 
-    // Generate progress insight using AI
-    const insightContent = await generateProgressInsight({
+    // Enrich context with entry insights (Tier 1 summaries + tags)
+    const entryInsights = await fetchEntryInsightsContext(
+        supabase,
+        recentEntries,
+    );
+
+    // Enrich context with weekly patterns in the date range
+    const weeklyPatterns = await fetchWeeklyPatternsContext(
+        supabase,
+        userId,
+        recentEntries,
+    );
+
+    // Generate progress insight using AI (structured JSON output)
+    const aiOutput = await generateProgressInsight({
         recentEntries: recentEntries.map((e) => ({
             id: e.id,
             content: e.content,
@@ -147,20 +216,40 @@ export const createProgressInsight = async (
             createdAt: e.createdAt,
             similarity: e.similarity,
         })),
+        entryInsights,
+        weeklyPatterns,
     });
 
-    if (!insightContent) {
+    if (!aiOutput) {
         return { error: "AI failed to generate progress insight" };
     }
+
+    // Compute milestone: every 5th insight is a milestone (including the 1st)
+    const existingCount = await countProgressInsights(supabase, userId);
+    const isMilestone = existingCount % 5 === 0;
+
+    // Build full structured content with milestone flag (stored as snake_case JSON in DB)
+    const structured = {
+        ...aiOutput,
+        is_milestone: isMilestone,
+    };
+
+    // Map key_entry_numbers (1-indexed) to actual entry IDs
+    const keyEntryIds = aiOutput.key_entry_numbers
+        .map((n) => recentEntries[n - 1]?.id)
+        .filter((id): id is string => id !== undefined);
+
+    const content = JSON.stringify(structured);
 
     // Save to database
     const { data: insight, error: insertError } = await insertProgressInsight(
         supabase,
         {
             userId,
-            content: insightContent,
+            content,
             recentEntryIds: recentEntries.map((e) => e.id),
             relatedPastEntryIds: relatedPastEntries.map((e) => e.id),
+            keyEntryIds,
         },
     );
 
@@ -187,6 +276,176 @@ export const createProgressInsight = async (
 };
 
 /**
+ * Get all progress insights + stats for the list page.
+ * Caller (RSC page) provides supabase server client + userId from auth.
+ */
+export const getProgressInsightsPage = async (
+    supabase: DbClient,
+    userId: string,
+): Promise<{
+    insights: ProgressInsight[];
+    totalInsights: number;
+    totalEntries: number;
+    entryCountAtLastProgress: number;
+}> => {
+    const [insightsResult, progressResult] = await Promise.all([
+        getProgressInsightsPaginated(supabase, userId, 1, 100),
+        getUserProgress(supabase, userId),
+    ]);
+
+    const progress = progressResult.data;
+
+    return {
+        insights: insightsResult.data,
+        totalInsights: insightsResult.count,
+        totalEntries: progress?.total_entries ?? 0,
+        entryCountAtLastProgress: progress?.entry_count_at_last_progress ?? 0,
+    };
+};
+
+/**
+ * Get a single progress insight + resolved key entry dates for the detail page.
+ * Returns null if insight not found.
+ * Caller (RSC page) provides supabase server client. RLS enforces ownership.
+ */
+export const getProgressInsightDetail = async (
+    supabase: DbClient,
+    insightId: string,
+): Promise<{
+    insight: ProgressInsight;
+    keyEntryData: { id: string; entryNumber: number; createdAt: string }[];
+} | null> => {
+    const { data: insight } = await getProgressInsightById(supabase, insightId);
+    if (!insight) return null;
+
+    // Determine key entry IDs: use stored key_entry_ids, or fall back to first/middle/last
+    const keyIds = resolveKeyEntryIds(insight);
+
+    const { data: entryDates } = await getEntryDatesByIds(supabase, keyIds);
+
+    const dateMap = new Map(entryDates.map((e) => [e.id, e.createdAt]));
+
+    const keyEntryData = keyIds
+        .map((id) => ({
+            id,
+            entryNumber: insight.recentEntryIds.indexOf(id) + 1,
+            createdAt: dateMap.get(id) ?? "",
+        }))
+        .filter((e) => e.createdAt !== "");
+
+    return { insight, keyEntryData };
+};
+
+/**
+ * Determine which entry IDs to show in the reference panel.
+ * Uses key_entry_ids if available (new records), otherwise falls back
+ * to first, middle, and last of recent_entry_ids (old records).
+ */
+const resolveKeyEntryIds = (insight: ProgressInsight): string[] => {
+    if (insight.keyEntryIds && insight.keyEntryIds.length > 0) {
+        return insight.keyEntryIds;
+    }
+
+    const ids = insight.recentEntryIds;
+    if (ids.length === 0) return [];
+    if (ids.length <= 3) return ids;
+
+    const first = ids[0];
+    const mid = ids[Math.floor(ids.length / 2)];
+    const last = ids[ids.length - 1];
+
+    return [...new Set([first, mid, last])];
+};
+
+/**
+ * Fetch entry insight summaries for recent entries.
+ * Returns context objects for the AI prompt.
+ * Gracefully returns empty array if no insights are available.
+ */
+const fetchEntryInsightsContext = async (
+    supabase: ReturnType<typeof createSupabaseAdmin>,
+    recentEntries: EntryMinimal[],
+): Promise<{ entryIndex: number; summary: string; tags: string[] }[]> => {
+    try {
+        const entryIds = recentEntries.map((e) => e.id);
+        const { data: insights } = await getEntryInsightsByEntryIds(
+            supabase,
+            entryIds,
+        );
+
+        if (!insights || insights.length === 0) return [];
+
+        const entryIdToIndex = new Map(recentEntries.map((e, i) => [e.id, i]));
+
+        return insights
+            .map((insight) => {
+                const index = entryIdToIndex.get(insight.entryId);
+                if (index === undefined) return null;
+                return {
+                    entryIndex: index,
+                    summary: insight.content,
+                    tags: insight.tags,
+                };
+            })
+            .filter(
+                (
+                    item,
+                ): item is {
+                    entryIndex: number;
+                    summary: string;
+                    tags: string[];
+                } => item !== null,
+            );
+    } catch (error) {
+        console.error(
+            "[Progress] Failed to fetch entry insights for context:",
+            error,
+        );
+        return [];
+    }
+};
+
+/**
+ * Fetch weekly patterns within the date range of the recent 15 entries.
+ * Used to enrich the AI context with higher-level pattern summaries.
+ */
+const fetchWeeklyPatternsContext = async (
+    supabase: ReturnType<typeof createSupabaseAdmin>,
+    userId: string,
+    recentEntries: EntryMinimal[],
+): Promise<WeeklyPatternContext[]> => {
+    if (recentEntries.length === 0) return [];
+
+    try {
+        const newestDate = recentEntries[0].createdAt;
+        const oldestDate = recentEntries[recentEntries.length - 1].createdAt;
+
+        const { data: patterns } = await getWeeklyPatternsForDateRange(
+            supabase,
+            userId,
+            oldestDate,
+            newestDate,
+            3,
+        );
+
+        if (!patterns || patterns.length === 0) return [];
+
+        return patterns
+            .filter((p) => p.description)
+            .map((p) => ({
+                title: p.title,
+                description: p.description,
+            }));
+    } catch (error) {
+        console.error(
+            "[Progress] Failed to fetch weekly patterns for context:",
+            error,
+        );
+        return [];
+    }
+};
+
+/**
  * Find past entries semantically related to recent entries.
  * Extracts themes from recent entries and searches older content.
  */
@@ -202,22 +461,19 @@ const findRelatedPastEntries = async (
     }, new Date());
 
     // Create a combined theme summary from recent entries
-    // Use first ~500 chars from each entry to capture key themes
     const themeSummary = recentEntries
         .map((e) => e.content.slice(0, 500))
         .join(" ")
-        .slice(0, 3000); // Limit total length for embedding
+        .slice(0, 3000);
 
     try {
-        // Generate embedding for the theme summary
         const themeEmbedding = await generateEmbedding(themeSummary);
 
-        // Search for related entries before the recent period
         const { data: relatedEntries, error } = await searchEntriesByEmbedding(
             supabase,
             userId,
             themeEmbedding,
-            RELATED_ENTRIES_LIMIT + PROGRESS_TRIGGER_INTERVAL, // Get extra to filter
+            RELATED_ENTRIES_LIMIT + PROGRESS_TRIGGER_INTERVAL,
             SIMILARITY_THRESHOLD,
         );
 
@@ -226,20 +482,11 @@ const findRelatedPastEntries = async (
             return [];
         }
 
-        console.log(
-            `[Progress] Semantic search found ${relatedEntries.length} entries above threshold ${SIMILARITY_THRESHOLD}`,
-        );
-
-        // Filter out recent entries (those in the last 15)
         const recentIds = new Set(recentEntries.map((e) => e.id));
         const pastEntries = relatedEntries
             .filter((e) => !recentIds.has(e.id))
             .filter((e) => new Date(e.createdAt) < oldestRecentDate)
             .slice(0, RELATED_ENTRIES_LIMIT);
-
-        console.log(
-            `[Progress] After filtering recent entries: ${pastEntries.length} past entries found`,
-        );
 
         return pastEntries.map((e) => ({
             id: e.id,
