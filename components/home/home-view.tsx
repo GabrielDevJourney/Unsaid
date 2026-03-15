@@ -19,11 +19,14 @@ import {
     SheetTitle,
 } from "@/components/ui/sheet";
 import { useDebounce } from "@/lib/hooks/use-debounce";
-import type { EntryWithSimilarity } from "@/types";
+import { useInfiniteScroll } from "@/lib/hooks/use-infinite-scroll";
+import type { EntryWithInsight, EntryWithSimilarity } from "@/types";
+
+const PAGE_SIZE = 20;
 
 interface HomeViewProps {
     entries: EntryItem[];
-    totalEntries: number;
+    initialHasMore: boolean;
     userName: string;
     totalEntriesAllTime: number;
     totalPatternsCount: number;
@@ -38,14 +41,17 @@ const getGreeting = (): string => {
 };
 
 const HomeView = ({
-    entries,
-    totalEntries,
+    entries: initialEntries,
+    initialHasMore,
     userName,
     totalEntriesAllTime,
     totalPatternsCount,
     entryDates,
 }: HomeViewProps) => {
     const router = useRouter();
+    const [entries, setEntries] = useState<EntryItem[]>(initialEntries);
+    const [page, setPage] = useState(2);
+    const [hasMore, setHasMore] = useState(initialHasMore);
     const [isAsideOpen, setIsAsideOpen] = useState(false);
     const [selectedTags, setSelectedTags] = useState<Set<TagName>>(new Set());
     const [dateRange, setDateRange] = useState<DateRange | undefined>();
@@ -58,6 +64,35 @@ const HomeView = ({
     );
     const [isSearching, setIsSearching] = useState(false);
     const debouncedQuery = useDebounce(searchQuery, 400);
+
+    const fetchMore = useCallback(async () => {
+        const res = await fetch(
+            `/api/entries?page=${page}&pageSize=${PAGE_SIZE}`,
+        );
+        if (!res.ok) return;
+
+        const json = (await res.json()) as {
+            data?: EntryWithInsight[];
+            pagination?: { hasMore: boolean };
+        };
+
+        if (json.data && json.data.length > 0) {
+            setEntries((prev) => [
+                ...prev,
+                ...(json.data ?? []).map((entry) => ({ entry })),
+            ]);
+            setPage((prev) => prev + 1);
+        }
+        setHasMore(json.pagination?.hasMore ?? false);
+    }, [page]);
+
+    const { sentinelRef, isFetching } = useInfiniteScroll({
+        hasMore,
+        fetchMore,
+        rootMargin: "300px",
+        threshold: 0,
+        enabled: searchResults === null,
+    });
 
     useEffect(() => {
         setDeletedIds((prev) => {
@@ -207,10 +242,19 @@ const HomeView = ({
                                     totalEntries={
                                         activeEntries.length === 0
                                             ? 0
-                                            : totalEntries
+                                            : activeTotal
                                     }
                                     onEntryDeleted={handleEntryDeleted}
                                 />
+                            )}
+
+                            {/* Sentinel — fires 300px before the user reaches the bottom */}
+                            <div ref={sentinelRef} className="h-1" />
+
+                            {isFetching && (
+                                <div className="flex justify-center py-4">
+                                    <div className="size-5 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
+                                </div>
                             )}
                         </div>
                     </div>

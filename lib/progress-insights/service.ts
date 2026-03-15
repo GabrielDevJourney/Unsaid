@@ -22,6 +22,7 @@ import type {
 
 // SupabaseClient alias accepted by both server and admin clients
 type DbClient = SupabaseClient;
+const INITIAL_PAGE_SIZE = 20; // must match PAGE_SIZE in progress-view.tsx
 
 import {
     countUnviewedProgressInsights,
@@ -276,17 +277,19 @@ export const getProgressInsightsPage = async (
     totalInsights: number;
     totalEntries: number;
     entryCountAtLastProgress: number;
+    hasMore: boolean;
 }> => {
     const [insightsResult, progressResult] = await Promise.all([
-        getProgressInsightsPaginated(supabase, userId, 1, 100),
+        getProgressInsightsPaginated(supabase, userId, 1, INITIAL_PAGE_SIZE),
         getUserProgress(supabase, userId),
     ]);
 
     const progress = progressResult.data;
-
+    const totalInsights = insightsResult.count ?? 0;
     return {
         insights: insightsResult.data,
-        totalInsights: insightsResult.count,
+        hasMore: totalInsights > INITIAL_PAGE_SIZE,
+        totalInsights: totalInsights,
         totalEntries: progress?.total_entries ?? 0,
         entryCountAtLastProgress: progress?.entry_count_at_last_progress ?? 0,
     };

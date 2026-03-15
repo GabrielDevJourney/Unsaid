@@ -1,20 +1,23 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { DateRange } from "react-day-picker";
 import { DateFilter } from "@/components/home/date-filter";
 import { PageHeader } from "@/components/layout/page-header";
+import { useInfiniteScroll } from "@/lib/hooks/use-infinite-scroll";
 import { useSidebarBadgeStore } from "@/lib/stores/sidebar-badge-store";
 import type { ProgressInsight } from "@/types";
 import { ProgressCard } from "./progress-card";
 import { ProgressEmptyState } from "./progress-empty-state";
 import { ProgressHeaderBar } from "./progress-header-bar";
 
+const PAGE_SIZE = 20;
 interface ProgressViewProps {
     insights: ProgressInsight[];
     totalInsights: number;
     totalEntries: number;
     entryCountAtLastProgress: number;
+    initialHasMore: boolean;
 }
 
 const isInsightInRange = (createdAt: string, range: DateRange): boolean => {
@@ -26,11 +29,16 @@ const isInsightInRange = (createdAt: string, range: DateRange): boolean => {
 };
 
 const ProgressView = ({
-    insights,
+    insights: initialInsights,
+    initialHasMore,
     totalInsights,
     totalEntries,
     entryCountAtLastProgress,
 }: ProgressViewProps) => {
+    const [insights, setInsights] =
+        useState<ProgressInsight[]>(initialInsights);
+    const [page, setPage] = useState(2);
+    const [hasMore, setHasMore] = useState(initialHasMore);
     const [dateRange, setDateRange] = useState<DateRange | undefined>();
     const [viewedIds, setViewedIds] = useState<Set<string>>(new Set());
     const { decrementProgress } = useSidebarBadgeStore();
@@ -59,6 +67,34 @@ const ProgressView = ({
         [enrichedInsights, dateRange],
     );
 
+    const fetchMore = useCallback(async () => {
+        const res = await fetch(
+            `/api/progress-insights?page=${page}&pageSize=${PAGE_SIZE}`,
+        );
+
+        if (!res.ok) return;
+
+        const json = (await res.json()) as {
+            data?: { insights: ProgressInsight[]; hasMore: boolean };
+        };
+
+        const { insights: newInsights, hasMore: nextHasMore } = json.data ?? {
+            insights: [],
+            hasMore: false,
+        };
+        if (newInsights.length > 0) {
+            setInsights((prev) => [...prev, ...newInsights]);
+            setPage((prev) => prev + 1);
+        }
+        setHasMore(nextHasMore);
+    }, [page]);
+
+    const { sentinelRef, isFetching } = useInfiniteScroll({
+        hasMore,
+        fetchMore,
+        rootMargin: "300px",
+        threshold: 0,
+    });
     return (
         <div className="flex h-full flex-col overflow-hidden">
             <PageHeader>
@@ -113,6 +149,15 @@ const ProgressView = ({
                                 ))}
                             </div>
                         )}
+                    </div>
+                )}
+
+                {/* Sentinel — fires 300px before the user reaches the bottom */}
+                <div ref={sentinelRef} className="h-1" />
+
+                {isFetching && (
+                    <div className="flex justify-center py-4">
+                        <div className="size-5 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
                     </div>
                 )}
             </div>

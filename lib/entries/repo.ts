@@ -117,6 +117,23 @@ export const getEntriesPaginated = async (
     };
 };
 
+/**
+ * Fetch only created_at dates for all user entries.
+ * Lightweight query used to populate the calendar without loading full entry data.
+ * RLS filters to the authenticated user automatically.
+ */
+export const getEntryDates = async (
+    supabase: SupabaseClient,
+): Promise<{ data: string[]; error: Error | null }> => {
+    const { data, error } = await supabase
+        .from("entries")
+        .select("created_at")
+        .order("created_at", { ascending: false });
+
+    if (error || !data) return { data: [], error };
+    return { data: data.map((e) => e.created_at as string), error: null };
+};
+
 export const getEntriesWithInsights = async (
     supabase: SupabaseClient,
 ): Promise<{

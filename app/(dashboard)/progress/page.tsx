@@ -9,12 +9,18 @@ const ProgressPage = async () => {
     if (!userId) redirect("/sign-in");
 
     const supabase = await createSupabaseServer();
-    const { insights, totalInsights, totalEntries, entryCountAtLastProgress } =
-        await getProgressInsightsPage(supabase, userId);
+    const {
+        insights,
+        hasMore,
+        totalInsights,
+        totalEntries,
+        entryCountAtLastProgress,
+    } = await getProgressInsightsPage(supabase, userId);
 
     return (
         <ProgressView
             insights={insights}
+            initialHasMore={hasMore}
             totalInsights={totalInsights}
             totalEntries={totalEntries}
             entryCountAtLastProgress={entryCountAtLastProgress}
