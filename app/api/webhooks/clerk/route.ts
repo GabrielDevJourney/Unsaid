@@ -1,8 +1,9 @@
 import type { EmailAddressJSON } from "@clerk/backend";
 import { verifyWebhook } from "@clerk/nextjs/webhooks";
 import type { NextRequest } from "next/server";
+import { cancelLemonSubscription } from "@/lib/subscriptions/service";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
-import { deleteUser } from "@/lib/users/repo";
+import { deleteUser, updateUserProfile } from "@/lib/users/repo";
 import { createUserWithProgress } from "@/lib/users/service";
 import type { CreateWithProgressPayload } from "@/types";
 
@@ -41,10 +42,41 @@ export async function POST(req: NextRequest) {
                 };
 
                 await createUserWithProgress(supabaseAdmin, user);
-
                 break;
             }
+
+            case "user.updated": {
+                const email = evt.data.email_addresses?.find(
+                    (e: EmailAddressJSON) =>
+                        e.id === evt.data.primary_email_address_id,
+                )?.email_address;
+
+                const username = evt.data.username ?? undefined;
+
+                await updateUserProfile(supabaseAdmin, clerkId, {
+                    email,
+                    username,
+                });
+                break;
+            }
+
             case "user.deleted": {
+                // Attempt LS cancellation as a safety net (e.g. admin-deleted from Clerk dashboard).
+                // For user-initiated deletions via the settings page, LS is cancelled before
+                // Clerk deletion — so this will usually be a no-op (404/422 from LS).
+                const { error: cancelError } = await cancelLemonSubscription(
+                    supabaseAdmin,
+                    clerkId,
+                );
+
+                if (cancelError) {
+                    console.error(
+                        `LS cancel failed for ${clerkId} during account deletion:`,
+                        cancelError,
+                    );
+                    // Still proceed — user is already gone from Clerk, DB must be cleaned up.
+                }
+
                 await deleteUser(supabaseAdmin, clerkId);
                 break;
             }
