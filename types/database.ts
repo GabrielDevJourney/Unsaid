@@ -362,6 +362,8 @@ export type Database = {
                     lemon_customer_id: string | null;
                     lemon_subscription_id: string | null;
                     plan_id: string | null;
+                    plan_name: string | null;
+                    price_in_cents: number | null;
                     status: string;
                     trial_ends_at: string | null;
                     updated_at: string;
@@ -376,6 +378,8 @@ export type Database = {
                     lemon_customer_id?: string | null;
                     lemon_subscription_id?: string | null;
                     plan_id?: string | null;
+                    plan_name?: string | null;
+                    price_in_cents?: number | null;
                     status?: string;
                     trial_ends_at?: string | null;
                     updated_at?: string;
@@ -390,6 +394,8 @@ export type Database = {
                     lemon_customer_id?: string | null;
                     lemon_subscription_id?: string | null;
                     plan_id?: string | null;
+                    plan_name?: string | null;
+                    price_in_cents?: number | null;
                     status?: string;
                     trial_ends_at?: string | null;
                     updated_at?: string;
@@ -440,6 +446,10 @@ export type Database = {
                     deleted_at: string | null;
                     email: string;
                     id: string;
+                    last_writing_reminder_sent_at: string | null;
+                    notify_progress_checks: boolean;
+                    notify_weekly_patterns: boolean;
+                    notify_writing_reminders: boolean;
                     role: string;
                     subscription_status: string;
                     trial_ends_at: string | null;
@@ -453,6 +463,10 @@ export type Database = {
                     deleted_at?: string | null;
                     email: string;
                     id?: string;
+                    last_writing_reminder_sent_at?: string | null;
+                    notify_progress_checks?: boolean;
+                    notify_weekly_patterns?: boolean;
+                    notify_writing_reminders?: boolean;
                     role?: string;
                     subscription_status?: string;
                     trial_ends_at?: string | null;
@@ -466,6 +480,10 @@ export type Database = {
                     deleted_at?: string | null;
                     email?: string;
                     id?: string;
+                    last_writing_reminder_sent_at?: string | null;
+                    notify_progress_checks?: boolean;
+                    notify_weekly_patterns?: boolean;
+                    notify_writing_reminders?: boolean;
                     role?: string;
                     subscription_status?: string;
                     trial_ends_at?: string | null;
