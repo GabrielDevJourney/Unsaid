@@ -1,7 +1,13 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { insertSubscription } from "@/lib/subscriptions/repo";
 import type { CreateWithProgressPayload, ServiceResult } from "@/types";
-import { deleteUser, insertUser, insertUserProgress } from "./repo";
+import {
+    deleteUser,
+    insertUser,
+    insertUserProgress,
+    type NotificationPreferences,
+    updateNotificationPreferences as updateNotificationPreferencesRepo,
+} from "./repo";
 
 type CreateUserResult = {
     userId: string;
@@ -52,4 +58,26 @@ export const createUserWithProgress = async (
     }
 
     return { data: { userId: user.id } };
+};
+
+/**
+ * Update notification preferences for a user.
+ */
+export const updateNotificationPreferences = async (
+    supabase: SupabaseClient,
+    userId: string,
+    prefs: Partial<NotificationPreferences>,
+): Promise<ServiceResult<null>> => {
+    const { error } = await updateNotificationPreferencesRepo(
+        supabase,
+        userId,
+        prefs,
+    );
+
+    if (error) {
+        console.error("Failed to update notification preferences:", error);
+        return { error: "Failed to update notification preferences" };
+    }
+
+    return { data: null };
 };

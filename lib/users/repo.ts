@@ -1,5 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+export interface NotificationPreferences {
+    notifyWeeklyPatterns: boolean;
+    notifyProgressChecks: boolean;
+    notifyWritingReminders: boolean;
+}
+
 export const insertUser = async (
     supabase: SupabaseClient,
     user: {
@@ -48,4 +54,80 @@ export const getUserProgress = async (
     }
 
     return { data: { totalEntries: data.total_entries }, error: null };
+};
+
+/**
+ * Get notification preferences for the authenticated user.
+ * RLS ensures only the current user's row is returned.
+ */
+export const getNotificationPreferences = async (
+    supabase: SupabaseClient,
+): Promise<{ data: NotificationPreferences | null; error: Error | null }> => {
+    const { data, error } = await supabase
+        .from("users")
+        .select(
+            "notify_weekly_patterns, notify_progress_checks, notify_writing_reminders",
+        )
+        .single();
+
+    if (error || !data) {
+        return { data: null, error };
+    }
+
+    return {
+        data: {
+            notifyWeeklyPatterns: data.notify_weekly_patterns,
+            notifyProgressChecks: data.notify_progress_checks,
+            notifyWritingReminders: data.notify_writing_reminders,
+        },
+        error: null,
+    };
+};
+
+/**
+ * Sync email and username from Clerk to DB (called on user.updated webhook).
+ */
+export const updateUserProfile = async (
+    supabase: SupabaseClient,
+    userId: string,
+    data: { email?: string; username?: string },
+) => {
+    return supabase
+        .from("users")
+        .update({
+            email: data.email,
+            username: data.username,
+        })
+        .eq("user_id", userId);
+};
+
+/**
+ * Update notification preferences for a specific user (admin use or RLS-scoped).
+ */
+export const updateNotificationPreferences = async (
+    supabase: SupabaseClient,
+    userId: string,
+    prefs: Partial<NotificationPreferences>,
+) => {
+    return supabase
+        .from("users")
+        .update({
+            notify_weekly_patterns: prefs.notifyWeeklyPatterns,
+            notify_progress_checks: prefs.notifyProgressChecks,
+            notify_writing_reminders: prefs.notifyWritingReminders,
+        })
+        .eq("user_id", userId);
+};
+
+/**
+ * Update the last writing reminder sent timestamp for a user.
+ */
+export const updateLastWritingReminderSent = async (
+    supabase: SupabaseClient,
+    userId: string,
+) => {
+    return supabase
+        .from("users")
+        .update({ last_writing_reminder_sent_at: new Date().toISOString() })
+        .eq("user_id", userId);
 };

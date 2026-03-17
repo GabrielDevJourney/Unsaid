@@ -231,12 +231,16 @@ const sendWeeklyInsightEmail = async (
     try {
         const { data: user } = await supabase
             .from("users")
-            .select("email")
+            .select("email, notify_weekly_patterns")
             .eq("user_id", userId)
             .single();
 
         if (!user?.email) {
             return { sent: false, error: "User email not found" };
+        }
+
+        if (!user.notify_weekly_patterns) {
+            return { sent: false };
         }
 
         const patternPreviews = patterns.slice(0, 3).map((p) => p.title);
