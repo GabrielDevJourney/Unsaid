@@ -48,19 +48,23 @@ export const LemonWebhookSchema = z.object({
     data: z.object({
         type: z.string(),
         id: z.string(),
-        attributes: z.strictObject({
-            customer_id: z.number(),
-            user_email: z.email(),
-            status: LemonStatus,
-            cancelled: z.boolean(),
-            trial_ends_at: z.string().nullable(),
-            renews_at: z.string().nullable(),
-            ends_at: z.string().nullable(),
-            urls: z.object({
-                update_payment_method: z.string(),
-                customer_portal: z.string().optional(),
-            }),
-        }),
+        attributes: z
+            .object({
+                customer_id: z.number(),
+                user_email: z.email(),
+                status: LemonStatus,
+                cancelled: z.boolean(),
+                trial_ends_at: z.string().nullable(),
+                renews_at: z.string().nullable(),
+                ends_at: z.string().nullable(),
+                variant_id: z.number().optional(),
+                variant_name: z.string().optional(),
+                urls: z.object({
+                    update_payment_method: z.string(),
+                    customer_portal: z.string().optional(),
+                }),
+            })
+            .passthrough(),
     }),
 });
 

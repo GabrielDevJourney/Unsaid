@@ -18,6 +18,11 @@ import {
     updateSubscriptionStatus,
 } from "./repo";
 
+/** Maps LS variant_name to price in cents. Update when adding new plans. */
+const PLAN_PRICE_MAP: Record<string, number> = {
+    Monthly: 1099,
+};
+
 /**
  * Create a trial subscription for a new user.
  */
@@ -156,6 +161,9 @@ const processSubscriptionUpdate = async (
         attrs.cancelled,
     );
 
+    const planName = attrs.variant_name;
+    const priceInCents = planName ? PLAN_PRICE_MAP[planName] : undefined;
+
     // Update subscription
     const { error: updateError } = await updateSubscriptionFromWebhook(
         supabase,
@@ -164,6 +172,9 @@ const processSubscriptionUpdate = async (
             status: internalStatus,
             lemonSubscriptionId: lemonSubscriptionId,
             lemonCustomerId: String(attrs.customer_id),
+            planId: attrs.variant_id ? String(attrs.variant_id) : undefined,
+            planName,
+            priceInCents,
             currentPeriodEnd: attrs.renews_at ?? attrs.ends_at ?? undefined,
             canceledAt: attrs.cancelled ? new Date().toISOString() : null,
             customerPortalUrl: attrs.urls.customer_portal,
