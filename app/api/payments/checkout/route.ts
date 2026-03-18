@@ -29,7 +29,6 @@ export const POST = async () => {
             );
         }
 
-        // Build checkout URL with custom data for webhook linking
         const checkoutUrl = new URL(`${storeUrl}/checkout/buy/${variantId}`);
         checkoutUrl.searchParams.set("checkout[custom][user_id]", userId);
 

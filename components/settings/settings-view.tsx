@@ -1,12 +1,18 @@
 import { PageHeader } from "@/components/layout/page-header";
-import type { SettingsUser } from "@/lib/settings/service";
+import type {
+    SettingsSubscription,
+    SettingsUser,
+} from "@/lib/settings/service";
 import { AccountSection } from "./account-section";
+import { SecuritySection } from "./security-section";
+import { SubscriptionSection } from "./subscription-section";
 
 interface SettingsViewProps {
     user: SettingsUser;
+    subscription: SettingsSubscription;
 }
 
-const SettingsView = ({ user }: SettingsViewProps) => {
+const SettingsView = ({ user, subscription }: SettingsViewProps) => {
     return (
         <div className="flex h-full flex-col overflow-hidden">
             <PageHeader>
@@ -16,8 +22,10 @@ const SettingsView = ({ user }: SettingsViewProps) => {
             </PageHeader>
 
             <div className="flex-1 overflow-y-auto">
-                <div className="mx-auto max-w-2xl px-10 py-8 flex flex-col gap-10">
+                <div className="mx-auto max-w-4xl px-10 py-8 flex flex-col gap-10">
                     <AccountSection user={user} />
+                    <SecuritySection email={user.email} />
+                    <SubscriptionSection subscription={subscription} />
                 </div>
             </div>
         </div>

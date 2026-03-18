@@ -1,4 +1,6 @@
 import { currentUser } from "@clerk/nextjs/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { getSubscriptionByUserId } from "@/lib/subscriptions/repo";
 
 export interface SettingsUser {
     username: string;
@@ -7,26 +9,53 @@ export interface SettingsUser {
     memberSince: string;
 }
 
+export type SubscriptionStatus =
+    | "trial"
+    | "active"
+    | "paused"
+    | "canceled"
+    | "expired";
+
+export interface SettingsSubscription {
+    status: SubscriptionStatus;
+    planName: string | null;
+    priceInCents: number | null;
+    currentPeriodEnd: string | null;
+    trialEndsAt: string | null;
+    customerPortalUrl: string | null;
+}
+
 export interface SettingsPageData {
     user: SettingsUser;
+    subscription: SettingsSubscription;
 }
 
 /**
  * Fetch all data needed for the settings page.
  * Returns null if user is not authenticated.
- * Ticket 4 will extend this with subscription data (add supabase param).
  */
-export const getSettingsPageData =
-    async (): Promise<SettingsPageData | null> => {
-        const user = await currentUser();
-        if (!user) return null;
+export const getSettingsPageData = async (
+    supabase: SupabaseClient,
+): Promise<SettingsPageData | null> => {
+    const user = await currentUser();
+    if (!user) return null;
 
-        return {
-            user: {
-                username: user.username ?? "",
-                imageUrl: user.imageUrl,
-                email: user.primaryEmailAddress?.emailAddress ?? "",
-                memberSince: new Date(user.createdAt).toISOString(),
-            },
-        };
+    const { data: sub } = await getSubscriptionByUserId(supabase, user.id);
+
+    return {
+        user: {
+            username: user.username ?? "",
+            imageUrl: user.imageUrl,
+            email: user.primaryEmailAddress?.emailAddress ?? "",
+            memberSince: new Date(user.createdAt).toISOString(),
+        },
+        subscription: {
+            status: sub?.status ?? "trial",
+            planName: sub?.plan_name ?? null,
+            priceInCents: sub?.price_in_cents ?? null,
+            currentPeriodEnd: sub?.current_period_end ?? null,
+            trialEndsAt: sub?.trial_ends_at ?? null,
+            customerPortalUrl: sub?.customer_portal_url ?? null,
+        },
     };
+};
