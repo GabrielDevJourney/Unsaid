@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { DATE_DISPLAY_LONG, formatDate } from "@/lib/date-utils";
 import type { SettingsUser } from "@/lib/settings/service";
 
 interface AccountSectionProps {
@@ -28,10 +29,7 @@ const AccountSection = ({ user }: AccountSectionProps) => {
     const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
     const [avatarError, setAvatarError] = useState<string | null>(null);
 
-    const memberSince = new Intl.DateTimeFormat("en-US", {
-        month: "long",
-        year: "numeric",
-    }).format(new Date(user.memberSince));
+    const memberSince = formatDate(user.memberSince, DATE_DISPLAY_LONG);
 
     const handleUsernameSubmit = async () => {
         setIsSavingUsername(true);
@@ -65,17 +63,15 @@ const AccountSection = ({ user }: AccountSectionProps) => {
 
     return (
         <section className="flex flex-col gap-6">
-            <div>
-                <h2 className="text-base font-medium text-zinc-800">Account</h2>
-                <p className="text-sm text-muted-foreground">
-                    Your profile information
-                </p>
+            <div className="gap-2 flex flex-col">
+                <h2 className="pl-2 text-2xl font-medium font-serif italic text-neutral-500">
+                    Account
+                </h2>
+                <Separator />
             </div>
 
-            <Separator />
-
             {/* Avatar */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 pl-2">
                 <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
@@ -122,7 +118,7 @@ const AccountSection = ({ user }: AccountSectionProps) => {
             </div>
 
             {/* Username */}
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-2 pl-2">
                 <p className="text-sm font-medium text-zinc-700">Username</p>
                 <div className="flex items-center gap-2">
                     <Input
@@ -131,7 +127,7 @@ const AccountSection = ({ user }: AccountSectionProps) => {
                             setUsername(e.target.value);
                             setUsernameError(null);
                         }}
-                        className="max-w-xs"
+                        className="max-w-xs bg-neutral-100 max-h-8"
                         placeholder="username"
                     />
                     <Button
@@ -143,6 +139,7 @@ const AccountSection = ({ user }: AccountSectionProps) => {
                             username === user.username ||
                             username.trim().length < 3
                         }
+                        className="shadow-xs min-h-8"
                     >
                         {isSavingUsername ? "Saving..." : "Save"}
                     </Button>
@@ -153,8 +150,8 @@ const AccountSection = ({ user }: AccountSectionProps) => {
             </div>
 
             {/* Member since */}
-            <div className="flex flex-col gap-1">
-                <p className="text-sm font-medium text-zinc-700">
+            <div className="flex flex-col pl-2">
+                <p className="text-sm font-medium text-neutral-500">
                     Member since
                 </p>
                 <p className="text-sm text-muted-foreground">{memberSince}</p>
