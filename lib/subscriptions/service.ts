@@ -18,9 +18,10 @@ import {
     updateSubscriptionStatus,
 } from "./repo";
 
-/** Maps LS variant_name to price in cents. Update when adding new plans. */
+/** Maps LS variant_name to price in cents. */
 const PLAN_PRICE_MAP: Record<string, number> = {
     Monthly: 1099,
+    Yearly: 9900,
 };
 
 /**
