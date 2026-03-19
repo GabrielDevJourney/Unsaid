@@ -59,11 +59,8 @@ const SubscriptionSection = ({ subscription }: SubscriptionSectionProps) => {
     const display = STATUS_DISPLAY[status] ?? STATUS_DISPLAY.expired;
 
     const displayPlan = isTrial ? "Free trial" : (planName ?? "—");
-    const billingPeriod = planName?.toLowerCase().includes("year")
-        ? "/year"
-        : "/month";
     const displayPrice = priceInCents
-        ? `${formatPrice(priceInCents)}${billingPeriod}`
+        ? `${formatPrice(priceInCents)}`
         : isTrial
           ? "Free"
           : "—";

@@ -12,6 +12,7 @@ const SettingsPage = async () => {
         <SettingsView
             user={pageData.user}
             subscription={pageData.subscription}
+            notifications={pageData.notifications}
         />
     );
 };

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
     updateAvatarAction,
     updateUsernameAction,
@@ -20,6 +20,8 @@ interface AccountSectionProps {
 const AccountSection = ({ user }: AccountSectionProps) => {
     const router = useRouter();
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const usernameInputRef = useRef<HTMLInputElement>(null);
+    const justMounted = useRef(true);
 
     const [username, setUsername] = useState(user.username);
     const [isSavingUsername, setIsSavingUsername] = useState(false);
@@ -30,6 +32,13 @@ const AccountSection = ({ user }: AccountSectionProps) => {
     const [avatarError, setAvatarError] = useState<string | null>(null);
 
     const memberSince = formatDate(user.memberSince, DATE_DISPLAY_LONG);
+
+    useEffect(() => {
+        const id = setTimeout(() => {
+            justMounted.current = false;
+        }, 500);
+        return () => clearTimeout(id);
+    }, []);
 
     const handleUsernameSubmit = async () => {
         setIsSavingUsername(true);
@@ -122,10 +131,17 @@ const AccountSection = ({ user }: AccountSectionProps) => {
                 <p className="text-sm font-medium text-zinc-700">Username</p>
                 <div className="flex items-center gap-2">
                     <Input
+                        ref={usernameInputRef}
                         value={username}
                         onChange={(e) => {
                             setUsername(e.target.value);
                             setUsernameError(null);
+                        }}
+                        onFocus={() => {
+                            if (justMounted.current) {
+                                justMounted.current = false;
+                                usernameInputRef.current?.blur();
+                            }
                         }}
                         className="max-w-xs bg-neutral-100 max-h-8"
                         placeholder="username"

@@ -1,6 +1,10 @@
 import { currentUser } from "@clerk/nextjs/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSubscriptionByUserId } from "@/lib/subscriptions/repo";
+import {
+    getNotificationPreferences,
+    type NotificationPreferences,
+} from "@/lib/users/repo";
 
 export interface SettingsUser {
     username: string;
@@ -28,6 +32,7 @@ export interface SettingsSubscription {
 export interface SettingsPageData {
     user: SettingsUser;
     subscription: SettingsSubscription;
+    notifications: NotificationPreferences;
 }
 
 /**
@@ -40,7 +45,10 @@ export const getSettingsPageData = async (
     const user = await currentUser();
     if (!user) return null;
 
-    const { data: sub } = await getSubscriptionByUserId(supabase, user.id);
+    const [{ data: sub }, { data: notifPrefs }] = await Promise.all([
+        getSubscriptionByUserId(supabase, user.id),
+        getNotificationPreferences(supabase),
+    ]);
 
     return {
         user: {
@@ -56,6 +64,11 @@ export const getSettingsPageData = async (
             currentPeriodEnd: sub?.current_period_end ?? null,
             trialEndsAt: sub?.trial_ends_at ?? null,
             customerPortalUrl: sub?.customer_portal_url ?? null,
+        },
+        notifications: notifPrefs ?? {
+            notifyWritingReminders: true,
+            notifyWeeklyPatterns: true,
+            notifyProgressChecks: true,
         },
     };
 };

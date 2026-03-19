@@ -2,7 +2,12 @@
 
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
-import { updateUserProfile } from "@/lib/users/repo";
+import { createSupabaseServer } from "@/lib/supabase/server";
+import {
+    type NotificationPreferences,
+    updateNotificationPreferences,
+    updateUserProfile,
+} from "@/lib/users/repo";
 import type { ServiceResult } from "@/types";
 
 export const updateUsernameAction = async (
@@ -50,4 +55,16 @@ export const updateAvatarAction = async (
         console.error("updateAvatarAction failed:", err);
         return { error: "Failed to update avatar" };
     }
+};
+
+export const updateNotificationPreferencesAction = async (
+    prefs: Partial<NotificationPreferences>,
+): Promise<ServiceResult<null>> => {
+    const { userId } = await auth();
+    if (!userId) return { error: "Unauthorized" };
+
+    const supabase = await createSupabaseServer();
+    await updateNotificationPreferences(supabase, userId, prefs);
+
+    return { data: null };
 };

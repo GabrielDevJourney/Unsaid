@@ -3,16 +3,24 @@ import type {
     SettingsSubscription,
     SettingsUser,
 } from "@/lib/settings/service";
+import type { NotificationPreferences } from "@/lib/users/repo";
 import { AccountSection } from "./account-section";
+import { DangerZoneSection } from "./danger-zone-section";
+import { NotificationsSection } from "./notifications-section";
 import { SecuritySection } from "./security-section";
 import { SubscriptionSection } from "./subscription-section";
 
 interface SettingsViewProps {
     user: SettingsUser;
     subscription: SettingsSubscription;
+    notifications: NotificationPreferences;
 }
 
-const SettingsView = ({ user, subscription }: SettingsViewProps) => {
+const SettingsView = ({
+    user,
+    subscription,
+    notifications,
+}: SettingsViewProps) => {
     return (
         <div className="flex h-full flex-col overflow-hidden">
             <PageHeader>
@@ -26,6 +34,8 @@ const SettingsView = ({ user, subscription }: SettingsViewProps) => {
                     <AccountSection user={user} />
                     <SecuritySection email={user.email} />
                     <SubscriptionSection subscription={subscription} />
+                    <NotificationsSection preferences={notifications} />
+                    <DangerZoneSection />
                 </div>
             </div>
         </div>
