@@ -119,6 +119,40 @@ export const updateNotificationPreferences = async (
         .eq("user_id", userId);
 };
 
+export interface WritingReminderUser {
+    user_id: string;
+    email: string;
+    username: string;
+}
+
+/**
+ * Get users eligible to receive a writing reminder.
+ * Filters: opted in, active/trial subscription, cooldown cleared.
+ * Used exclusively by the writing-reminders cron (admin client).
+ */
+export const getUsersOptedIntoWritingReminders = async (
+    supabase: SupabaseClient,
+    cooldownDays: number,
+): Promise<{ data: WritingReminderUser[] | null; error: Error | null }> => {
+    const cooldownDate = new Date();
+    cooldownDate.setDate(cooldownDate.getDate() - cooldownDays);
+
+    const { data, error } = await supabase
+        .from("users")
+        .select("user_id, email, username")
+        .eq("notify_writing_reminders", true)
+        .in("subscription_status", ["trial", "active"])
+        .or(
+            `last_writing_reminder_sent_at.is.null,last_writing_reminder_sent_at.lt.${cooldownDate.toISOString()}`,
+        );
+
+    if (error || !data) {
+        return { data: null, error };
+    }
+
+    return { data, error: null };
+};
+
 /**
  * Update the last writing reminder sent timestamp for a user.
  */
