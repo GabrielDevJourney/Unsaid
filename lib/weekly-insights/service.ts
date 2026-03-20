@@ -231,7 +231,7 @@ const sendWeeklyInsightEmail = async (
     try {
         const { data: user } = await supabase
             .from("users")
-            .select("email, notify_weekly_patterns")
+            .select("email, username, notify_weekly_patterns")
             .eq("user_id", userId)
             .single();
 
@@ -246,7 +246,7 @@ const sendWeeklyInsightEmail = async (
         const patternPreviews = patterns.slice(0, 3).map((p) => p.title);
         const emailResult = await sendWeeklyPatternsEmail(
             user.email,
-            user.email.split("@")[0],
+            user.username,
             patterns.length,
             patternPreviews,
         );

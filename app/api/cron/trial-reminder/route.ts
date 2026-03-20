@@ -60,7 +60,7 @@ export const GET = async (req: NextRequest) => {
         try {
             const { data: user } = await supabase
                 .from("users")
-                .select("email")
+                .select("email, username")
                 .eq("user_id", trial.user_id)
                 .single();
 
@@ -82,7 +82,7 @@ export const GET = async (req: NextRequest) => {
 
             const emailResult = await sendTrialEndingEmail(
                 user.email,
-                user.email.split("@")[0],
+                user.username,
                 DAYS_BEFORE_EXPIRY,
                 {
                     entriesWritten: entriesResult.count ?? 0,
