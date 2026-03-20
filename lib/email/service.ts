@@ -154,31 +154,3 @@ export const sendWaitlistConfirmationEmail = async (
         react: WaitlistConfirmationEmail({ email: to }),
     });
 };
-
-/**
- * Send writing reminder email.
- */
-export const sendWritingReminderEmail = async (
-    to: string,
-    userName: string,
-    daysSinceLastEntry: number | null,
-): Promise<{ success: boolean; error?: string }> => {
-    const { default: WritingReminderEmail } = await import(
-        "@/emails/writing-reminder"
-    );
-
-    const subject =
-        daysSinceLastEntry !== null
-            ? `You haven't written in ${daysSinceLastEntry} day${daysSinceLastEntry === 1 ? "" : "s"}.`
-            : "You haven't written yet.";
-
-    return sendEmail({
-        to,
-        subject,
-        react: WritingReminderEmail({
-            userName,
-            daysSinceLastEntry,
-            writeUrl: `${APP_URL}`,
-        }),
-    });
-};
