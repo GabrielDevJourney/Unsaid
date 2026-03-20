@@ -1,14 +1,41 @@
 "use server";
 
 import { auth, clerkClient } from "@clerk/nextjs/server";
+import { z } from "zod";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import {
-    type NotificationPreferences,
     updateNotificationPreferences,
     updateUserProfile,
 } from "@/lib/users/repo";
 import type { ServiceResult } from "@/types";
+
+const ALLOWED_IMAGE_TYPES = [
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "image/webp",
+];
+
+const UsernameSchema = z
+    .string()
+    .trim()
+    .min(3, "Username must be at least 3 characters")
+    .max(30, "Username too long")
+    .regex(
+        /^[a-zA-Z0-9_.-]+$/,
+        "Username can only contain letters, numbers, underscores, dots, and hyphens",
+    );
+
+const NotificationPreferencesSchema = z
+    .object({
+        notifyWeeklyPatterns: z.boolean().optional(),
+        notifyProgressChecks: z.boolean().optional(),
+        notifyWritingReminders: z.boolean().optional(),
+    })
+    .refine((data) => Object.values(data).some((v) => v !== undefined), {
+        message: "At least one preference must be provided",
+    });
 
 export const updateUsernameAction = async (
     username: string,
@@ -16,17 +43,15 @@ export const updateUsernameAction = async (
     const { userId } = await auth();
     if (!userId) return { error: "Unauthorized" };
 
-    const trimmed = username.trim();
-    if (trimmed.length < 3)
-        return { error: "Username must be at least 3 characters" };
-    if (trimmed.length > 30) return { error: "Username too long" };
+    const parsed = UsernameSchema.safeParse(username);
+    if (!parsed.success) return { error: parsed.error.issues[0].message };
 
     try {
         const client = await clerkClient();
-        await client.users.updateUser(userId, { username: trimmed });
+        await client.users.updateUser(userId, { username: parsed.data });
 
         const supabase = createSupabaseAdmin();
-        await updateUserProfile(supabase, userId, { username: trimmed });
+        await updateUserProfile(supabase, userId, { username: parsed.data });
 
         return { data: null };
     } catch (err) {
@@ -43,6 +68,8 @@ export const updateAvatarAction = async (
 
     const file = formData.get("avatar");
     if (!(file instanceof File)) return { error: "No file provided" };
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type))
+        return { error: "File must be a JPEG, PNG, GIF, or WebP image" };
     if (file.size > 5 * 1024 * 1024) return { error: "File must be under 5MB" };
 
     try {
@@ -58,13 +85,24 @@ export const updateAvatarAction = async (
 };
 
 export const updateNotificationPreferencesAction = async (
-    prefs: Partial<NotificationPreferences>,
+    rawPrefs: unknown,
 ): Promise<ServiceResult<null>> => {
     const { userId } = await auth();
     if (!userId) return { error: "Unauthorized" };
 
+    const parsed = NotificationPreferencesSchema.safeParse(rawPrefs);
+    if (!parsed.success) return { error: parsed.error.issues[0].message };
+
     const supabase = await createSupabaseServer();
-    await updateNotificationPreferences(supabase, userId, prefs);
+    const { error } = await updateNotificationPreferences(
+        supabase,
+        userId,
+        parsed.data,
+    );
+    if (error) {
+        console.error("updateNotificationPreferencesAction failed:", error);
+        return { error: "Failed to save notification preferences" };
+    }
 
     return { data: null };
 };

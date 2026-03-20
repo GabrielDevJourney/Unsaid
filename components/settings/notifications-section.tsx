@@ -39,8 +39,19 @@ const NotificationsSection = ({ preferences }: NotificationsSectionProps) => {
         key: keyof NotificationPreferences,
         value: boolean,
     ) => {
+        const previous = prefs;
         setPrefs((prev) => ({ ...prev, [key]: value }));
-        await updateNotificationPreferencesAction({ [key]: value });
+
+        const result = await updateNotificationPreferencesAction({
+            [key]: value,
+        });
+        if (result.error) {
+            console.error(
+                "Failed to save notification preference:",
+                result.error,
+            );
+            setPrefs(previous);
+        }
     };
 
     return (
