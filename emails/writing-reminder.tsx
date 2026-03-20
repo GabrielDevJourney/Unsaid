@@ -13,20 +13,22 @@ import { EmailHead } from "@/emails/components/email-head";
 
 const LOGO_URL = "https://byunsaid.com/logo-white-bg.svg";
 
-interface ProgressCheckEmailProps {
+interface WritingReminderEmailProps {
     userName: string;
-    headline: string;
-    entryCount: number;
-    viewUrl: string;
+    daysSinceLastEntry: number | null;
+    writeUrl: string;
 }
 
-const ProgressCheckEmail = ({
+const WritingReminderEmail = ({
     userName = "there",
-    headline = "You're developing greater self-awareness",
-    entryCount = 15,
-    viewUrl = "https://byunsaid.com/progress",
-}: ProgressCheckEmailProps) => {
-    const previewText = `${entryCount} entries in. Time to see how far you've come.`;
+    daysSinceLastEntry = null,
+    writeUrl = "https://byunsaid.com",
+}: WritingReminderEmailProps) => {
+    const hasEntries = daysSinceLastEntry !== null;
+    const headingText = hasEntries ? "Still here." : "Time to start.";
+    const previewText = hasEntries
+        ? `It's been ${daysSinceLastEntry} day${daysSinceLastEntry === 1 ? "" : "s"} since your last entry.`
+        : "You haven't written yet.";
 
     return (
         <Html>
@@ -45,36 +47,45 @@ const ProgressCheckEmail = ({
                             />
                         </div>
 
-                        <Text style={heading}>{entryCount} entries in.</Text>
+                        <Text style={heading}>{headingText}</Text>
 
                         <Text style={paragraph}>Hi {userName},</Text>
 
-                        <Text style={paragraph}>
-                            Unsaid has been reading. Here's what {entryCount}{" "}
-                            entries revealed.
-                        </Text>
+                        {hasEntries ? (
+                            <Text style={paragraph}>
+                                It's been {daysSinceLastEntry} day
+                                {daysSinceLastEntry === 1 ? "" : "s"} since your
+                                last entry.
+                            </Text>
+                        ) : (
+                            <Text style={paragraph}>
+                                You haven't written yet.
+                            </Text>
+                        )}
 
                         <Section style={highlightBox}>
-                            <Text style={headlineLabel}>THE HEADLINE</Text>
-                            <Text style={headlineText}>"{headline}"</Text>
+                            <Text style={highlightText}>
+                                No judgment. But the patterns don't pause — they
+                                just go untracked.
+                            </Text>
                         </Section>
 
                         <Text style={paragraph}>
-                            Your full progress report has the patterns, the
-                            shifts, and what's been on repeat.
+                            What happened after your last entry?
                         </Text>
 
                         <Section style={buttonSection}>
-                            <Button style={button} href={viewUrl}>
-                                View your progress
+                            <Button style={button} href={writeUrl}>
+                                Write today
                             </Button>
                         </Section>
 
                         <Hr style={hr} />
 
                         <Text style={footer}>
-                            Next milestone: {entryCount + 15} entries. Keep
-                            going.
+                            You're receiving this because you enabled writing
+                            reminders in your settings. You can turn them off
+                            anytime.
                         </Text>
 
                         <Text style={tagline}>The truth has no filter.</Text>
@@ -85,7 +96,7 @@ const ProgressCheckEmail = ({
     );
 };
 
-export default ProgressCheckEmail;
+export default WritingReminderEmail;
 
 const main = {
     backgroundColor: "#f2f2f2",
@@ -136,20 +147,12 @@ const highlightBox = {
     margin: "24px 0",
 };
 
-const headlineLabel = {
-    color: "#a1a1aa",
-    fontSize: "11px",
-    fontWeight: "600",
-    letterSpacing: "0.08em",
-    margin: "0 0 8px",
-};
-
-const headlineText = {
+const highlightText = {
     color: "#52525b",
-    fontSize: "16px",
+    fontSize: "15px",
     fontStyle: "italic",
     fontFamily: "'Libre Baskerville', Georgia, serif",
-    lineHeight: "1.6",
+    lineHeight: "1.7",
     margin: "0",
 };
 

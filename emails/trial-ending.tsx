@@ -2,14 +2,16 @@ import {
     Body,
     Button,
     Container,
-    Head,
-    Heading,
     Hr,
     Html,
+    Img,
     Preview,
     Section,
     Text,
 } from "@react-email/components";
+import { EmailHead } from "@/emails/components/email-head";
+
+const LOGO_URL = "https://byunsaid.com/logo-white-bg.svg";
 
 interface TrialEndingEmailProps {
     userName: string;
@@ -26,54 +28,66 @@ const TrialEndingEmail = ({
     insightsReceived = 0,
     upgradeUrl = "https://byunsaid.com/settings",
 }: TrialEndingEmailProps) => {
-    const previewText = `Your Unsaid trial ends in ${daysRemaining} day${daysRemaining === 1 ? "" : "s"}`;
+    const previewText = `Your trial ends in ${daysRemaining} day${daysRemaining === 1 ? "" : "s"}`;
 
     return (
         <Html>
-            <Head />
+            <EmailHead />
             <Preview>{previewText}</Preview>
             <Body style={main}>
                 <Container style={container}>
-                    <Heading style={heading}>
-                        Your trial ends in {daysRemaining} day
-                        {daysRemaining === 1 ? "" : "s"}
-                    </Heading>
+                    <div style={inner}>
+                        <div style={logoWrap}>
+                            <Img
+                                src={LOGO_URL}
+                                width="38"
+                                height="38"
+                                alt="unsaid"
+                                style={{ display: "block", margin: "0 auto" }}
+                            />
+                        </div>
 
-                    <Text style={paragraph}>Hi {userName},</Text>
-
-                    <Text style={paragraph}>
-                        Your Unsaid trial is coming to an end. Here's what
-                        you've accomplished so far:
-                    </Text>
-
-                    <Section style={statsSection}>
-                        <Text style={statItem}>
-                            📝 <strong>{entriesWritten}</strong> entries written
+                        <Text style={heading}>
+                            {daysRemaining} day
+                            {daysRemaining === 1 ? "" : "s"} left.
                         </Text>
-                        <Text style={statItem}>
-                            💡 <strong>{insightsReceived}</strong> insights
-                            received
+
+                        <Text style={paragraph}>Hi {userName},</Text>
+
+                        <Text style={paragraph}>
+                            Your trial is coming to an end. Here's what you
+                            built while it lasted:
                         </Text>
-                    </Section>
 
-                    <Text style={paragraph}>
-                        Continue your self-discovery journey with full access to
-                        AI-powered insights, weekly patterns, and progress
-                        tracking.
-                    </Text>
+                        <Section style={highlightBox}>
+                            <Text style={statLine}>
+                                {entriesWritten} entries written
+                            </Text>
+                            <Text style={statLine}>
+                                {insightsReceived} insights received
+                            </Text>
+                        </Section>
 
-                    <Section style={buttonSection}>
-                        <Button style={button} href={upgradeUrl}>
-                            Continue your journey - $12.99/month
-                        </Button>
-                    </Section>
+                        <Text style={paragraph}>
+                            That's real work. Your patterns, progress, and
+                            everything you've written stays with you.
+                        </Text>
 
-                    <Hr style={hr} />
+                        <Section style={buttonSection}>
+                            <Button style={button} href={upgradeUrl}>
+                                Continue for $10.99/month
+                            </Button>
+                        </Section>
 
-                    <Text style={footer}>
-                        If you choose not to upgrade, you'll still be able to
-                        view your entries and export your data anytime.
-                    </Text>
+                        <Hr style={hr} />
+
+                        <Text style={footer}>
+                            If you choose not to continue, you'll still be able
+                            to view your entries anytime.
+                        </Text>
+
+                        <Text style={tagline}>The truth has no filter.</Text>
+                    </div>
                 </Container>
             </Body>
         </Html>
@@ -83,72 +97,97 @@ const TrialEndingEmail = ({
 export default TrialEndingEmail;
 
 const main = {
-    backgroundColor: "#f6f9fc",
+    backgroundColor: "#f2f2f2",
     fontFamily:
-        '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        'Satoshi, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
 };
 
 const container = {
-    backgroundColor: "#ffffff",
+    backgroundColor: "#fcfcfc",
     margin: "0 auto",
-    padding: "40px 20px",
-    maxWidth: "560px",
-    borderRadius: "8px",
+    maxWidth: "520px",
+    borderRadius: "14px",
+    border: "1px solid #e5e5e5",
+    overflow: "hidden",
+};
+
+const inner = {
+    padding: "36px 32px 40px",
+};
+
+const logoWrap = {
+    textAlign: "center" as const,
+    margin: "0 0 32px",
 };
 
 const heading = {
-    color: "#1a1a1a",
-    fontSize: "24px",
-    fontWeight: "600",
+    color: "#52525b",
+    fontSize: "28px",
+    fontWeight: "400",
+    fontStyle: "italic",
+    fontFamily: "'Libre Baskerville', Georgia, serif",
     lineHeight: "1.3",
     margin: "0 0 24px",
 };
 
 const paragraph = {
-    color: "#4a4a4a",
-    fontSize: "16px",
-    lineHeight: "1.6",
+    color: "#737373",
+    fontSize: "15px",
+    lineHeight: "1.7",
     margin: "0 0 16px",
 };
 
-const statsSection = {
-    backgroundColor: "#f8f9fa",
-    borderRadius: "8px",
+const highlightBox = {
+    backgroundColor: "#f2f2f2",
+    borderRadius: "10px",
+    border: "1px solid #e5e5e5",
     padding: "16px 20px",
     margin: "24px 0",
 };
 
-const statItem = {
-    color: "#1a1a1a",
-    fontSize: "16px",
+const statLine = {
+    color: "#52525b",
+    fontSize: "15px",
     lineHeight: "1.8",
     margin: "0",
 };
 
 const buttonSection = {
     textAlign: "center" as const,
-    margin: "32px 0",
+    margin: "28px 0",
 };
 
 const button = {
-    backgroundColor: "#0f172a",
-    borderRadius: "6px",
+    background:
+        "linear-gradient(135deg, rgb(148,163,184) 0%, rgb(189,142,111) 65%, rgba(247,107,21,0.6) 100%)",
+    boxShadow: "0 0 0 4px #d4d4d8",
+    borderRadius: "8px",
     color: "#ffffff",
-    fontSize: "16px",
-    fontWeight: "600",
+    fontSize: "14px",
+    fontWeight: "500",
     textDecoration: "none",
-    padding: "12px 24px",
+    padding: "11px 24px",
     display: "inline-block",
 };
 
 const hr = {
-    borderColor: "#e6e6e6",
-    margin: "32px 0",
+    borderColor: "#e5e5e5",
+    margin: "28px 0 20px",
 };
 
 const footer = {
-    color: "#8898aa",
+    color: "#a1a1aa",
+    fontSize: "13px",
+    lineHeight: "1.6",
+    margin: "0 0 16px",
+};
+
+const tagline = {
+    color: "#71717a",
     fontSize: "14px",
-    lineHeight: "1.5",
-    margin: "0",
+    fontStyle: "italic",
+    fontFamily: "'Libre Baskerville', Georgia, serif",
+    textAlign: "center" as const,
+    margin: "8px 0 0",
+    letterSpacing: "0.02em",
 };

@@ -2,14 +2,16 @@ import {
     Body,
     Button,
     Container,
-    Head,
-    Heading,
     Hr,
     Html,
+    Img,
     Preview,
     Section,
     Text,
 } from "@react-email/components";
+import { EmailHead } from "@/emails/components/email-head";
+
+const LOGO_URL = "https://byunsaid.com/logo-white-bg.svg";
 
 interface WeeklyPatternsEmailProps {
     userName: string;
@@ -24,57 +26,73 @@ const WeeklyPatternsEmail = ({
     patternPreviews = ["Pattern 1", "Pattern 2", "Pattern 3"],
     viewUrl = "https://byunsaid.com/patterns",
 }: WeeklyPatternsEmailProps) => {
-    const previewText = `${patternCount} new patterns discovered this week`;
+    const previewText = `${patternCount} new pattern${patternCount === 1 ? "" : "s"} discovered this week`;
 
     return (
         <Html>
-            <Head />
+            <EmailHead />
             <Preview>{previewText}</Preview>
             <Body style={main}>
                 <Container style={container}>
-                    <Heading style={heading}>
-                        Your weekly patterns are ready 📊
-                    </Heading>
+                    <div style={inner}>
+                        <div style={logoWrap}>
+                            <Img
+                                src={LOGO_URL}
+                                width="38"
+                                height="38"
+                                alt="unsaid"
+                                style={{ display: "block", margin: "0 auto" }}
+                            />
+                        </div>
 
-                    <Text style={paragraph}>Hi {userName},</Text>
+                        <Text style={heading}>
+                            {patternCount} pattern
+                            {patternCount === 1 ? "" : "s"} this week.
+                        </Text>
 
-                    <Text style={paragraph}>
-                        Based on your journal entries this week, I've identified{" "}
-                        <strong>{patternCount} patterns</strong> in your
-                        thoughts and behaviors.
-                    </Text>
+                        <Text style={paragraph}>Hi {userName},</Text>
 
-                    <Section style={patternsSection}>
-                        <Text style={sectionLabel}>This week's patterns:</Text>
-                        {patternPreviews.slice(0, 3).map((pattern) => (
-                            <Text key={pattern} style={patternItem}>
-                                • {pattern}
-                            </Text>
-                        ))}
-                        {patternCount > 3 && (
-                            <Text style={morePatterns}>
-                                +{patternCount - 3} more patterns
-                            </Text>
-                        )}
-                    </Section>
+                        <Text style={paragraph}>
+                            Based on your entries this week, Unsaid identified{" "}
+                            <strong>
+                                {patternCount} pattern
+                                {patternCount === 1 ? "" : "s"}
+                            </strong>{" "}
+                            in your thoughts and behaviors.
+                        </Text>
 
-                    <Text style={paragraph}>
-                        Understanding your patterns is the first step to
-                        meaningful change. Dive deeper to see the evidence and
-                        suggested experiments.
-                    </Text>
+                        <Section style={highlightBox}>
+                            {patternPreviews.slice(0, 3).map((pattern) => (
+                                <Text key={pattern} style={patternItem}>
+                                    • {pattern}
+                                </Text>
+                            ))}
+                            {patternCount > 3 && (
+                                <Text style={morePatterns}>
+                                    +{patternCount - 3} more inside
+                                </Text>
+                            )}
+                        </Section>
 
-                    <Section style={buttonSection}>
-                        <Button style={button} href={viewUrl}>
-                            View all patterns
-                        </Button>
-                    </Section>
+                        <Text style={paragraph}>
+                            Each comes with evidence from your own words and a
+                            suggested experiment.
+                        </Text>
 
-                    <Hr style={hr} />
+                        <Section style={buttonSection}>
+                            <Button style={button} href={viewUrl}>
+                                View all patterns
+                            </Button>
+                        </Section>
 
-                    <Text style={footer}>
-                        Keep journaling to discover more patterns each week.
-                    </Text>
+                        <Hr style={hr} />
+
+                        <Text style={footer}>
+                            Keep writing to surface more.
+                        </Text>
+
+                        <Text style={tagline}>The truth has no filter.</Text>
+                    </div>
                 </Container>
             </Body>
         </Html>
@@ -84,89 +102,106 @@ const WeeklyPatternsEmail = ({
 export default WeeklyPatternsEmail;
 
 const main = {
-    backgroundColor: "#f6f9fc",
+    backgroundColor: "#f2f2f2",
     fontFamily:
-        '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        'Satoshi, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
 };
 
 const container = {
-    backgroundColor: "#ffffff",
+    backgroundColor: "#fcfcfc",
     margin: "0 auto",
-    padding: "40px 20px",
-    maxWidth: "560px",
-    borderRadius: "8px",
+    maxWidth: "520px",
+    borderRadius: "14px",
+    border: "1px solid #e5e5e5",
+    overflow: "hidden",
+};
+
+const inner = {
+    padding: "36px 32px 40px",
+};
+
+const logoWrap = {
+    textAlign: "center" as const,
+    margin: "0 0 32px",
 };
 
 const heading = {
-    color: "#1a1a1a",
-    fontSize: "24px",
-    fontWeight: "600",
+    color: "#52525b",
+    fontSize: "28px",
+    fontWeight: "400",
+    fontStyle: "italic",
+    fontFamily: "'Libre Baskerville', Georgia, serif",
     lineHeight: "1.3",
     margin: "0 0 24px",
 };
 
 const paragraph = {
-    color: "#4a4a4a",
-    fontSize: "16px",
-    lineHeight: "1.6",
+    color: "#737373",
+    fontSize: "15px",
+    lineHeight: "1.7",
     margin: "0 0 16px",
 };
 
-const patternsSection = {
-    backgroundColor: "#f0fdf4",
-    borderRadius: "8px",
+const highlightBox = {
+    backgroundColor: "#f2f2f2",
+    borderRadius: "10px",
+    border: "1px solid #e5e5e5",
     padding: "16px 20px",
     margin: "24px 0",
-    borderLeft: "4px solid #22c55e",
-};
-
-const sectionLabel = {
-    color: "#166534",
-    fontSize: "14px",
-    fontWeight: "600",
-    margin: "0 0 12px",
-    textTransform: "uppercase" as const,
-    letterSpacing: "0.5px",
 };
 
 const patternItem = {
-    color: "#1a1a1a",
-    fontSize: "15px",
+    color: "#52525b",
+    fontSize: "16px",
+    fontStyle: "italic",
+    fontFamily: "'Libre Baskerville', Georgia, serif",
     lineHeight: "1.6",
-    margin: "0 0 8px",
+    margin: "0 0 6px",
 };
 
 const morePatterns = {
-    color: "#6b7280",
-    fontSize: "14px",
+    color: "#a1a1aa",
+    fontSize: "13px",
     fontStyle: "italic",
-    margin: "8px 0 0",
+    margin: "10px 0 0",
 };
 
 const buttonSection = {
     textAlign: "center" as const,
-    margin: "32px 0",
+    margin: "28px 0",
 };
 
 const button = {
-    backgroundColor: "#0f172a",
-    borderRadius: "6px",
+    background:
+        "linear-gradient(135deg, rgb(148,163,184) 0%, rgb(189,142,111) 65%, rgba(247,107,21,0.6) 100%)",
+    boxShadow: "0 0 0 4px #d4d4d8",
+    borderRadius: "8px",
     color: "#ffffff",
-    fontSize: "16px",
-    fontWeight: "600",
+    fontSize: "14px",
+    fontWeight: "500",
     textDecoration: "none",
-    padding: "12px 24px",
+    padding: "11px 24px",
     display: "inline-block",
 };
 
 const hr = {
-    borderColor: "#e6e6e6",
-    margin: "32px 0",
+    borderColor: "#e5e5e5",
+    margin: "28px 0 20px",
 };
 
 const footer = {
-    color: "#8898aa",
+    color: "#a1a1aa",
+    fontSize: "13px",
+    lineHeight: "1.6",
+    margin: "0 0 16px",
+};
+
+const tagline = {
+    color: "#71717a",
     fontSize: "14px",
-    lineHeight: "1.5",
-    margin: "0",
+    fontStyle: "italic",
+    fontFamily: "'Libre Baskerville', Georgia, serif",
+    textAlign: "center" as const,
+    margin: "8px 0 0",
+    letterSpacing: "0.02em",
 };

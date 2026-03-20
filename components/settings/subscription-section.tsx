@@ -73,21 +73,22 @@ const SubscriptionSection = ({ subscription }: SubscriptionSectionProps) => {
 
     return (
         <section className="flex flex-col gap-6">
-            <div className="flex items-center gap-4">
-                <h2 className="text-2xl pl-2 font-medium font-serif italic text-neutral-500">
-                    Subscription
-                </h2>
-                <div
-                    className={`flex items-center gap-2 rounded-md border-2 px-4 py-1.5 text-sm ${display.badgeClass}`}
-                >
-                    <span
-                        className={`size-2 shrink-0 rounded-full ${display.dotClass}`}
-                    />
-                    {display.label}
+            <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-4">
+                    <h2 className="text-2xl pl-2 font-medium font-serif italic text-neutral-500">
+                        Subscription
+                    </h2>
+                    <div
+                        className={`flex items-center gap-2 rounded-md border-2 px-4 py-1.5 text-sm ${display.badgeClass}`}
+                    >
+                        <span
+                            className={`size-2 shrink-0 rounded-full ${display.dotClass}`}
+                        />
+                        {display.label}
+                    </div>
                 </div>
+                <Separator />
             </div>
-
-            <Separator />
 
             <div className="overflow-hidden rounded-lg border border-zinc-200 w-1/2">
                 <div className="grid grid-cols-3 divide-x divide-zinc-200">
