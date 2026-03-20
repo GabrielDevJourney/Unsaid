@@ -18,6 +18,12 @@ import {
     updateSubscriptionStatus,
 } from "./repo";
 
+/** Maps LS variant_name to price in cents. */
+const PLAN_PRICE_MAP: Record<string, number> = {
+    Monthly: 1099,
+    Yearly: 9900,
+};
+
 /**
  * Create a trial subscription for a new user.
  */
@@ -156,6 +162,9 @@ const processSubscriptionUpdate = async (
         attrs.cancelled,
     );
 
+    const planName = attrs.variant_name;
+    const priceInCents = planName ? PLAN_PRICE_MAP[planName] : undefined;
+
     // Update subscription
     const { error: updateError } = await updateSubscriptionFromWebhook(
         supabase,
@@ -164,6 +173,9 @@ const processSubscriptionUpdate = async (
             status: internalStatus,
             lemonSubscriptionId: lemonSubscriptionId,
             lemonCustomerId: String(attrs.customer_id),
+            planId: attrs.variant_id ? String(attrs.variant_id) : undefined,
+            planName,
+            priceInCents,
             currentPeriodEnd: attrs.renews_at ?? attrs.ends_at ?? undefined,
             canceledAt: attrs.cancelled ? new Date().toISOString() : null,
             customerPortalUrl: attrs.urls.customer_portal,
@@ -184,6 +196,53 @@ const processSubscriptionUpdate = async (
     });
 
     return { data: { processed: true } };
+};
+
+/**
+ * Cancel a Lemon Squeezy subscription via API.
+ * Used as a safety net when a user deletes their account.
+ * Returns { data: null } if already cancelled or no LS subscription exists.
+ * Returns { error } if the LS API call fails (caller decides whether to block).
+ */
+export const cancelLemonSubscription = async (
+    supabase: SupabaseClient,
+    userId: string,
+): Promise<ServiceResult<null>> => {
+    const { data: sub } = await getSubscriptionByUserId(supabase, userId);
+
+    if (!sub?.lemon_subscription_id) {
+        // Trial or no LS subscription — nothing to cancel
+        return { data: null };
+    }
+
+    const apiKey = process.env.LEMONSQUEEZY_API_KEY;
+    if (!apiKey) {
+        throw new Error("LEMONSQUEEZY_API_KEY is not set");
+    }
+
+    const response = await fetch(
+        `https://api.lemonsqueezy.com/v1/subscriptions/${sub.lemon_subscription_id}`,
+        {
+            method: "DELETE",
+            headers: {
+                Authorization: `Bearer ${apiKey}`,
+                Accept: "application/vnd.api+json",
+            },
+        },
+    );
+
+    // 200: cancelled successfully
+    // 404: already gone — treat as success
+    // 422: already cancelled in LS — treat as success
+    if (!response.ok && response.status !== 404 && response.status !== 422) {
+        const body = await response.text();
+        console.error(
+            `LS cancel failed for user ${userId}: ${response.status} ${body}`,
+        );
+        return { error: `LS cancellation failed: ${response.status}` };
+    }
+
+    return { data: null };
 };
 
 /**

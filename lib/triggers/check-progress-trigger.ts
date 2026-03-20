@@ -91,7 +91,7 @@ export const checkAndTriggerProgress = async (
                 const supabase = createSupabaseAdmin();
                 const { data: user } = await supabase
                     .from("users")
-                    .select("email")
+                    .select("email, username")
                     .eq("user_id", userId)
                     .single();
 
@@ -99,7 +99,7 @@ export const checkAndTriggerProgress = async (
                     const headline = extractHeadline(insight.content);
                     const emailResult = await sendProgressCheckEmail(
                         user.email,
-                        user.email.split("@")[0],
+                        user.username,
                         headline,
                         triggerCheck.totalEntries,
                     );

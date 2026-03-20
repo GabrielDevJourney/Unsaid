@@ -32,6 +32,13 @@ export const getWeekRange = (weekStart: string): { start: Date; end: Date } => {
     return { start, end };
 };
 
+/** Shared options for "Month Day, Year" display (e.g. "March 17, 2026") */
+export const DATE_DISPLAY_LONG: Intl.DateTimeFormatOptions = {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+};
+
 export const formatDate = (
     date: Date | string,
     options: Intl.DateTimeFormatOptions,

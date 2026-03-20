@@ -89,6 +89,9 @@ export const updateSubscriptionFromWebhook = async (
         status: SubscriptionStatusType;
         lemonSubscriptionId?: string;
         lemonCustomerId?: string;
+        planId?: string;
+        planName?: string;
+        priceInCents?: number;
         currentPeriodEnd?: string;
         canceledAt?: string | null;
         customerPortalUrl?: string;
@@ -100,6 +103,9 @@ export const updateSubscriptionFromWebhook = async (
             status: data.status,
             lemon_subscription_id: data.lemonSubscriptionId,
             lemon_customer_id: data.lemonCustomerId,
+            plan_id: data.planId,
+            plan_name: data.planName,
+            price_in_cents: data.priceInCents,
             current_period_end: data.currentPeriodEnd,
             canceled_at: data.canceledAt,
             customer_portal_url: data.customerPortalUrl,

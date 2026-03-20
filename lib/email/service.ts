@@ -103,7 +103,7 @@ export const sendWeeklyPatternsEmail = async (
 
     return sendEmail({
         to,
-        subject: "Your weekly patterns are ready 📊",
+        subject: "Your weekly patterns are ready.",
         react: WeeklyPatternsEmail({
             userName,
             patternCount,
@@ -128,7 +128,7 @@ export const sendProgressCheckEmail = async (
 
     return sendEmail({
         to,
-        subject: "Your progress check is ready 💡",
+        subject: "Your progress check is ready.",
         react: ProgressCheckEmail({
             userName,
             headline,
