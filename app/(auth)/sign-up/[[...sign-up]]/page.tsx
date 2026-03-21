@@ -61,11 +61,11 @@ const SignUpPage = () => {
 
                 <p className="mt-6 text-center text-xs text-muted-foreground">
                     By clicking continue, you agree to our{" "}
-                    <a href={" "} className="underline">
+                    <a href="/terms" className="underline">
                         Terms of Service
                     </a>{" "}
                     and{" "}
-                    <a href={" "} className="underline">
+                    <a href="/privacy" className="underline">
                         Privacy Policy
                     </a>
                     .
