@@ -20,18 +20,17 @@ const buttonVariants = cva(
                 ghost: "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
                 link: "text-primary underline-offset-4 hover:underline",
                 sunrise: cn(
-                    "relative z-0 bg-slate-400 text-white",
+                    "relative z-0 bg-slate-400 text-white overflow-hidden",
 
                     "hover:bg-slate-400 hover:text-white",
 
                     "ring-4 ring-zinc-300",
 
-                    "before:absolute before:top-[-10px] before:left-[-20px]",
-                    "before:w-[210px] before:h-[230px]",
+                    "before:absolute before:inset-0",
                     "before:content-['']",
                     "before:pointer-events-none before:z-0",
 
-                    "before:bg-[radial-gradient(circle_at_80%_85%,rgba(251,146,60,0.7)_0%,rgba(255,115,1,0.50)_60%,transparent_80%)] cursor-pointer",
+                    "before:bg-[radial-gradient(circle_at_80%_200%,rgba(247,107,21,0.8)_0%,rgba(255,115,1,0.5)_30%,transparent_70%)] cursor-pointer",
 
                     "[&>*]:relative [&>*]:z-10",
                 ),
