@@ -3,47 +3,70 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { TRIAL_DAYS } from "@/lib/constants";
 import { DATE_DISPLAY_LONG, formatDate } from "@/lib/date-utils";
 import { formatPrice } from "@/lib/format-utils";
-import type {
-    SettingsSubscription,
-    SubscriptionStatus,
-} from "@/lib/settings/service";
+import type { SubscriptionStatusType } from "@/lib/schemas/subscription";
+import type { SettingsSubscription } from "@/lib/settings/service";
 
 interface SubscriptionSectionProps {
     subscription: SettingsSubscription;
 }
 
 const STATUS_DISPLAY: Record<
-    SubscriptionStatus,
-    { label: string; dotClass: string; badgeClass: string }
+    SubscriptionStatusType,
+    {
+        label: string;
+        dotClass: string;
+        badgeClass: string;
+        filledDotClass: string;
+    }
 > = {
-    trial: {
-        label: "You are on a free trial",
-        dotClass: "bg-[#B5B5A8]",
-        badgeClass: "border-[#D8D8D2] bg-[#F5F5F2] text-[#6B6B62]",
-    },
+    // Calm confidence — safe, healthy, all good
     active: {
         label: "Your subscription is active",
         dotClass: "bg-[#A1B48E]",
         badgeClass: "border-[#C8D8BE] bg-[#F2F6EE] text-[#5A7046]",
+        filledDotClass: "border-[#8FA87A] bg-[#A1B48E]",
     },
+    // Curiosity + gentle urgency — warm amber, clock is ticking
+    trial: {
+        label: "You are on a free trial",
+        dotClass: "bg-[#FCE8BC]",
+        badgeClass: "border-[#FAE4B4] bg-[#FFFDF5] text-[#8B5A10]",
+        filledDotClass: "border-[#FAD99A] bg-[#FCE8BC]",
+    },
+    // Neutral suspension — cool blue, calm and waiting
     paused: {
         label: "Your subscription is paused",
-        dotClass: "bg-[#C4A882]",
-        badgeClass: "border-[#DDD0BC] bg-[#FAF5EE] text-[#7A6040]",
+        dotClass: "bg-[#7A9BB5]",
+        badgeClass: "border-[#B8D0E8] bg-[#EEF4FA] text-[#2E5C7A]",
+        filledDotClass: "border-[#5C85A0] bg-[#7A9BB5]",
     },
+    // Soft regret, winback — subtle dusty red, not alarming
     canceled: {
         label: "Your subscription is canceled",
-        dotClass: "bg-[#C49090]",
-        badgeClass: "border-[#DDC0C0] bg-[#FAF0F0] text-[#7A4040]",
+        dotClass: "bg-[#C49898]",
+        badgeClass: "border-[#DEC0C0] bg-[#FAF2F2] text-[#7A3A3A]",
+        filledDotClass: "border-[#B08080] bg-[#C49898]",
     },
+    // Urgent, fix now — burnt orange, action needed
+    unpaid: {
+        label: "Payment issue, update your payment method",
+        dotClass: "bg-[#C47A50]",
+        badgeClass: "border-[#E0C0A0] bg-[#FAF0E8] text-[#7A3A10]",
+        filledDotClass: "border-[#B06030] bg-[#C47A50]",
+    },
+    // Definitive end, re-engage — muted red, door is closed
     expired: {
         label: "Your subscription has expired",
-        dotClass: "bg-[#B5B5A8]",
-        badgeClass: "border-[#D8D8D2] bg-[#F5F5F2] text-[#6B6B62]",
+        dotClass: "bg-[#B06060]",
+        badgeClass: "border-[#DDAAAA] bg-[#FAF0F0] text-[#6A2020]",
+        filledDotClass: "border-[#9A4848] bg-[#B06060]",
     },
 };
+
+const CHECKOUT_URL = process.env.NEXT_PUBLIC_LEMON_CHECKOUT_URL ?? "#";
 
 const SubscriptionSection = ({ subscription }: SubscriptionSectionProps) => {
     const {
@@ -52,24 +75,31 @@ const SubscriptionSection = ({ subscription }: SubscriptionSectionProps) => {
         priceInCents,
         currentPeriodEnd,
         trialEndsAt,
+        trialDaysRemaining,
         customerPortalUrl,
     } = subscription;
 
     const isTrial = status === "trial";
-    const display = STATUS_DISPLAY[status] ?? STATUS_DISPLAY.expired;
+    const display = STATUS_DISPLAY[status];
 
-    const displayPlan = isTrial ? "Free trial" : (planName ?? "—");
-    const displayPrice = priceInCents
-        ? `${formatPrice(priceInCents)}`
-        : isTrial
-          ? "Free"
-          : "—";
+    const displayPlan = planName ?? "—";
+    const displayPrice = priceInCents ? formatPrice(priceInCents) : "—";
     const billingLabel = currentPeriodEnd ? "Next billing" : "Expires";
     const displayNextBilling = currentPeriodEnd
         ? formatDate(currentPeriodEnd, DATE_DISPLAY_LONG)
         : trialEndsAt
           ? formatDate(trialEndsAt, DATE_DISPLAY_LONG)
           : "—";
+
+    const filledCount =
+        isTrial && trialDaysRemaining !== null
+            ? TRIAL_DAYS - trialDaysRemaining
+            : 0;
+
+    const trialDots = Array.from({ length: TRIAL_DAYS }, (_, i) => ({
+        id: `trial-dot-${i}`,
+        filled: i < filledCount,
+    }));
 
     return (
         <section className="flex flex-col gap-6">
@@ -89,33 +119,114 @@ const SubscriptionSection = ({ subscription }: SubscriptionSectionProps) => {
 
             <Separator />
 
-            <div className="overflow-hidden rounded-lg border border-zinc-200 w-1/2">
-                <div className="grid grid-cols-3 divide-x divide-zinc-200">
-                    <div className="flex flex-col gap-1 px-4 py-3">
-                        <p className="text-xs text-muted-foreground">Plan</p>
-                        <p className="text-sm text-neutral-600">
-                            {displayPlan}
-                        </p>
-                    </div>
-                    <div className="flex flex-col gap-1 px-4 py-3">
-                        <p className="text-xs text-muted-foreground">Price</p>
-                        <p className="text-sm text-neutral-600">
-                            {displayPrice}
-                        </p>
-                    </div>
-                    <div className="flex flex-col gap-1 px-4 py-3">
-                        <p className="text-xs text-muted-foreground">
-                            {billingLabel}
-                        </p>
-                        <p className="text-sm text-neutral-600">
-                            {displayNextBilling}
-                        </p>
+            {isTrial && trialDaysRemaining !== null && (
+                <div className="overflow-hidden rounded-lg border border-neutral-300 w-1/2">
+                    <div className="flex items-center justify-between px-4 py-3">
+                        <div className="flex flex-col gap-1">
+                            <p className="text-xs text-muted-foreground">
+                                Days remaining
+                            </p>
+                            <p className="text-sm font-bold text-neutral-500">
+                                {trialDaysRemaining}
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            {trialDots.map((dot) => (
+                                <div
+                                    key={dot.id}
+                                    className={`relative size-3.5 shrink-0 rounded-full border-2 ${dot.filled ? display.filledDotClass : "border-zinc-300 bg-neutral-300"}`}
+                                />
+                            ))}
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
 
-            {!isTrial && customerPortalUrl && (
-                <div className="flex items-center gap-4">
+            {!isTrial && (
+                <div className="overflow-hidden rounded-lg border border-zinc-200 w-1/2">
+                    <div className="grid grid-cols-3 divide-x divide-zinc-200">
+                        <div className="flex flex-col gap-1 px-4 py-3">
+                            <p className="text-xs text-muted-foreground">
+                                Plan
+                            </p>
+                            <p className="text-sm text-neutral-600">
+                                {displayPlan}
+                            </p>
+                        </div>
+                        <div className="flex flex-col gap-1 px-4 py-3">
+                            <p className="text-xs text-muted-foreground">
+                                Price
+                            </p>
+                            <p className="text-sm text-neutral-600">
+                                {displayPrice}
+                            </p>
+                        </div>
+                        <div className="flex flex-col gap-1 px-4 py-3">
+                            <p className="text-xs text-muted-foreground">
+                                {billingLabel}
+                            </p>
+                            <p className="text-sm text-neutral-600">
+                                {displayNextBilling}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <div className="flex items-center gap-4">
+                {(status === "trial" || status === "expired") && (
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        asChild
+                        className="bg-white py-4"
+                    >
+                        <Link
+                            href={CHECKOUT_URL}
+                            className="text-muted-foreground text-sm font-normal"
+                        >
+                            <HugeiconsIcon icon={LinkSquare01Icon} />
+                            Upgrade Plan
+                        </Link>
+                    </Button>
+                )}
+
+                {(status === "active" ||
+                    status === "paused" ||
+                    status === "canceled") &&
+                    customerPortalUrl && (
+                        <>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                asChild
+                                className="bg-white py-4"
+                            >
+                                <Link
+                                    href={customerPortalUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-muted-foreground text-sm font-normal"
+                                >
+                                    <HugeiconsIcon icon={LinkSquare01Icon} />
+                                    Manage subscription
+                                </Link>
+                            </Button>
+                            {/* Both links go to the same portal — Lemon Squeezy handles cancellation within it */}
+                            {status === "active" && (
+                                <Link
+                                    href={customerPortalUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-sm text-zinc-500 transition-colors hover:text-zinc-700"
+                                >
+                                    Cancel subscription
+                                </Link>
+                            )}
+                        </>
+                    )}
+
+                {status === "unpaid" && customerPortalUrl && (
                     <Button
                         variant="outline"
                         size="sm"
@@ -129,19 +240,11 @@ const SubscriptionSection = ({ subscription }: SubscriptionSectionProps) => {
                             className="text-muted-foreground text-sm font-normal"
                         >
                             <HugeiconsIcon icon={LinkSquare01Icon} />
-                            Manage subscription
+                            Fix payment
                         </Link>
                     </Button>
-                    <Link
-                        href={customerPortalUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-zinc-500 transition-colors hover:text-zinc-700"
-                    >
-                        Cancel subscription
-                    </Link>
-                </div>
-            )}
+                )}
+            </div>
         </section>
     );
 };
