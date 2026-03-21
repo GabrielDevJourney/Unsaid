@@ -1,3 +1,4 @@
+import type { SubscriptionStatusType } from "@/lib/schemas/subscription";
 import type { Tables, TablesInsert, TablesUpdate } from "../database";
 
 // 1. Database Types (derived from generated types)
@@ -8,8 +9,8 @@ export type SubscriptionUpdate = TablesUpdate<"subscriptions">;
 export type PaymentEventRow = Tables<"payment_events">;
 export type PaymentEventInsert = TablesInsert<"payment_events">;
 
-// 2. Our Internal Subscription Status
-export type SubscriptionStatus = "trial" | "active" | "canceled" | "expired";
+// 2. Our Internal Subscription Status — re-exported from canonical source
+export type { SubscriptionStatusType };
 
 // 3. Lemon Squeezy Status Values (from their API)
 export type LemonSqueezyStatus =
@@ -26,7 +27,7 @@ export interface SubscriptionAccess {
     canUseFeatures: boolean;
     canViewEntries: boolean;
     canExportData: boolean;
-    status: SubscriptionStatus;
+    status: SubscriptionStatusType;
     trialDaysRemaining: number | null;
     isTrialExpired: boolean;
 }
