@@ -1,6 +1,7 @@
 "use client";
 
 import { ClerkLoaded, ClerkLoading, SignIn } from "@clerk/nextjs";
+import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const SignInPage = () => {
@@ -8,8 +9,20 @@ const SignInPage = () => {
         <div className="flex min-h-svh">
             {/* Left — form */}
             <div className="flex flex-1 flex-col items-center justify-center bg-primary-foreground px-8">
-                {/* Logo placeholder */}
-                <div className="mb-8 h-12 w-12 rounded-md bg-muted" />
+                <div className="mb-8 flex items-center gap-2">
+                    <Image
+                        src="/logo-white-bg.svg"
+                        alt=""
+                        width={32}
+                        height={32}
+                    />
+                    <Image
+                        src="/logo-text.svg"
+                        alt="Unsaid"
+                        width={76}
+                        height={24}
+                    />
+                </div>
 
                 <ClerkLoading>
                     <div className="flex w-full max-w-md h-97.5 flex-col gap-4 rounded-xl border border-muted p-8">
