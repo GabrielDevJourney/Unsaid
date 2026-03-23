@@ -13,7 +13,10 @@ const isDashboardRoute = createRouteMatcher([
     "/progress(.*)",
     "/settings(.*)",
     "/feedback(.*)",
+    "/onboarding(.*)",
 ]);
+
+const isOnboardingRoute = createRouteMatcher(["/onboarding(.*)"]);
 
 export default clerkMiddleware(async (auth, req: NextRequest) => {
     const pathname = req.nextUrl.pathname;
@@ -61,7 +64,19 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
         );
     }
 
-    // User is authenticated + provisioned
+    // Redirect new users to onboarding (only for dashboard routes, not onboarding itself)
+    if (isDashboardRoute(req) && !isOnboardingRoute(req)) {
+        const { data: progress } = await supabase
+            .from("user_progress")
+            .select("has_completed_onboarding")
+            .eq("user_id", userId)
+            .single();
+
+        if (progress && !progress.has_completed_onboarding) {
+            return NextResponse.redirect(new URL("/onboarding", req.url));
+        }
+    }
+
     return NextResponse.next();
 });
 
