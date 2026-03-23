@@ -219,6 +219,41 @@ export type Database = {
                     },
                 ];
             };
+            onboarding_previews: {
+                Row: {
+                    created_at: string;
+                    entry_id: string;
+                    id: string;
+                    pattern: Json;
+                    progress: Json;
+                    user_id: string;
+                };
+                Insert: {
+                    created_at?: string;
+                    entry_id: string;
+                    id?: string;
+                    pattern: Json;
+                    progress: Json;
+                    user_id: string;
+                };
+                Update: {
+                    created_at?: string;
+                    entry_id?: string;
+                    id?: string;
+                    pattern?: Json;
+                    progress?: Json;
+                    user_id?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: "onboarding_previews_entry_id_fkey";
+                        columns: ["entry_id"];
+                        isOneToOne: false;
+                        referencedRelation: "entries";
+                        referencedColumns: ["id"];
+                    },
+                ];
+            };
             payment_events: {
                 Row: {
                     created_at: string;
@@ -414,18 +449,21 @@ export type Database = {
             user_progress: {
                 Row: {
                     entry_count_at_last_progress: number;
+                    has_completed_onboarding: boolean;
                     total_entries: number;
                     updated_at: string;
                     user_id: string;
                 };
                 Insert: {
                     entry_count_at_last_progress?: number;
+                    has_completed_onboarding?: boolean;
                     total_entries?: number;
                     updated_at?: string;
                     user_id: string;
                 };
                 Update: {
                     entry_count_at_last_progress?: number;
+                    has_completed_onboarding?: boolean;
                     total_entries?: number;
                     updated_at?: string;
                     user_id?: string;
