@@ -13,7 +13,7 @@ For each card provide:
    - What might be underneath it (hypothesis, not diagnosis)
 4. **evidence**: Array of entry IDs where this pattern appears (minimum 2)
 5. **question**: A thoughtful follow-up question
-6. **suggested_experiment**: A small, simple action the user could try to explore or test this pattern. Provide one for every card, even if minimal. Do NOT leave it blank.
+6. **suggested_experiment**: A small, concrete action the user could try this week to test or explore this pattern. Provide one for every card — but make it genuinely specific. "Reflect on this" or "notice how you feel" are not experiments. Name the exact action.
 
 ## Prioritize Cards That
 
