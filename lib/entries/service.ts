@@ -1,7 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { generateEmbedding } from "@/lib/ai/embeddings";
 import { checkEntryRateLimit } from "@/lib/rate-limit";
+import { canUserWriteEntry } from "@/lib/subscriptions/entitlements";
 import { checkAndTriggerProgress } from "@/lib/triggers/check-progress-trigger";
+import { getUserProgress } from "@/lib/users/repo";
 import type {
     CreateEntryPayload,
     Entry,
@@ -65,6 +67,14 @@ export const createEntry = async (
     const rateLimit = await checkEntryRateLimit(supabase, userId);
     if (!rateLimit.allowed) {
         return { error: rateLimit.reason ?? "Rate limit exceeded" };
+    }
+
+    const canWrite = await canUserWriteEntry(supabase);
+    if (!canWrite) {
+        const { data: progress } = await getUserProgress(supabase);
+        if ((progress?.totalEntries ?? 0) >= 15) {
+            return { error: "FREE_LIMIT_REACHED" };
+        }
     }
 
     const wordCount = calculateWordCount(payload.content);
