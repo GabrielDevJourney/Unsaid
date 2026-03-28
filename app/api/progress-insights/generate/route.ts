@@ -1,7 +1,9 @@
 import { auth } from "@clerk/nextjs/server";
 import { type NextRequest, NextResponse } from "next/server";
+import { isAdmin } from "@/lib/auth/admin";
 import { createProgressInsight } from "@/lib/progress-insights/service";
 import { GenerateProgressInsightRequestSchema } from "@/lib/schemas/progress-insight";
+import { createSupabaseServer } from "@/lib/supabase/server";
 import { getProgressStatus } from "@/lib/triggers/check-progress-trigger";
 import { isServiceError } from "@/types";
 
@@ -10,10 +12,9 @@ import { isServiceError } from "@/types";
  *
  * Manually trigger generation of a progress insight.
  * Checks if requirements are met (15 entries since last insight).
- * Use forceGenerate: true to bypass the check.
+ * forceGenerate: true bypasses the check — admin only.
  *
- * Typically called internally after entry creation, but exposed
- * for manual testing and admin use.
+ * Typically called internally after entry creation.
  */
 export const POST = async (req: NextRequest) => {
     try {
@@ -37,6 +38,17 @@ export const POST = async (req: NextRequest) => {
         }
 
         const { forceGenerate } = validated.data;
+
+        // forceGenerate bypasses the 15-entry gate — admin only
+        if (forceGenerate) {
+            const supabase = await createSupabaseServer();
+            if (!(await isAdmin(userId, supabase))) {
+                return NextResponse.json(
+                    { error: "Forbidden - admin only" },
+                    { status: 403 },
+                );
+            }
+        }
 
         // Check if progress insight should trigger
         if (!forceGenerate) {

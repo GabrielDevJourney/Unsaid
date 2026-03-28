@@ -29,7 +29,9 @@ export const POST = async () => {
             );
         }
 
-        const checkoutUrl = new URL(`${storeUrl}/checkout/buy/${variantId}`);
+        const checkoutUrl = new URL(
+            `${storeUrl.replace(/\/$/, "")}/checkout/buy/${variantId}`,
+        );
         checkoutUrl.searchParams.set("checkout[custom][user_id]", userId);
 
         return NextResponse.json({ data: { url: checkoutUrl.toString() } });

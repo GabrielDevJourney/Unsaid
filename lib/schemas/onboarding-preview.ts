@@ -1,11 +1,12 @@
 import { z } from "zod";
+import { MAX_ENTRY_LENGTH } from "@/lib/constants";
 import { INSIGHT_TAG_TYPES } from "@/lib/constants/insight-tag-types";
 import { PATTERN_TYPE_CODES } from "@/lib/constants/pattern-types";
 
 export const onboardingPreviewRequestSchema = z.object({
     entry_id: z.uuid(),
-    content: z.string().min(10),
-    insight: z.string(),
+    content: z.string().min(10).max(MAX_ENTRY_LENGTH),
+    insight: z.string().max(MAX_ENTRY_LENGTH),
     tags: z.array(z.enum(INSIGHT_TAG_TYPES)),
 });
 

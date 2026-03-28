@@ -64,8 +64,6 @@
         "@types/react": "^19",
         "@types/react-dom": "^19",
         "@vitejs/plugin-react": "^5.1.2",
-        "commitizen": "^4.2.4",
-        "cz-conventional-changelog": "^3.3.0",
         "dotenv": "^17.2.3",
         "jsdom": "^27.3.0",
         "lefthook": "^2.0.11",
