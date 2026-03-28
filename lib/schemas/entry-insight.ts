@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { MAX_ENTRY_LENGTH } from "@/lib/constants";
 import { INSIGHT_TAG_TYPES } from "@/lib/constants/insight-tag-types";
 
 /**
@@ -18,7 +19,7 @@ export type InsightObject = z.infer<typeof insightSchema>;
  */
 export const EntryInsightGenerateSchema = z.object({
     entry_id: z.uuid(),
-    content: z.string().min(10),
+    content: z.string().min(10).max(MAX_ENTRY_LENGTH),
 });
 
 export type EntryInsightGenerateInput = z.infer<

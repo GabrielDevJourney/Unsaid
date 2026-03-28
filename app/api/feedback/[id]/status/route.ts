@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import { isAdmin } from "@/lib/auth/admin";
 import { setFeedbackStatus } from "@/lib/feedback/service";
 import {
     FeedbackIdSchema,
@@ -12,23 +12,6 @@ import { createSupabaseServer } from "@/lib/supabase/server";
 interface RouteParams {
     params: Promise<{ id: string }>;
 }
-
-/**
- * Check if user is admin via DB role.
- * Set role = 'admin' in Supabase dashboard for admin users.
- */
-const isAdmin = async (
-    userId: string,
-    supabase: SupabaseClient,
-): Promise<boolean> => {
-    const { data: user } = await supabase
-        .from("users")
-        .select("role")
-        .eq("user_id", userId)
-        .single();
-
-    return user?.role === "admin";
-};
 
 /**
  * PATCH /api/feedback/[id]/status - Update feedback status (admin only)
