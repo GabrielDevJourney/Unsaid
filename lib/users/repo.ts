@@ -154,6 +154,22 @@ export const getUsersOptedIntoWritingReminders = async (
 };
 
 /**
+ * Sync subscription_status on the users table to match subscriptions.status.
+ * Called after every webhook event that changes subscription state.
+ * Uses admin client (bypasses RLS) — only called from webhook/cron contexts.
+ */
+export const updateUserSubscriptionStatus = async (
+    supabase: SupabaseClient,
+    userId: string,
+    status: string,
+) => {
+    return supabase
+        .from("users")
+        .update({ subscription_status: status })
+        .eq("user_id", userId);
+};
+
+/**
  * Update the last writing reminder sent timestamp for a user.
  */
 export const updateLastWritingReminderSent = async (
