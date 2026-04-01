@@ -15,7 +15,7 @@ import {
     SidebarHeader,
     SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { brainNavItems, footerNavItems } from "@/config/sidebar";
+import { adminNavItems, brainNavItems, footerNavItems } from "@/config/sidebar";
 import { useSidebarBadgeStore } from "@/lib/stores/sidebar-badge-store";
 import { SidebarNavGroup } from "./sidebar-nav-group";
 import { SidebarUser } from "./sidebar-user";
@@ -23,11 +23,13 @@ import { SidebarUser } from "./sidebar-user";
 interface AppSidebarProps {
     newPatternsCount?: number;
     newProgressCount?: number;
+    isAdmin?: boolean;
 }
 
 export const AppSidebar = ({
     newPatternsCount = 0,
     newProgressCount = 0,
+    isAdmin = false,
 }: AppSidebarProps) => {
     const { signOut } = useClerk();
     const { user } = useUser();
@@ -104,6 +106,12 @@ export const AppSidebar = ({
 
             <SidebarFooter>
                 <SidebarNavGroup items={footerNavItems} className="p-4" />
+                {isAdmin && (
+                    <SidebarNavGroup
+                        items={adminNavItems}
+                        className="px-4 pb-1"
+                    />
+                )}
                 <SidebarUser
                     name={displayName}
                     email={userEmail}
