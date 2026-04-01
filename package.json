@@ -48,6 +48,7 @@
         "react-dom": "^19.2.3",
         "react-email": "^5.0.8",
         "resend": "^6.6.0",
+        "sharp": "^0.34.5",
         "tailwind-merge": "^3.4.0",
         "zod": "^4.1.13",
         "zustand": "^5.0.11"
