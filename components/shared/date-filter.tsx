@@ -1,25 +1,27 @@
 import { Calendar04Icon } from "@hugeicons/core-free-icons";
 import type { DateRange } from "react-day-picker";
 
-import { FilterButton } from "@/components/home/filter-button";
+import { FilterButton } from "@/components/shared/filter-button";
 import { Calendar } from "@/components/ui/calendar";
 
 interface DateFilterProps {
     dateRange: DateRange | undefined;
     onDateRangeChange: (range: DateRange | undefined) => void;
     popoverAlign?: "start" | "end";
+    showLabel?: boolean;
 }
 
 const DateFilter = ({
     dateRange,
     onDateRangeChange,
     popoverAlign = "end",
+    showLabel = false,
 }: DateFilterProps) => (
     <FilterButton
         icon={Calendar04Icon}
         label="Calendar"
         isActive={!!dateRange?.from}
-        showLabel
+        showLabel={showLabel}
         popoverAlign={popoverAlign}
         popoverClassName="w-auto p-0 rounded-xl shadow-lg"
     >

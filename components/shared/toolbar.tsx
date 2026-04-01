@@ -3,7 +3,7 @@
 import { Search01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { DateRange } from "react-day-picker";
-import { DateFilter } from "@/components/home/date-filter";
+import { DateFilter } from "@/components/shared/date-filter";
 import { Input } from "@/components/ui/input";
 import { FilterBadges, type FilterOption } from "./filter-badges";
 

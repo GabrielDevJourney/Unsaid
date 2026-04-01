@@ -31,7 +31,7 @@ const FilterButton = ({
         <PopoverTrigger asChild>
             <Button
                 variant="outline"
-                size={showLabel ? "sm" : "icon-lg"}
+                size={showLabel ? "default" : "icon-lg"}
                 className={`bg-accent hover:bg-white ${isActive ? "border-slate-500 bg-white" : ""}`}
             >
                 <HugeiconsIcon icon={icon} className="size-4" />
