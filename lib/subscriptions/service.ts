@@ -5,6 +5,7 @@ import {
     type LemonWebhookInput,
     mapLemonToInternalStatus,
 } from "@/lib/schemas/subscription";
+import { updateUserSubscriptionStatus } from "@/lib/users/repo";
 import type { ServiceResult } from "@/types";
 import type { Json } from "@/types/database";
 import type { SubscriptionRow } from "@/types/domain/subscriptions";
@@ -187,6 +188,9 @@ const processSubscriptionUpdate = async (
         throw updateError;
     }
 
+    // Keep users.subscription_status in sync
+    await updateUserSubscriptionStatus(supabase, userId, internalStatus);
+
     // Record event for audit/idempotency
     await insertPaymentEvent(supabase, {
         userId,
@@ -274,6 +278,7 @@ export const expireTrials = async (
     // Update all expired trials
     for (const userId of userIds) {
         await updateSubscriptionStatus(supabase, userId, "expired");
+        await updateUserSubscriptionStatus(supabase, userId, "expired");
     }
 
     return { data: { count: userIds.length } };

@@ -1,230 +1,163 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type {
-    FeedbackSortType,
-    FeedbackStatusType,
-} from "@/lib/schemas/feedback";
-import type { Feedback, InsertCommentData, InsertFeedbackData } from "@/types";
+import type { FeedbackStatusType } from "@/lib/schemas/feedback";
 
-/**
- * Insert a new feedback post.
- */
-export const insertFeedback = async (
-    supabase: SupabaseClient,
-    data: InsertFeedbackData,
-) => {
-    return supabase
-        .from("feedback")
-        .insert({
-            user_id: data.userId,
-            title: data.title,
-            description: data.description,
-            category: data.category,
-        })
-        .select()
-        .single();
-};
+// submitted_by / rejected_by are intentionally excluded — never returned to the client
+const ITEM_COLS =
+    "id, title, description, status, upvote_count, is_approved, is_anonymous, author_name, image_url, admin_reply, admin_reply_at, rejected_at, created_at";
 
-/**
- * Insert a comment on feedback.
- */
-export const insertComment = async (
-    supabase: SupabaseClient,
-    data: InsertCommentData,
-) => {
-    return supabase
-        .from("feedback")
-        .insert({
-            user_id: data.userId,
-            parent_id: data.parentId,
-            description: data.description,
-            // Comments don't have title, category, or status
-        })
-        .select()
-        .single();
-};
+// ─── User-facing reads ───────────────────────────────────────────────────────
 
-/**
- * Get feedback by ID.
- */
-export const getFeedbackById = async (
-    supabase: SupabaseClient,
-    feedbackId: string,
-) => {
-    return supabase.from("feedback").select("*").eq("id", feedbackId).single();
-};
+export const getFeedbackItems = (supabase: SupabaseClient) =>
+    supabase
+        .from("feedback_items")
+        .select(ITEM_COLS)
+        .eq("is_approved", true)
+        .order("upvote_count", { ascending: false })
+        .order("created_at", { ascending: false });
 
-/**
- * Get paginated feedback list with sorting and filtering.
- * Only returns top-level posts (parent_id IS NULL).
- */
-export const getFeedbackList = async (
-    supabase: SupabaseClient,
-    page: number,
-    pageSize: number,
-    sort: FeedbackSortType,
-    status: FeedbackStatusType | "all",
-) => {
-    const offset = (page - 1) * pageSize;
-
-    let query = supabase
-        .from("feedback")
-        .select("*", { count: "exact" })
-        .is("parent_id", null); // Only top-level posts
-
-    // Filter by status
-    if (status !== "all") {
-        query = query.eq("status", status);
-    }
-
-    // Sort
-    if (sort === "votes") {
-        query = query.order("upvotes", { ascending: false });
-    } else {
-        query = query.order("created_at", { ascending: false });
-    }
-
-    return query.range(offset, offset + pageSize - 1);
-};
-
-/**
- * Get comments for a feedback post.
- */
-export const getCommentsByParentId = async (
-    supabase: SupabaseClient,
-    parentId: string,
-) => {
-    return supabase
-        .from("feedback")
-        .select("*")
-        .eq("parent_id", parentId)
-        .order("created_at", { ascending: true });
-};
-
-/**
- * Update feedback status (admin only).
- */
-export const updateFeedbackStatus = async (
-    supabase: SupabaseClient,
-    feedbackId: string,
-    status: FeedbackStatusType,
-) => {
-    return supabase
-        .from("feedback")
-        .update({ status })
-        .eq("id", feedbackId)
-        .select()
-        .single();
-};
-
-/**
- * Check if user has voted on feedback.
- */
-export const getUserVote = async (
-    supabase: SupabaseClient,
-    userId: string,
-    feedbackId: string,
-) => {
-    return supabase
-        .from("feedback_votes")
-        .select("*")
-        .eq("user_id", userId)
-        .eq("feedback_id", feedbackId)
-        .maybeSingle();
-};
-
-/**
- * Get all votes by user for a list of feedback IDs.
- * Used to check hasVoted status in bulk.
- */
-export const getUserVotesForFeedbackIds = async (
+export const getUserUpvotedIds = (
     supabase: SupabaseClient,
     userId: string,
     feedbackIds: string[],
 ) => {
-    if (feedbackIds.length === 0) {
-        return { data: [], error: null };
-    }
-
+    if (feedbackIds.length === 0)
+        return Promise.resolve({ data: [], error: null });
+    // feedback_upvotes RLS allows reading all rows (public vote counts are visible),
+    // so .eq("user_id") is required here to scope results to the current user
     return supabase
-        .from("feedback_votes")
+        .from("feedback_upvotes")
         .select("feedback_id")
         .eq("user_id", userId)
         .in("feedback_id", feedbackIds);
 };
 
-/**
- * Insert a vote.
- */
-export const insertVote = async (
+// ─── Rate limit ──────────────────────────────────────────────────────────────
+
+export const countUserSubmissionsLast24h = (
     supabase: SupabaseClient,
     userId: string,
-    feedbackId: string,
 ) => {
-    return supabase.from("feedback_votes").insert({
-        user_id: userId,
-        feedback_id: feedbackId,
-    });
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    // feedback_items has a permissive read policy (public board), so .eq("submitted_by")
+    // is required to scope the rate-limit count to the current user
+    return supabase
+        .from("feedback_items")
+        .select("id", { count: "exact", head: true })
+        .eq("submitted_by", userId)
+        .gte("created_at", since);
 };
 
-/**
- * Delete a vote (unvote).
- */
-export const deleteVote = async (
+// ─── Mutations ───────────────────────────────────────────────────────────────
+
+export const insertFeedbackItem = (
+    supabase: SupabaseClient,
+    userId: string,
+    title: string,
+    description: string,
+    isAnonymous: boolean,
+    authorName: string | null,
+    imageUrl: string | null,
+) =>
+    supabase
+        .from("feedback_items")
+        .insert({
+            submitted_by: userId,
+            title,
+            description,
+            is_anonymous: isAnonymous,
+            author_name: isAnonymous ? null : authorName,
+            image_url: imageUrl ?? null,
+        })
+        .select(ITEM_COLS)
+        .single();
+
+export const insertUpvote = (
     supabase: SupabaseClient,
     userId: string,
     feedbackId: string,
-) => {
-    return supabase
-        .from("feedback_votes")
+) =>
+    supabase
+        .from("feedback_upvotes")
+        .insert({ user_id: userId, feedback_id: feedbackId });
+
+export const deleteUpvote = (
+    supabase: SupabaseClient,
+    userId: string,
+    feedbackId: string,
+) =>
+    supabase
+        .from("feedback_upvotes")
         .delete()
         .eq("user_id", userId)
         .eq("feedback_id", feedbackId);
-};
 
-/**
- * Increment upvotes count on feedback.
- */
-export const incrementUpvotes = async (
+// ─── Admin reads ─────────────────────────────────────────────────────────────
+
+export const getPendingFeedbackItems = (supabase: SupabaseClient) =>
+    supabase
+        .from("feedback_items")
+        .select(ITEM_COLS)
+        .eq("is_approved", false)
+        .is("rejected_at", null)
+        .order("created_at", { ascending: true });
+
+export const getApprovedFeedbackItemsAdmin = (supabase: SupabaseClient) =>
+    supabase
+        .from("feedback_items")
+        .select(ITEM_COLS)
+        .eq("is_approved", true)
+        .order("upvote_count", { ascending: false })
+        .order("created_at", { ascending: false });
+
+// ─── Admin mutations ─────────────────────────────────────────────────────────
+
+export const approveFeedbackItem = (
     supabase: SupabaseClient,
     feedbackId: string,
-) => {
-    // Get current upvotes
-    const { data: feedback } = await supabase
-        .from("feedback")
-        .select("upvotes")
+) =>
+    supabase
+        .from("feedback_items")
+        .update({ is_approved: true })
         .eq("id", feedbackId)
+        .select(ITEM_COLS)
         .single();
 
-    const currentUpvotes = (feedback as Feedback | null)?.upvotes ?? 0;
-
-    return supabase
-        .from("feedback")
-        .update({ upvotes: currentUpvotes + 1 })
-        .eq("id", feedbackId)
-        .select("upvotes")
-        .single();
-};
-
-/**
- * Decrement upvotes count on feedback.
- */
-export const decrementUpvotes = async (
+// Soft-delete: records who rejected and when; row is preserved for audit history
+export const softRejectFeedbackItem = (
     supabase: SupabaseClient,
     feedbackId: string,
-) => {
-    // Get current upvotes
-    const { data: feedback } = await supabase
-        .from("feedback")
-        .select("upvotes")
+    adminUserId: string,
+) =>
+    supabase
+        .from("feedback_items")
+        .update({
+            status: "rejected" as FeedbackStatusType,
+            rejected_at: new Date().toISOString(),
+            rejected_by: adminUserId,
+        })
+        .eq("id", feedbackId);
+
+export const updateFeedbackStatus = (
+    supabase: SupabaseClient,
+    feedbackId: string,
+    status: FeedbackStatusType,
+) =>
+    supabase
+        .from("feedback_items")
+        .update({ status })
         .eq("id", feedbackId)
+        .select(ITEM_COLS)
         .single();
 
-    const currentUpvotes = (feedback as Feedback | null)?.upvotes ?? 0;
-
-    return supabase
-        .from("feedback")
-        .update({ upvotes: Math.max(0, currentUpvotes - 1) })
+// admin_reply_at is set automatically by the DB trigger on feedback_items
+export const updateAdminReply = (
+    supabase: SupabaseClient,
+    feedbackId: string,
+    reply: string,
+) =>
+    supabase
+        .from("feedback_items")
+        .update({ admin_reply: reply })
         .eq("id", feedbackId)
-        .select("upvotes")
+        .select(ITEM_COLS)
         .single();
-};

@@ -5,7 +5,7 @@ import {
     EntryTag,
     type TagName,
 } from "@/components/home/entry-tag";
-import { FilterButton } from "@/components/home/filter-button";
+import { FilterButton } from "@/components/shared/filter-button";
 
 interface TagFilterProps {
     selectedTags: Set<TagName>;

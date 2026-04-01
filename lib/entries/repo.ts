@@ -241,11 +241,12 @@ export const getEntryWithInsightById = async (
 
 /**
  * Update an entry's content (re-encrypts).
- * RLS ensures user can only update their own entries.
+ * Explicit userId filter + RLS for defence-in-depth.
  */
 export const updateEntryContent = async (
     supabase: SupabaseClient,
     entryId: string,
+    userId: string,
     data: { content: string; wordCount: number },
 ): Promise<{ data: Entry | null; error: Error | null }> => {
     const { encryptedContent, iv, tag } = encrypt(data.content);
@@ -259,6 +260,7 @@ export const updateEntryContent = async (
             word_count: data.wordCount,
         })
         .eq("id", entryId)
+        .eq("user_id", userId)
         .select(
             "id, user_id, encrypted_content, content_iv, content_tag, word_count, created_at, updated_at",
         )

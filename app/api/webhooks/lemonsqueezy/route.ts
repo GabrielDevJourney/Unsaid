@@ -34,13 +34,13 @@ const verifySignature = (
 
 /**
  * Generate unique webhook ID from payload for idempotency.
+ * Uses crypto.randomUUID() to avoid millisecond collision risk.
  */
 const generateWebhookId = (
     eventName: string,
     subscriptionId: string,
 ): string => {
-    const timestamp = Date.now();
-    return `${eventName}_${subscriptionId}_${timestamp}`;
+    return `${eventName}_${subscriptionId}_${crypto.randomUUID()}`;
 };
 
 export const POST = async (req: Request) => {

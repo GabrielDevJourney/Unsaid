@@ -97,14 +97,17 @@ export const createEntry = async (
 export const saveEntry = async (
     supabase: SupabaseClient,
     entryId: string,
+    userId: string,
     content: string,
 ): Promise<ServiceResult<Entry>> => {
     const wordCount = calculateWordCount(content);
 
-    const { data: entry, error } = await updateEntryContent(supabase, entryId, {
-        content,
-        wordCount,
-    });
+    const { data: entry, error } = await updateEntryContent(
+        supabase,
+        entryId,
+        userId,
+        { content, wordCount },
+    );
 
     if (error || !entry) {
         return { error: "Failed to save entry" };

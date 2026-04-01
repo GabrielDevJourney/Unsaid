@@ -2,8 +2,8 @@
 
 import { useCallback, useMemo, useState } from "react";
 import type { DateRange } from "react-day-picker";
-import { DateFilter } from "@/components/home/date-filter";
 import { PageHeader } from "@/components/layout/page-header";
+import { DateFilter } from "@/components/shared/date-filter";
 import { useInfiniteScroll } from "@/lib/hooks/use-infinite-scroll";
 import { useSidebarBadgeStore } from "@/lib/stores/sidebar-badge-store";
 import type { ProgressInsight } from "@/types";
@@ -129,6 +129,7 @@ const ProgressView = ({
                                 dateRange={dateRange}
                                 onDateRangeChange={setDateRange}
                                 popoverAlign="start"
+                                showLabel
                             />
                             <hr className="flex-1 border-zinc-200" />
                         </div>

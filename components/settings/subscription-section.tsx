@@ -8,6 +8,7 @@ import { DATE_DISPLAY_LONG, formatDate } from "@/lib/date-utils";
 import { formatPrice } from "@/lib/format-utils";
 import type { SubscriptionStatusType } from "@/lib/schemas/subscription";
 import type { SettingsSubscription } from "@/lib/settings/service";
+import { UpgradePlanButton } from "./upgrade-plan-button";
 
 interface SubscriptionSectionProps {
     subscription: SettingsSubscription;
@@ -65,8 +66,6 @@ const STATUS_DISPLAY: Record<
         filledDotClass: "border-[#9A4848] bg-[#B06060]",
     },
 };
-
-const CHECKOUT_URL = process.env.NEXT_PUBLIC_LEMON_CHECKOUT_URL ?? "#";
 
 const SubscriptionSection = ({ subscription }: SubscriptionSectionProps) => {
     const {
@@ -175,20 +174,7 @@ const SubscriptionSection = ({ subscription }: SubscriptionSectionProps) => {
 
             <div className="flex items-center gap-4">
                 {(status === "trial" || status === "expired") && (
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        asChild
-                        className="bg-white py-4"
-                    >
-                        <Link
-                            href={CHECKOUT_URL}
-                            className="text-muted-foreground text-sm font-normal"
-                        >
-                            <HugeiconsIcon icon={LinkSquare01Icon} />
-                            Upgrade Plan
-                        </Link>
-                    </Button>
+                    <UpgradePlanButton />
                 )}
 
                 {(status === "active" ||

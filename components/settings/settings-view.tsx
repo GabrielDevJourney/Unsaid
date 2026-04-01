@@ -6,6 +6,7 @@ import type {
 import type { NotificationPreferences } from "@/lib/users/repo";
 import { AccountSection } from "./account-section";
 import { DangerZoneSection } from "./danger-zone-section";
+import { ExportSection } from "./export-section";
 import { NotificationsSection } from "./notifications-section";
 import { SecuritySection } from "./security-section";
 import { SubscriptionSection } from "./subscription-section";
@@ -35,6 +36,7 @@ const SettingsView = ({
                     <SecuritySection email={user.email} />
                     <SubscriptionSection subscription={subscription} />
                     <NotificationsSection preferences={notifications} />
+                    <ExportSection />
                     <DangerZoneSection />
                 </div>
             </div>
