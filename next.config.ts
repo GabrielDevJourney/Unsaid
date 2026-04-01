@@ -1,7 +1,27 @@
 import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 
+const remotePatterns: NonNullable<NextConfig["images"]>["remotePatterns"] = [
+    {
+        protocol: "https",
+        hostname: "vmhlernvxnixomfvpbsp.supabase.co",
+        pathname: "/storage/v1/object/public/**",
+    },
+];
+
+// Allow local Supabase storage in development only — 127.0.0.1 is blocked in prod
+if (process.env.NODE_ENV === "development") {
+    remotePatterns.push({
+        protocol: "http",
+        hostname: "127.0.0.1",
+        pathname: "/storage/v1/object/public/**",
+    });
+}
+
 const nextConfig: NextConfig = {
+    images: {
+        remotePatterns,
+    },
     experimental: {
         optimizePackageImports: [
             "lucide-react",

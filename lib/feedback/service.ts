@@ -1,222 +1,191 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { FeedbackStatusType } from "@/lib/schemas/feedback";
 import type {
-    FeedbackCategoryType,
-    FeedbackSortType,
-    FeedbackStatusType,
-} from "@/lib/schemas/feedback";
-import type {
-    Feedback,
-    FeedbackWithVoteStatus,
-    PaginatedFeedback,
+    FeedbackItem,
+    FeedbackItemWithVote,
     ServiceResult,
 } from "@/types";
 import {
-    decrementUpvotes,
-    deleteVote,
-    getFeedbackById,
-    getFeedbackList,
-    getUserVote,
-    getUserVotesForFeedbackIds,
-    incrementUpvotes,
-    insertComment,
-    insertFeedback,
-    insertVote,
+    approveFeedbackItem,
+    countUserSubmissionsLast24h,
+    deleteUpvote,
+    getApprovedFeedbackItemsAdmin,
+    getFeedbackItems,
+    getPendingFeedbackItems,
+    getUserUpvotedIds,
+    insertFeedbackItem,
+    insertUpvote,
+    softRejectFeedbackItem,
+    updateAdminReply,
     updateFeedbackStatus,
 } from "./repo";
 
-/**
- * Create a new feedback post.
- */
-export const createFeedback = async (
+const RATE_LIMIT = 10;
+
+// ─── User-facing ─────────────────────────────────────────────────────────────
+
+export const listFeedbackForUser = async (
     supabase: SupabaseClient,
     userId: string,
-    title: string,
-    description: string,
-    category: FeedbackCategoryType,
-): Promise<ServiceResult<Feedback>> => {
-    const { data, error } = await insertFeedback(supabase, {
-        userId,
-        title,
-        description,
-        category,
-    });
+): Promise<ServiceResult<FeedbackItemWithVote[]>> => {
+    const { data, error } = await getFeedbackItems(supabase);
+    if (error) throw error;
 
-    if (error) {
-        console.error("Failed to create feedback:", error);
-        throw error;
-    }
+    const items = (data ?? []) as FeedbackItem[];
+    const feedbackIds = items.map((i) => i.id);
 
-    return { data: data as Feedback };
-};
-
-/**
- * Create a comment on feedback.
- */
-export const createComment = async (
-    supabase: SupabaseClient,
-    userId: string,
-    parentId: string,
-    description: string,
-): Promise<ServiceResult<Feedback>> => {
-    // Verify parent exists
-    const { data: parent, error: parentError } = await getFeedbackById(
-        supabase,
-        parentId,
-    );
-
-    if (parentError || !parent) {
-        return { error: "Feedback not found" };
-    }
-
-    const { data, error } = await insertComment(supabase, {
-        userId,
-        parentId,
-        description,
-    });
-
-    if (error) {
-        console.error("Failed to create comment:", error);
-        throw error;
-    }
-
-    return { data: data as Feedback };
-};
-
-/**
- * Get paginated feedback list with vote status.
- */
-export const listFeedback = async (
-    supabase: SupabaseClient,
-    userId: string,
-    page: number,
-    pageSize: number,
-    sort: FeedbackSortType,
-    status: FeedbackStatusType | "all",
-): Promise<PaginatedFeedback> => {
-    const {
-        data: feedbackList,
-        count,
-        error,
-    } = await getFeedbackList(supabase, page, pageSize, sort, status);
-
-    if (error) {
-        console.error("Failed to list feedback:", error);
-        throw error;
-    }
-
-    const feedback = (feedbackList as Feedback[]) ?? [];
-    const total = count ?? 0;
-    const offset = (page - 1) * pageSize;
-
-    // Get user's votes for these feedback items
-    const feedbackIds = feedback.map((f) => f.id);
-    const { data: votes } = await getUserVotesForFeedbackIds(
+    const { data: votes } = await getUserUpvotedIds(
         supabase,
         userId,
         feedbackIds,
     );
-
-    const votedIds = new Set((votes ?? []).map((v) => v.feedback_id));
-
-    // Add hasVoted status
-    const feedbackWithVotes: FeedbackWithVoteStatus[] = feedback.map((f) => ({
-        ...f,
-        hasVoted: votedIds.has(f.id),
-    }));
+    const votedSet = new Set((votes ?? []).map((v) => v.feedback_id));
 
     return {
-        data: feedbackWithVotes,
-        pagination: {
-            page,
-            pageSize,
-            total,
-            hasMore: total > offset + pageSize,
-        },
+        data: items.map((item) => ({
+            ...item,
+            hasVoted: votedSet.has(item.id),
+        })),
     };
 };
 
+export const submitFeedback = async (
+    supabase: SupabaseClient,
+    userId: string,
+    title: string,
+    description: string,
+    isAnonymous: boolean,
+    authorName: string | null,
+    imageUrl: string | null,
+): Promise<ServiceResult<null>> => {
+    const { count } = await countUserSubmissionsLast24h(supabase, userId);
+    if ((count ?? 0) >= RATE_LIMIT) {
+        return { error: "rate_limit" };
+    }
+
+    const { error } = await insertFeedbackItem(
+        supabase,
+        userId,
+        title,
+        description,
+        isAnonymous,
+        authorName,
+        imageUrl,
+    );
+    if (error) throw error;
+
+    return { data: null };
+};
+
+export const checkFeedbackRateLimit = async (
+    supabase: SupabaseClient,
+    userId: string,
+): Promise<boolean> => {
+    const { count } = await countUserSubmissionsLast24h(supabase, userId);
+    return (count ?? 0) >= RATE_LIMIT;
+};
+
 /**
- * Toggle vote on feedback.
- * If already voted, removes vote. If not voted, adds vote.
- * Returns new upvote count.
+ * Toggle upvote: try INSERT first; if duplicate key (23505) the user already
+ * voted — DELETE instead. One fewer round-trip vs. checking first.
  */
-export const toggleVote = async (
+export const toggleUpvote = async (
     supabase: SupabaseClient,
     userId: string,
     feedbackId: string,
-): Promise<ServiceResult<{ upvotes: number; hasVoted: boolean }>> => {
-    // Verify feedback exists
-    const { data: feedback, error: feedbackError } = await getFeedbackById(
-        supabase,
-        feedbackId,
-    );
-
-    if (feedbackError || !feedback) {
-        return { error: "Feedback not found" };
-    }
-
-    // Check if user already voted
-    const { data: existingVote } = await getUserVote(
+): Promise<ServiceResult<{ hasVoted: boolean }>> => {
+    const { error: insertError } = await insertUpvote(
         supabase,
         userId,
         feedbackId,
     );
 
-    if (existingVote) {
-        // Remove vote
-        await deleteVote(supabase, userId, feedbackId);
-        const { data: updated } = await decrementUpvotes(supabase, feedbackId);
-        return {
-            data: {
-                upvotes: (updated as { upvotes: number } | null)?.upvotes ?? 0,
-                hasVoted: false,
-            },
-        };
-    }
-
-    // Add vote
-    const { error: voteError } = await insertVote(supabase, userId, feedbackId);
-
-    if (voteError) {
-        // Could be duplicate key if race condition - treat as already voted
-        if (voteError.code === "23505") {
-            return { error: "Already voted" };
+    if (insertError) {
+        if (insertError.code === "23505") {
+            const { error: deleteError } = await deleteUpvote(
+                supabase,
+                userId,
+                feedbackId,
+            );
+            if (deleteError) throw deleteError;
+            return { data: { hasVoted: false } };
         }
-        console.error("Failed to insert vote:", voteError);
-        throw voteError;
+        throw insertError;
     }
 
-    const { data: updated } = await incrementUpvotes(supabase, feedbackId);
-
-    return {
-        data: {
-            upvotes: (updated as { upvotes: number } | null)?.upvotes ?? 0,
-            hasVoted: true,
-        },
-    };
+    return { data: { hasVoted: true } };
 };
 
-/**
- * Update feedback status (admin only).
- */
+// ─── Admin ───────────────────────────────────────────────────────────────────
+
+export const listPendingFeedback = async (
+    supabase: SupabaseClient,
+): Promise<ServiceResult<FeedbackItem[]>> => {
+    const { data, error } = await getPendingFeedbackItems(supabase);
+    if (error) throw error;
+    return { data: (data ?? []) as FeedbackItem[] };
+};
+
+export const listApprovedFeedbackAdmin = async (
+    supabase: SupabaseClient,
+): Promise<ServiceResult<FeedbackItem[]>> => {
+    const { data, error } = await getApprovedFeedbackItemsAdmin(supabase);
+    if (error) throw error;
+    return { data: (data ?? []) as FeedbackItem[] };
+};
+
+export const approveFeedback = async (
+    supabase: SupabaseClient,
+    feedbackId: string,
+): Promise<ServiceResult<FeedbackItem>> => {
+    const { data, error } = await approveFeedbackItem(supabase, feedbackId);
+    if (error) {
+        if (error.code === "PGRST116") return { error: "Feedback not found" };
+        throw error;
+    }
+    return { data: data as FeedbackItem };
+};
+
+export const rejectFeedback = async (
+    supabase: SupabaseClient,
+    feedbackId: string,
+    adminUserId: string,
+): Promise<ServiceResult<null>> => {
+    const { error } = await softRejectFeedbackItem(
+        supabase,
+        feedbackId,
+        adminUserId,
+    );
+    if (error) throw error;
+    return { data: null };
+};
+
 export const setFeedbackStatus = async (
     supabase: SupabaseClient,
     feedbackId: string,
     status: FeedbackStatusType,
-): Promise<ServiceResult<Feedback>> => {
+): Promise<ServiceResult<FeedbackItem>> => {
     const { data, error } = await updateFeedbackStatus(
         supabase,
         feedbackId,
         status,
     );
-
     if (error) {
-        if (error.code === "PGRST116") {
-            return { error: "Feedback not found" };
-        }
-        console.error("Failed to update feedback status:", error);
+        if (error.code === "PGRST116") return { error: "Feedback not found" };
         throw error;
     }
+    return { data: data as FeedbackItem };
+};
 
-    return { data: data as Feedback };
+export const setAdminReply = async (
+    supabase: SupabaseClient,
+    feedbackId: string,
+    reply: string,
+): Promise<ServiceResult<FeedbackItem>> => {
+    const { data, error } = await updateAdminReply(supabase, feedbackId, reply);
+    if (error) {
+        if (error.code === "PGRST116") return { error: "Feedback not found" };
+        throw error;
+    }
+    return { data: data as FeedbackItem };
 };
