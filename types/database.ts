@@ -186,6 +186,89 @@ export type Database = {
                     },
                 ];
             };
+            feedback_items: {
+                Row: {
+                    admin_reply: string | null;
+                    admin_reply_at: string | null;
+                    author_name: string | null;
+                    created_at: string;
+                    description: string;
+                    fts: unknown;
+                    id: string;
+                    image_url: string | null;
+                    is_anonymous: boolean;
+                    is_approved: boolean;
+                    rejected_at: string | null;
+                    rejected_by: string | null;
+                    status: Database["public"]["Enums"]["feedback_status"];
+                    submitted_by: string;
+                    title: string;
+                    upvote_count: number;
+                };
+                Insert: {
+                    admin_reply?: string | null;
+                    admin_reply_at?: string | null;
+                    author_name?: string | null;
+                    created_at?: string;
+                    description: string;
+                    fts?: unknown;
+                    id?: string;
+                    image_url?: string | null;
+                    is_anonymous?: boolean;
+                    is_approved?: boolean;
+                    rejected_at?: string | null;
+                    rejected_by?: string | null;
+                    status?: Database["public"]["Enums"]["feedback_status"];
+                    submitted_by: string;
+                    title: string;
+                    upvote_count?: number;
+                };
+                Update: {
+                    admin_reply?: string | null;
+                    admin_reply_at?: string | null;
+                    author_name?: string | null;
+                    created_at?: string;
+                    description?: string;
+                    fts?: unknown;
+                    id?: string;
+                    image_url?: string | null;
+                    is_anonymous?: boolean;
+                    is_approved?: boolean;
+                    rejected_at?: string | null;
+                    rejected_by?: string | null;
+                    status?: Database["public"]["Enums"]["feedback_status"];
+                    submitted_by?: string;
+                    title?: string;
+                    upvote_count?: number;
+                };
+                Relationships: [];
+            };
+            feedback_upvotes: {
+                Row: {
+                    created_at: string;
+                    feedback_id: string;
+                    user_id: string;
+                };
+                Insert: {
+                    created_at?: string;
+                    feedback_id: string;
+                    user_id: string;
+                };
+                Update: {
+                    created_at?: string;
+                    feedback_id?: string;
+                    user_id?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: "feedback_upvotes_feedback_id_fkey";
+                        columns: ["feedback_id"];
+                        isOneToOne: false;
+                        referencedRelation: "feedback_items";
+                        referencedColumns: ["id"];
+                    },
+                ];
+            };
             feedback_votes: {
                 Row: {
                     created_at: string;
@@ -748,7 +831,12 @@ export type Database = {
             };
         };
         Enums: {
-            [_ in never]: never;
+            feedback_status:
+                | "open"
+                | "in_progress"
+                | "completed"
+                | "wont_do"
+                | "rejected";
         };
         CompositeTypes: {
             [_ in never]: never;
@@ -881,6 +969,14 @@ export const Constants = {
         Enums: {},
     },
     public: {
-        Enums: {},
+        Enums: {
+            feedback_status: [
+                "open",
+                "in_progress",
+                "completed",
+                "wont_do",
+                "rejected",
+            ],
+        },
     },
 } as const;
