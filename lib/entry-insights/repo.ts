@@ -86,3 +86,17 @@ export const getEntryInsightByEntryId = async (
 
     return { data: toEntryInsight(insightRow), error: null };
 };
+
+/**
+ * Get total count of entry insights for the authenticated user.
+ * RLS ensures only the user's own rows are counted.
+ */
+export const getTotalInsightsCount = async (
+    supabase: SupabaseClient,
+): Promise<{ count: number; error: Error | null }> => {
+    const { count, error } = await supabase
+        .from("entry_insights")
+        .select("id", { count: "exact", head: true });
+
+    return { count: count ?? 0, error };
+};
