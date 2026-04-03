@@ -5,13 +5,14 @@ import { listFeedbackForUser } from "@/lib/feedback/service";
 import { createSupabaseServer } from "@/lib/supabase/server";
 
 const FeedbackPage = async () => {
-    const { userId } = await auth();
+    const authPromise = auth();
+    const userPromise = currentUser();
+    const supabasePromise = createSupabaseServer();
+
+    const { userId } = await authPromise;
     if (!userId) redirect("/sign-in");
 
-    const [user, supabase] = await Promise.all([
-        currentUser(),
-        createSupabaseServer(),
-    ]);
+    const [user, supabase] = await Promise.all([userPromise, supabasePromise]);
 
     const { data: items } = await listFeedbackForUser(supabase, userId);
 
