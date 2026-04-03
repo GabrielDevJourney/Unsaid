@@ -2,16 +2,17 @@ import {
     Activity01Icon,
     ArrowLeft01Icon,
     DashboardSquare01Icon,
-    SquareLock02Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
+import { LockedPreviewCard } from "@/components/entries/locked-preview-card";
 import { PatternCard } from "@/components/patterns/pattern-card";
 import { ProgressCard } from "@/components/progress/progress-card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ProgressInsight, WeeklyInsightPattern } from "@/types";
 
+// Falls back to "#" in local/preview environments where the env var is not set
 const CHECKOUT_URL = process.env.NEXT_PUBLIC_LEMON_CHECKOUT_URL ?? "#";
 
 // Teaser fill for the gate — shows what the bar looks like, not real progress
@@ -35,47 +36,19 @@ const StatCell = ({ label, value }: { label: string; value: number }) => (
     </div>
 );
 
-const LockedPreviewCard = ({
-    icon,
-    title,
-    subtitle,
-    extra,
-    children,
-}: {
-    icon: React.ComponentProps<typeof HugeiconsIcon>["icon"];
-    title: string;
-    subtitle: React.ReactNode;
-    extra?: React.ReactNode;
-    children: React.ReactNode;
-}) => (
-    <div className="flex flex-col rounded-xl border border-neutral-300 bg-[#D9D9D9]/30 overflow-hidden min-w-50 h-70">
-        <div className="px-5 pt-5">
-            <div className="flex items-center justify-between">
-                <div className="bg-white border border-border rounded-md p-1.5">
-                    <HugeiconsIcon
-                        icon={icon}
-                        strokeWidth={1}
-                        className="size-5 text-neutral-500"
-                    />
-                </div>
-                <HugeiconsIcon
-                    icon={SquareLock02Icon}
-                    className="size-4 text-neutral-400"
-                />
+const gateProgressBar = (
+    <div className="flex flex-col gap-1.5">
+        <div className="relative h-1.5 rounded-full bg-neutral-300 overflow-hidden">
+            <div
+                className="absolute inset-y-0 left-0 rounded-full bg-slate-400 overflow-hidden"
+                style={{ width: `${GATE_BAR_FILL_PCT}%` }}
+            >
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_100%_100%,rgba(251,146,60,0.75)_5%,rgba(255,115,1,0.45)_20%,transparent_55%)]" />
             </div>
-            <h3 className="mt-2 font-serif text-xl italic text-neutral-500">
-                {title}
-            </h3>
-            <p className="mt-1 text-xs text-neutral-500 leading-snug">
-                {subtitle}
-            </p>
         </div>
-        {extra && <div className="px-5 pt-3">{extra}</div>}
-        <div className="relative mt-4 flex-1 min-h-0 overflow-hidden pointer-events-none">
-            {children}
-            <div className="absolute bottom-0 inset-x-0 h-6.25 backdrop-blur-[1px]" />
-            <div className="absolute inset-0 bg-linear-to-b from-transparent from-50% to-card" />
-        </div>
+        <p className="text-xs text-neutral-400">
+            Keep writing to unlock your next reflection
+        </p>
     </div>
 );
 
@@ -128,22 +101,7 @@ const EntryGate = ({
                             Entry by entry, week by week.
                         </>
                     }
-                    extra={
-                        <div className="flex flex-col gap-1.5">
-                            <div className="relative h-1.5 rounded-full bg-neutral-300 overflow-hidden">
-                                <div
-                                    className="absolute inset-y-0 left-0 rounded-full bg-slate-400 overflow-hidden"
-                                    style={{ width: `${GATE_BAR_FILL_PCT}%` }}
-                                >
-                                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_100%_100%,rgba(251,146,60,0.75)_5%,rgba(255,115,1,0.45)_20%,transparent_55%)]" />
-                                </div>
-                            </div>
-                            {/* TODO: understand if with/out this text cuz affects the current design */}
-                            <p className="text-xs text-neutral-400">
-                                Keep writing to unlock your next reflection
-                            </p>
-                        </div>
-                    }
+                    extra={gateProgressBar}
                 >
                     {latestProgressInsight ? (
                         <div className="ml-10 origin-top-left scale-[0.50] w-[200%]">
