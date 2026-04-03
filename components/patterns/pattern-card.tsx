@@ -13,12 +13,14 @@ interface PatternCardProps {
     pattern: WeeklyInsightPattern;
     from?: string;
     onViewed?: (id: string) => void;
+    isPreview?: boolean;
 }
 
 const PatternCard = ({
     pattern,
     from = "/patterns",
     onViewed,
+    isPreview = false,
 }: PatternCardProps) => {
     const badgeStyle =
         PATTERN_TYPE_BADGE_STYLES[pattern.patternType] ??
@@ -34,8 +36,9 @@ const PatternCard = ({
     };
 
     return (
-        // Outer div — not a Link, so pills inside can be valid <a> siblings
-        <div className="flex h-56 rounded-xl border border-border bg-card shadow-xs hover:shadow-sm transition-shadow duration-200 overflow-hidden">
+        <div
+            className={`flex ${isPreview ? "h-42" : "h-56"} rounded-xl border border-border bg-card shadow-xs hover:shadow-sm transition-shadow duration-200 overflow-hidden`}
+        >
             {/* Left: each pill is its own Link to the referenced entry */}
             <div className="border-r border-border">
                 <ReferenceTimeline
@@ -69,7 +72,9 @@ const PatternCard = ({
                 <h3 className="font-serif text-2xl italic text-muted-foreground leading-snug line-clamp-2">
                     {pattern.title}
                 </h3>
-                <p className="text-sm text-muted-foreground leading-relaxed line-clamp-4">
+                <p
+                    className={`text-sm text-muted-foreground leading-relaxed ${isPreview ? "line-clamp-2" : "line-clamp-4"}`}
+                >
                     {pattern.description}
                 </p>
             </Link>
