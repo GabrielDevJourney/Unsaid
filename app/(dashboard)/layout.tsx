@@ -27,10 +27,8 @@ const Layout = async ({
     ]);
 
     const isAtFreeLimit = (progressData?.totalEntries ?? 0) >= 15 && !canWrite;
-
     // Role is forwarded by middleware — avoids a redundant DB round-trip
     const isAdmin = (await headers()).get("x-user-role") === "admin";
-
     return (
         <div className="flex h-svh">
             <EntitlementProvider isAtFreeLimit={isAtFreeLimit}>
@@ -39,7 +37,6 @@ const Layout = async ({
                         newPatternsCount={newPatternsCount ?? 0}
                         newProgressCount={newProgressCount ?? 0}
                         isAdmin={isAdmin}
-
                     />
                     <main className="flex-1 overflow-hidden">{children}</main>
                 </SidebarProvider>
@@ -47,5 +44,4 @@ const Layout = async ({
         </div>
     );
 };
-
 export default Layout;
