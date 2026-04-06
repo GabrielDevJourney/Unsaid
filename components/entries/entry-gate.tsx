@@ -1,6 +1,7 @@
 import {
     Activity01Icon,
     ArrowLeft01Icon,
+    ArrowRight02Icon,
     DashboardSquare01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -154,9 +155,16 @@ const EntryGate = ({
                     Cancel anytime.{" "}
                     <Link
                         href="/upgrade"
-                        className="text-foreground underline underline-offset-4 transition-opacity hover:opacity-70"
+                        className="inline-flex items-center gap-1 text-neutral-500 transition-opacity hover:opacity-70"
                     >
-                        See everything that's included →
+                        <span className="underline underline-offset-4">
+                            See what&apos;s waiting
+                        </span>
+                        <HugeiconsIcon
+                            icon={ArrowRight02Icon}
+                            strokeWidth={1.5}
+                            className="size-4"
+                        />
                     </Link>
                 </p>
             </div>
