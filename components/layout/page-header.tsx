@@ -3,8 +3,6 @@
 import { ArrowLeft02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
-import { UpgradeBanner } from "@/components/shared/upgrade-banner";
-import { useEntitlement } from "@/lib/context/entitlement-context";
 import { cn } from "@/lib/utils";
 
 interface PageHeaderProps {
@@ -15,11 +13,8 @@ interface PageHeaderProps {
 }
 
 const PageHeader = ({ children, className, backHref }: PageHeaderProps) => {
-    const { isAtFreeLimit } = useEntitlement();
-
     return (
         <header className={cn("flex shrink-0 flex-col border-b", className)}>
-            {isAtFreeLimit && <UpgradeBanner />}
             <div className="flex h-24 items-center px-10">
                 {backHref && (
                     <Link
