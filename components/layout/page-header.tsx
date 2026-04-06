@@ -1,3 +1,5 @@
+"use client";
+
 import { ArrowLeft02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
@@ -12,25 +14,22 @@ interface PageHeaderProps {
 
 const PageHeader = ({ children, className, backHref }: PageHeaderProps) => {
     return (
-        <header
-            className={cn(
-                "flex h-24 shrink-0 items-center border-b px-10",
-                className,
-            )}
-        >
-            {backHref && (
-                <Link
-                    href={backHref}
-                    className="mr-4 shrink-0 text-muted-foreground hover:text-foreground transition-colors"
-                >
-                    <HugeiconsIcon
-                        icon={ArrowLeft02Icon}
-                        className="size-5 text-zinc-600"
-                        strokeWidth={1.5}
-                    />
-                </Link>
-            )}
-            {children}
+        <header className={cn("flex shrink-0 flex-col border-b", className)}>
+            <div className="flex h-24 items-center px-10">
+                {backHref && (
+                    <Link
+                        href={backHref}
+                        className="mr-4 shrink-0 text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                        <HugeiconsIcon
+                            icon={ArrowLeft02Icon}
+                            className="size-5 text-zinc-600"
+                            strokeWidth={1.5}
+                        />
+                    </Link>
+                )}
+                {children}
+            </div>
         </header>
     );
 };

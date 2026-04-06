@@ -1,4 +1,5 @@
 import { PROGRESS_TRIGGER_INTERVAL } from "@/lib/constants";
+import { computeProgressCycle } from "@/lib/progress-insights/utils";
 
 interface ProgressHeaderBarProps {
     totalEntries: number;
@@ -11,12 +12,10 @@ const ProgressHeaderBar = ({
     totalInsights,
     entryCountAtLastProgress,
 }: ProgressHeaderBarProps) => {
-    const entriesInCycle = Math.max(0, totalEntries - entryCountAtLastProgress);
-    const fillPct = (entriesInCycle / PROGRESS_TRIGGER_INTERVAL) * 100;
-    const nextIn =
-        entriesInCycle === 0
-            ? PROGRESS_TRIGGER_INTERVAL
-            : PROGRESS_TRIGGER_INTERVAL - entriesInCycle;
+    const { fillPct, nextIn } = computeProgressCycle({
+        totalEntries,
+        entryCountAtLastProgress,
+    });
     const depth = Math.floor(totalEntries / PROGRESS_TRIGGER_INTERVAL);
     const depthLabel = `Depth ${String(depth).padStart(2, "0")}`;
 

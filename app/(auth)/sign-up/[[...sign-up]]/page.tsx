@@ -1,15 +1,20 @@
 "use client";
 
 import { ClerkLoaded, ClerkLoading, SignUp } from "@clerk/nextjs";
+import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const SignUpPage = () => {
     return (
         <div className="flex min-h-svh flex-col items-center justify-center bg-primary-foreground px-4">
-            {/* Logo placeholder */}
             <div className="mb-6 flex items-center gap-2">
-                <div className="h-8 w-8 rounded-md bg-sidebar-primary" />
-                <span className="text-lg font-medium">Unsaid</span>
+                <Image src="/logo-white-bg.svg" alt="" width={40} height={40} />
+                <Image
+                    src="/logo-text.svg"
+                    alt="Unsaid"
+                    width={82}
+                    height={24}
+                />
             </div>
 
             <ClerkLoading>

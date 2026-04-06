@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { notFound, redirect } from "next/navigation";
+import { after } from "next/server";
 import { PatternDetailPage } from "@/components/patterns/pattern-detail-page";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import {
@@ -21,7 +22,7 @@ const PatternPage = async ({ params }: Props) => {
     const { data: pattern } = await getPatternById(supabase, id);
     if (!pattern) notFound();
 
-    await markPatternAsViewed(supabase, id);
+    after(markPatternAsViewed(supabase, id));
 
     return <PatternDetailPage pattern={pattern} />;
 };
