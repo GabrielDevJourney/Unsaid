@@ -11,13 +11,8 @@ import { PatternCard } from "@/components/patterns/pattern-card";
 import { ProgressCard } from "@/components/progress/progress-card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CHECKOUT_URL, GATE_BAR_FILL_PCT } from "@/lib/constants/upgrade";
 import type { ProgressInsight, WeeklyInsightPattern } from "@/types";
-
-// Falls back to "#" in local/preview environments where the env var is not set
-const CHECKOUT_URL = process.env.NEXT_PUBLIC_LEMON_CHECKOUT_URL ?? "#";
-
-// Teaser fill for the gate — shows what the bar looks like, not real progress
-const GATE_BAR_FILL_PCT = 52;
 
 interface EntryGateProps {
     totalEntries: number;

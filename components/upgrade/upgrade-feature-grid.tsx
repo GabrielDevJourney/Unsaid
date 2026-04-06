@@ -10,16 +10,16 @@ import { LockedPreviewCard } from "@/components/entries/locked-preview-card";
 import { EntryCard } from "@/components/home/entry-card";
 import { PatternCard } from "@/components/patterns/pattern-card";
 import { ProgressCard } from "@/components/progress/progress-card";
+import { FoggyBlurOverlay } from "@/components/shared/foggy-blur-overlay";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MAX_INSIGHT_COUNT } from "@/lib/constants";
+import { GATE_BAR_FILL_PCT } from "@/lib/constants/upgrade";
 import type {
     EntryInsightSummary,
     EntryWithInsight,
     ProgressInsight,
     WeeklyInsightPattern,
 } from "@/types";
-
-const GATE_BAR_FILL_PCT = 52;
 
 interface UpgradeFeatureGridProps {
     recentEntries: EntryWithInsight[] | null;
@@ -80,17 +80,7 @@ const UpgradeFeatureGrid = ({
                                     />
                                 ))}
                             </div>
-                            <div
-                                className="absolute inset-x-0 bottom-0 h-12 pointer-events-none"
-                                style={{
-                                    backdropFilter: "blur(2px)",
-                                    WebkitBackdropFilter: "blur(2px)",
-                                    maskImage:
-                                        "linear-gradient(to bottom, transparent, black 50%)",
-                                    WebkitMaskImage:
-                                        "linear-gradient(to bottom, transparent, black 40%)",
-                                }}
-                            />
+                            <FoggyBlurOverlay />
                         </>
                     ) : (
                         <Skeleton className="m-3 h-full rounded-xl" />
@@ -160,17 +150,7 @@ const UpgradeFeatureGrid = ({
                     ) : (
                         <Skeleton className="mx-3 h-full rounded-xl" />
                     )}
-                    <div
-                        className="absolute inset-x-0 bottom-0 h-12 pointer-events-none"
-                        style={{
-                            backdropFilter: "blur(2px)",
-                            WebkitBackdropFilter: "blur(2px)",
-                            maskImage:
-                                "linear-gradient(to bottom, transparent, black 50%)",
-                            WebkitMaskImage:
-                                "linear-gradient(to bottom, transparent, black 40%)",
-                        }}
-                    />
+                    <FoggyBlurOverlay />
                 </div>
             </div>
 

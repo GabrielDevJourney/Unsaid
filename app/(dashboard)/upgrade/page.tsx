@@ -4,6 +4,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
 import { UpgradeFeatureGrid } from "@/components/upgrade/upgrade-feature-grid";
 import { UpgradePricingSection } from "@/components/upgrade/upgrade-pricing-section";
+import { CHECKOUT_URL } from "@/lib/constants/upgrade";
 import { getEntriesWithInsightsPaginated } from "@/lib/entries/repo";
 import { getTotalInsightsCount } from "@/lib/entry-insights/repo";
 import {
@@ -11,10 +12,9 @@ import {
     getProgressInsightsPaginated,
 } from "@/lib/progress-insights/repo";
 import { createSupabaseServer } from "@/lib/supabase/server";
+import { deriveUpgradePreviewData } from "@/lib/upgrade/utils";
 import { getUserProgress } from "@/lib/users/repo";
 import { getWeeklyInsightWithPatternsPaginated } from "@/lib/weekly-insights/repo";
-
-const CHECKOUT_URL = process.env.NEXT_PUBLIC_LEMON_CHECKOUT_URL ?? "#";
 
 const UpgradePage = async () => {
     const { userId } = await auth();
@@ -42,25 +42,17 @@ const UpgradePage = async () => {
 
     const totalEntries = progress?.totalEntries ?? 0;
 
-    // Gate shows patterns[0] — upgrade page shows distinct pattern
-    const latestPattern = weeklyInsights?.[0]?.patterns?.[0] ?? null;
-    const upgradePattern =
-        weeklyInsights?.[1]?.patterns?.[0] ??
-        weeklyInsights?.[0]?.patterns?.[2] ??
-        weeklyInsights?.[0]?.patterns?.[1] ??
-        latestPattern;
-
-    // Gate shows latestProgressInsight — upgrade page shows second-most-recent
-    const upgradeProgressInsight =
-        olderProgressInsights?.[0] ?? latestProgressInsight ?? null;
-
-    const secondUpgradePattern =
-        weeklyInsights?.[1]?.patterns?.[1] ??
-        weeklyInsights?.[0]?.patterns?.[2] ??
-        weeklyInsights?.[0]?.patterns?.[1] ??
-        upgradePattern;
-
-    const latestEntryInsight = recentEntries?.[0]?.entryInsight ?? null;
+    const {
+        upgradePattern,
+        secondUpgradePattern,
+        upgradeProgressInsight,
+        latestEntryInsight,
+    } = deriveUpgradePreviewData({
+        weeklyInsights,
+        olderProgressInsights,
+        latestProgressInsight,
+        recentEntries,
+    });
 
     return (
         <div className="h-full overflow-y-auto">

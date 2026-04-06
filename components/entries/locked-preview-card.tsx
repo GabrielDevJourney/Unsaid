@@ -1,5 +1,6 @@
 import { SquareLock02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { FoggyBlurOverlay } from "@/components/shared/foggy-blur-overlay";
 import { cn } from "@/lib/utils";
 
 interface LockedPreviewCardProps {
@@ -60,17 +61,7 @@ const LockedPreviewCard = ({
         {extra && <div className="px-5 pt-3">{extra}</div>}
         <div className="relative mt-4 flex-1 min-h-0 overflow-hidden pointer-events-none">
             {children}
-            <div
-                className="absolute inset-x-0 bottom-0 h-12 pointer-events-none"
-                style={{
-                    backdropFilter: "blur(2px)",
-                    WebkitBackdropFilter: "blur(2px)",
-                    maskImage:
-                        "linear-gradient(to bottom, transparent, black 50%)",
-                    WebkitMaskImage:
-                        "linear-gradient(to bottom, transparent, black 40%)",
-                }}
-            />
+            <FoggyBlurOverlay />
         </div>
     </div>
 );
