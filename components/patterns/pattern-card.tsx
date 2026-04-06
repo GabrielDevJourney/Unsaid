@@ -37,7 +37,7 @@ const PatternCard = ({
 
     return (
         <div
-            className={`flex ${isPreview ? "h-42" : "h-56"} rounded-xl border border-border bg-card shadow-xs hover:shadow-sm transition-shadow duration-200 overflow-hidden`}
+            className={`flex ${isPreview ? "h-50" : "h-56"} rounded-xl border border-border bg-card shadow-xs hover:shadow-sm transition-shadow duration-200 overflow-hidden`}
         >
             {/* Left: each pill is its own Link to the referenced entry */}
             <div className="border-r border-border">
