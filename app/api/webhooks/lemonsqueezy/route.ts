@@ -33,14 +33,16 @@ const verifySignature = (
 };
 
 /**
- * Generate unique webhook ID from payload for idempotency.
- * Uses crypto.randomUUID() to avoid millisecond collision risk.
+ * Generate a deterministic webhook ID for idempotency.
+ * Same event replayed (Lemon Squeezy retry) produces the same ID,
+ * so processWebhookEvent will detect it as already processed.
  */
 const generateWebhookId = (
     eventName: string,
     subscriptionId: string,
+    renewsAt: string | null,
 ): string => {
-    return `${eventName}_${subscriptionId}_${crypto.randomUUID()}`;
+    return `${eventName}_${subscriptionId}_${renewsAt ?? "no-date"}`;
 };
 
 export const POST = async (req: Request) => {
@@ -67,6 +69,7 @@ export const POST = async (req: Request) => {
         const webhookId = generateWebhookId(
             payload.meta.event_name,
             payload.data.id,
+            payload.data.attributes.renews_at,
         );
 
         // Process webhook with admin client (bypasses RLS)

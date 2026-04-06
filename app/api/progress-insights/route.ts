@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getProgressInsightsPaginated } from "@/lib/progress-insights/repo";
-import { createSupabaseAdmin } from "@/lib/supabase/admin";
+import { createSupabaseServer } from "@/lib/supabase/server";
 
 const QuerySchema = z.object({
     page: z.coerce.number().int().positive().default(1),
@@ -40,7 +40,7 @@ export const GET = async (req: NextRequest) => {
         }
 
         const { page, pageSize } = queryResult.data;
-        const supabase = createSupabaseAdmin();
+        const supabase = await createSupabaseServer();
 
         const {
             data: insights,

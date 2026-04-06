@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import { type NextRequest, NextResponse } from "next/server";
 import { processWeeklyInsightsForAllUsers } from "@/lib/weekly-insights/service";
 import { isServiceError } from "@/types";
@@ -22,7 +23,16 @@ export const GET = async (req: NextRequest) => {
         );
     }
 
-    if (authHeader !== `Bearer ${cronSecret}`) {
+    const expectedHeader = `Bearer ${cronSecret}`;
+    const isValid =
+        authHeader !== null &&
+        authHeader.length === expectedHeader.length &&
+        crypto.timingSafeEqual(
+            Buffer.from(authHeader, "utf8"),
+            Buffer.from(expectedHeader, "utf8"),
+        );
+
+    if (!isValid) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
