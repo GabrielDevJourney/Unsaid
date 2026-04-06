@@ -218,7 +218,7 @@ const ReflectionStep = ({
         const id = result.data.id;
         setEntryId(id);
         entryIdRef.current = id;
-        submit({ entry_id: id, content });
+        submit({ entry_id: id });
     }, [content, submit]);
 
     const handleContinue = useCallback(() => {

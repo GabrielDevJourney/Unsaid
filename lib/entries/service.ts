@@ -72,7 +72,8 @@ export const createEntry = async (
     const canWrite = await canUserWriteEntry(supabase);
     if (!canWrite) {
         const { data: progress } = await getUserProgress(supabase);
-        if ((progress?.totalEntries ?? 0) >= 15) {
+        // Fail closed: if progress is unavailable (DB error), deny rather than allow.
+        if (!progress || progress.totalEntries >= 15) {
             return { error: "FREE_LIMIT_REACHED" };
         }
     }
@@ -123,7 +124,7 @@ export const deleteEntryById = async (
     userId: string,
     entryId: string,
 ): Promise<ServiceResult<null>> => {
-    const { error } = await deleteEntry(supabase, entryId);
+    const { error } = await deleteEntry(supabase, entryId, userId);
     if (error) return { error: "Failed to delete entry" };
 
     const { error: progressError } = await decrementUserProgress(

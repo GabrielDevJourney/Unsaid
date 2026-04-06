@@ -49,16 +49,8 @@ const InsightDisplay = forwardRef<InsightDisplayHandle, InsightDisplayProps>(
         const handleNewInsight = useCallback(() => {
             if (!entryId || isLoading || isAtLimit || !hasContent) return;
             onGenerating?.(true);
-            submit({ entry_id: entryId, content });
-        }, [
-            entryId,
-            content,
-            hasContent,
-            isLoading,
-            isAtLimit,
-            submit,
-            onGenerating,
-        ]);
+            submit({ entry_id: entryId });
+        }, [entryId, hasContent, isLoading, isAtLimit, submit, onGenerating]);
 
         useImperativeHandle(ref, () => ({ generate: handleNewInsight }));
 

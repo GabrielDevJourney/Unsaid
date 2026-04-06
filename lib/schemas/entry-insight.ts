@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { MAX_ENTRY_LENGTH } from "@/lib/constants";
 import { INSIGHT_TAG_TYPES } from "@/lib/constants/insight-tag-types";
 
 /**
@@ -14,12 +13,11 @@ export const insightSchema = z.object({
 export type InsightObject = z.infer<typeof insightSchema>;
 
 /**
- * Schema for generating an entry insight
- * Used when calling the insight generation endpoint
+ * Schema for generating an entry insight.
+ * Content is NOT accepted from the client — fetched server-side to prevent prompt injection.
  */
 export const EntryInsightGenerateSchema = z.object({
     entry_id: z.uuid(),
-    content: z.string().min(10).max(MAX_ENTRY_LENGTH),
 });
 
 export type EntryInsightGenerateInput = z.infer<

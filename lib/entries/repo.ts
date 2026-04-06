@@ -305,8 +305,13 @@ export const updateEntryEmbedding = async (
 export const deleteEntry = async (
     supabase: SupabaseClient,
     entryId: string,
+    userId: string,
 ): Promise<{ error: Error | null }> => {
-    const { error } = await supabase.from("entries").delete().eq("id", entryId);
+    const { error } = await supabase
+        .from("entries")
+        .delete()
+        .eq("id", entryId)
+        .eq("user_id", userId);
 
     return { error: error as Error | null };
 };
