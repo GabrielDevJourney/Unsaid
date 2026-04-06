@@ -89,8 +89,10 @@ export const createEntry = async (
     if (insertError) throw insertError;
     if (!entry) throw new Error("Entry was not created");
 
-    await generateAndAttachEmbedding(supabase, entry.id, payload.content);
-    await updateProgress(supabase, userId);
+    await Promise.all([
+        generateAndAttachEmbedding(supabase, entry.id, payload.content),
+        updateProgress(supabase, userId),
+    ]);
 
     return { data: entry };
 };
