@@ -1,53 +1,45 @@
 "use client";
 
-const _CHECKOUT_URL = process.env.NEXT_PUBLIC_LEMON_CHECKOUT_URL ?? "#";
-
-const ROW = "flex items-center justify-between border-b px-10 py-2";
-const TEXT = "text-xs";
-const CTA = "text-xs font-medium";
+import { Cancel01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import Link from "next/link";
+import { useState } from "react";
+import { useEntitlement } from "@/lib/context/entitlement-context";
 
 const UpgradeBanner = () => {
+    const { isAtFreeLimit } = useEntitlement();
+    const [dismissed, setDismissed] = useState(false);
+
+    if (!isAtFreeLimit || dismissed) return null;
+
     return (
-        <>
-            {/* 5 — Cool slate blue (from paused subscription, calm) */}
-            <div
-                className={ROW}
-                style={{ backgroundColor: "#EEF4FA", borderColor: "#B8D0E8" }}
-            >
-                <p className={TEXT} style={{ color: "#2E5C7A" }}>
-                    Patterns are forming in your writing.
-                </p>
-                <span className={CTA} style={{ color: "#2E5C7A" }}>
-                    → Unlock Pro — $10.99/mo
-                </span>
+        <div className="flex items-center justify-between rounded-sm border border-slate-300 bg-slate-100 px-4 py-2.5 mb-4">
+            <p className="text-xs text-slate-500">
+                Unsaid has found{" "}
+                <strong className="font-medium text-slate-600">patterns</strong>{" "}
+                in your writing, unlock full insights with Pro.
+            </p>
+            <div className="ml-4 flex shrink-0 items-center gap-3">
+                <Link
+                    href="/upgrade"
+                    className="text-xs font-medium text-slate-600 underline underline-offset-2"
+                >
+                    See what Pro adds
+                </Link>
+                <button
+                    type="button"
+                    onClick={() => setDismissed(true)}
+                    className="text-slate-400 transition-colors hover:text-slate-600"
+                    aria-label="Dismiss"
+                >
+                    <HugeiconsIcon
+                        icon={Cancel01Icon}
+                        className="size-3.5"
+                        strokeWidth={2}
+                    />
+                </button>
             </div>
-
-            {/* 7 — Warm white, near-invisible (copy does all the work) */}
-            <div
-                className={ROW}
-                style={{ backgroundColor: "#FAFAFA", borderColor: "#E4E4E7" }}
-            >
-                <p className={TEXT} style={{ color: "#18181B" }}>
-                    Patterns are forming in your writing.
-                </p>
-                <span className={CTA} style={{ color: "#71717A" }}>
-                    → Unlock Pro — $10.99/mo
-                </span>
-            </div>
-
-            {/* 9 — Soft teal (fresh, calm) */}
-            <div
-                className={ROW}
-                style={{ backgroundColor: "#F0FAFA", borderColor: "#B0D8D8" }}
-            >
-                <p className={TEXT} style={{ color: "#2A6060" }}>
-                    Patterns are forming in your writing.
-                </p>
-                <span className={CTA} style={{ color: "#2A6060" }}>
-                    → Unlock Pro — $10.99/mo
-                </span>
-            </div>
-        </>
+        </div>
     );
 };
 
