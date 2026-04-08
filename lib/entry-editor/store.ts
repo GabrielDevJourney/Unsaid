@@ -11,6 +11,9 @@ interface EntryEditorState {
     saveError: string | null;
     lastSavedAt: Date | null;
     insight: EntryInsightSummary | null;
+    isGeneratingInsight: boolean;
+    suggestion: string | null;
+    isLoadingSuggestion: boolean;
 }
 
 interface EntryEditorActions {
@@ -21,6 +24,9 @@ interface EntryEditorActions {
         insight: EntryInsightSummary | null,
     ) => void;
     setInsight: (insight: EntryInsightSummary) => void;
+    setIsGeneratingInsight: (v: boolean) => void;
+    setSuggestion: (v: string | null) => void;
+    setIsLoadingSuggestion: (v: boolean) => void;
     saveNow: () => Promise<{ entryId: string | null; isNew: boolean }>;
     reset: () => void;
 }
@@ -33,6 +39,9 @@ const initialState: EntryEditorState = {
     saveError: null,
     lastSavedAt: null,
     insight: null,
+    isGeneratingInsight: false,
+    suggestion: null,
+    isLoadingSuggestion: true,
 };
 
 export const useEntryEditorStore = create<
@@ -48,10 +57,24 @@ export const useEntryEditorStore = create<
             set({ insight });
             return;
         }
-        set({ entryId, content, savedContent: content, insight });
+        // Different entry — clear suggestion so it gets re-fetched
+        set({
+            entryId,
+            content,
+            savedContent: content,
+            insight,
+            suggestion: null,
+            isLoadingSuggestion: false,
+        });
     },
 
     setInsight: (insight) => set({ insight }),
+
+    setIsGeneratingInsight: (v) => set({ isGeneratingInsight: v }),
+
+    setSuggestion: (v) => set({ suggestion: v }),
+
+    setIsLoadingSuggestion: (v) => set({ isLoadingSuggestion: v }),
 
     saveNow: async () => {
         const { entryId, content, savedContent, isSaving } = get();

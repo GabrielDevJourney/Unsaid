@@ -9,7 +9,7 @@ export const MAX_ENTRY_LENGTH = 16000;
 export const MIN_ENTRY_LENGTH = 10;
 
 // Entry insights - max regenerations per entry
-export const MAX_INSIGHT_COUNT = 3;
+export const MAX_INSIGHT_COUNT = 10;
 
 // Word count display limit in editor UI
 export const MAX_WORD_COUNT = 20000;
