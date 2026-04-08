@@ -1,13 +1,13 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { savePromptAction } from "@/app/actions/prompts";
 import { useEntryEditorStore } from "@/lib/entry-editor/store";
 import { cn, formatEntryDate } from "@/lib/utils";
 import type { EntryInsightSummary } from "@/types";
 import { PageHeader } from "../layout/page-header";
 import { EntryEditor } from "./entry-editor";
-import { EntryInsightPanel } from "./entry-insight-panel";
 
 interface InitialEntry {
     id: string;
@@ -38,8 +38,18 @@ export const EntryEditorPage = ({ initialEntry }: EntryEditorPageProps) => {
         isSaving,
         lastSavedAt,
         saveError,
+        suggestion,
+        isLoadingSuggestion,
+        setSuggestion,
+        setIsLoadingSuggestion,
     } = useEntryEditorStore();
+    const storeEntryId = useEntryEditorStore((s) => s.entryId);
     const [, setTick] = useState(0);
+
+    const isNewEntry = useRef(initialEntry === undefined);
+    const initialEntryId = useRef(initialEntry?.id ?? null);
+    const hasSavedPrompt = useRef(false);
+    const isDismissed = useRef(false);
 
     useEffect(() => {
         if (initialEntry) {
@@ -52,6 +62,43 @@ export const EntryEditorPage = ({ initialEntry }: EntryEditorPageProps) => {
             reset();
         }
     }, [loadExistingEntry, initialEntry, reset]);
+
+    // Fetch suggestion on mount — guarded so it doesn't re-fetch after /new → /[id] navigation
+    useEffect(() => {
+        if (isNewEntry.current) {
+            if (suggestion !== null) return; // already fetched this session
+            fetch("/api/prompts/entry-theme")
+                .then((res) => res.json())
+                .then((json) => setSuggestion(json.data.promptText))
+                .catch(() =>
+                    setSuggestion(
+                        "What's been on your mind lately that you haven't said out loud?",
+                    ),
+                )
+                .finally(() => setIsLoadingSuggestion(false));
+        } else if (initialEntryId.current) {
+            fetch(`/api/prompts/entry/${initialEntryId.current}`)
+                .then((res) => res.json())
+                .then((json) => setSuggestion(json.data?.promptText ?? null))
+                .catch(() => setSuggestion(null));
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [setIsLoadingSuggestion, setSuggestion, suggestion]);
+
+    // Save prompt when autosave first creates the entry
+    useEffect(() => {
+        if (
+            !storeEntryId ||
+            !suggestion ||
+            hasSavedPrompt.current ||
+            !isNewEntry.current ||
+            isDismissed.current
+        )
+            return;
+
+        hasSavedPrompt.current = true;
+        savePromptAction(suggestion, storeEntryId);
+    }, [storeEntryId, suggestion]);
 
     useEffect(() => {
         if (!lastSavedAt) return;
@@ -98,12 +145,19 @@ export const EntryEditorPage = ({ initialEntry }: EntryEditorPageProps) => {
                 </div>
             </PageHeader>
 
-            <div className="flex flex-1 gap-4 overflow-hidden p-6">
-                <div className="min-w-0 flex-1">
-                    <EntryEditor />
-                </div>
-                <div className="w-108 shrink-0">
-                    <EntryInsightPanel entryId={resolvedEntryId} />
+            <div className="flex flex-1 items-start justify-center overflow-hidden p-6">
+                <div className="h-full w-[70%]">
+                    <EntryEditor
+                        entryId={resolvedEntryId}
+                        suggestion={suggestion}
+                        isLoadingSuggestion={isLoadingSuggestion}
+                        isNewEntry={isNewEntry.current}
+                        onDismiss={() => {
+                            isDismissed.current = true;
+                        }}
+                        initialContent={initialEntry?.content}
+                        initialInsight={initialEntry?.insight?.content ?? null}
+                    />
                 </div>
             </div>
         </div>
