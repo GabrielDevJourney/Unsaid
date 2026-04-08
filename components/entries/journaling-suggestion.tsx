@@ -1,51 +1,72 @@
 "use client";
 
-import {
-    Accordion,
-    AccordionContent,
-    AccordionItem,
-    AccordionTrigger,
-} from "@/components/ui/accordion";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface JournalingSuggestionProps {
     suggestion: string | null;
     isLoading: boolean;
+    isNewEntry: boolean;
+    hasContent: boolean;
+    onDismiss: () => void;
 }
 
 export const JournalingSuggestion = ({
     suggestion,
     isLoading,
+    isNewEntry,
+    hasContent,
+    onDismiss,
 }: JournalingSuggestionProps) => {
+    const [isUsed, setIsUsed] = useState(false);
+    const [isDismissed, setIsDismissed] = useState(false);
+
+    if (isDismissed) return null;
+
+    if (hasContent && !isUsed) return null;
+
+    if (isLoading) {
+        return (
+            <div className="space-y-2 px-12 pt-8 pb-4">
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+            </div>
+        );
+    }
+
+    if (!suggestion) return null;
+
+    const showButtons = isNewEntry && !hasContent && !isUsed;
+
     return (
-        <Accordion type="single" collapsible>
-            <AccordionItem
-                value="suggestion"
-                className="rounded-lg border border-neutral-300 bg-neutral-200"
+        <div className="px-12 pt-8 pb-4">
+            <p
+                className={`font-serif italic text-lg leading-relaxed transition-colors ${isUsed ? "text-neutral-500" : "text-neutral-300"}`}
             >
-                <AccordionTrigger
-                    iconSide="left"
-                    className="px-4 py-3 data-[state=open]:border-b data-[state=open]:rounded-none border-neutral-300 text-neutral-500 font-sans"
-                >
-                    Need a journaling suggestion?
-                </AccordionTrigger>
-                <AccordionContent className="px-5 pt-2 pb-3">
-                    {isLoading ? (
-                        <div className="space-y-2">
-                            <Skeleton className="h-3.5 w-full" />
-                            <Skeleton className="h-3.5 w-3/4" />
-                        </div>
-                    ) : suggestion ? (
-                        <p className="text-sm font-sans leading-relaxed text-muted-foreground">
-                            {suggestion}
-                        </p>
-                    ) : (
-                        <p className="text-sm font-sans italic text-muted-foreground/60">
-                            No journaling suggestion was used for this entry.
-                        </p>
-                    )}
-                </AccordionContent>
-            </AccordionItem>
-        </Accordion>
+                {suggestion}
+            </p>
+            {showButtons && (
+                <div className="mt-3 flex gap-2">
+                    <Button
+                        variant="sunrise"
+                        size="sm"
+                        onClick={() => setIsUsed(true)}
+                    >
+                        Use this prompt
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                            setIsDismissed(true);
+                            onDismiss();
+                        }}
+                    >
+                        Dismiss
+                    </Button>
+                </div>
+            )}
+        </div>
     );
 };
