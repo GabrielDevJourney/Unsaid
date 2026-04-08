@@ -4,11 +4,8 @@ import { experimental_useObject as useObject } from "@ai-sdk/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createEntryAction } from "@/app/actions/entries";
 import { EntryEditor } from "@/components/entries/entry-editor";
-import type { InsightDisplayHandle } from "@/components/entries/insight-display";
-import { InsightDisplay } from "@/components/entries/insight-display";
 import { EntryTag } from "@/components/home/entry-tag";
 import { Button } from "@/components/ui/button";
-import { MAX_INSIGHT_COUNT } from "@/lib/constants";
 import type { InsightTagType } from "@/lib/constants/insight-tag-types";
 import { useEntryEditorStore } from "@/lib/entry-editor/store";
 import { insightSchema } from "@/lib/schemas/entry-insight";
@@ -77,7 +74,6 @@ const ReflectionStep = ({
         initialPreview ?? null,
     );
     const [previewLoading, setPreviewLoading] = useState(false);
-    const [isGoingDeeper, setIsGoingDeeper] = useState(false);
 
     // Loading animation state
     const [revealPhrase, setRevealPhrase] = useState(0);
@@ -87,13 +83,10 @@ const ReflectionStep = ({
     const insightCountRef = useRef(isRestoring ? 1 : 0);
     const entryIdRef = useRef<string | null>(initialEntryId ?? null);
     const contentRef = useRef(initialContent ?? "");
-    const insightDisplayRef = useRef<InsightDisplayHandle>(null);
 
     const loadExistingEntry = useEntryEditorStore((s) => s.loadExistingEntry);
     const storeInsight = useEntryEditorStore((s) => s.insight);
     const currentTags = (storeInsight?.tags ?? []) as InsightTagType[];
-    const canGoDeeper =
-        !!storeInsight && storeInsight.insightCount < MAX_INSIGHT_COUNT;
 
     // Restore entry editor store when navigating back to an already-completed step
     useEffect(() => {
@@ -305,51 +298,33 @@ const ReflectionStep = ({
             )}
 
             {phase === "revealed" && (
-                <div className="flex gap-6 mx-auto items-start">
-                    <div className="w-208 shrink-0 flex flex-col gap-4">
-                        <div className="h-112">
-                            <EntryEditor />
-                        </div>
+                <div className="w-full max-w-4xl mx-auto flex flex-col gap-4">
+                    <div className="h-[65vh]">
+                        <EntryEditor
+                            entryId={entryId}
+                            suggestion={null}
+                            isLoadingSuggestion={false}
+                            isNewEntry={false}
+                            onDismiss={() => {}}
+                            initialContent={content}
+                            initialInsight={savedInsight?.text ?? null}
+                        />
+                    </div>
+                    <div className="flex items-center justify-between">
                         <div className="flex gap-2 flex-wrap">
                             {currentTags.map((tag) => (
                                 <EntryTag key={tag} name={tag} />
                             ))}
                         </div>
-                    </div>
-                    <div className="w-108 shrink-0 flex flex-col gap-4">
-                        <div className="h-112">
-                            <InsightDisplay
-                                ref={insightDisplayRef}
-                                entryId={entryId}
-                                hideNewInsight
-                                onGenerating={setIsGoingDeeper}
-                            />
-                        </div>
-                        <div className="flex items-center justify-end gap-2">
-                            {canGoDeeper && (
-                                <Button
-                                    variant="sunrise"
-                                    size="sm"
-                                    onClick={() =>
-                                        insightDisplayRef.current?.generate()
-                                    }
-                                    disabled={isGoingDeeper || previewLoading}
-                                >
-                                    {isGoingDeeper
-                                        ? "Going deeper..."
-                                        : "Go deeper"}
-                                </Button>
-                            )}
-                            <Button
-                                variant="outline"
-                                size="lg"
-                                onClick={handleContinue}
-                                disabled={previewLoading || isGoingDeeper}
-                                className="bg-neutral-300 font-light rounded-xl"
-                            >
-                                {previewLoading ? "One moment..." : "Continue"}
-                            </Button>
-                        </div>
+                        <Button
+                            variant="outline"
+                            size="lg"
+                            onClick={handleContinue}
+                            disabled={previewLoading}
+                            className="bg-neutral-300 font-light rounded-xl shrink-0"
+                        >
+                            {previewLoading ? "One moment..." : "Continue"}
+                        </Button>
                     </div>
                 </div>
             )}
