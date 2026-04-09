@@ -61,7 +61,7 @@ const InsightDisplay = forwardRef<InsightDisplayHandle, InsightDisplayProps>(
         const isAtLimit =
             hasInsight && insight.insightCount >= MAX_INSIGHT_COUNT;
 
-        const [isComplete, setIsComplete] = useState(false);
+        const [_isComplete, setIsComplete] = useState(false);
 
         const { object, submit, isLoading } = useObject({
             api: "/api/entry-insights",
@@ -104,8 +104,8 @@ const InsightDisplay = forwardRef<InsightDisplayHandle, InsightDisplayProps>(
 
         useImperativeHandle(ref, () => ({ generate: handleGenerate }));
 
-        // When caller manages segment display, hide after completion
-        if (onInsightComplete && isComplete) return null;
+        // When caller manages segment display, only render during active streaming
+        if (onInsightComplete && !isLoading) return null;
 
         if (!hasInsight && !isLoading) return null;
 
