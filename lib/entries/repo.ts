@@ -70,6 +70,28 @@ export const getEntryById = async (
 };
 
 /**
+ * Get multiple entries by ID array.
+ * Decrypts content for each entry.
+ * RLS ensures user can only fetch their own entries.
+ */
+export const getEntriesByIds = async (
+    supabase: SupabaseClient,
+    entryIds: string[],
+): Promise<{ data: Entry[]; error: Error | null }> => {
+    if (entryIds.length === 0) return { data: [], error: null };
+
+    const { data: rows, error } = await supabase
+        .from("entries")
+        .select(
+            "id, user_id, encrypted_content, content_iv, content_tag, word_count, created_at, updated_at",
+        )
+        .in("id", entryIds);
+
+    if (error || !rows) return { data: [], error };
+    return { data: rows.map(toEntry), error: null };
+};
+
+/**
  * Get paginated entries for a user.
  * Decrypts content for each entry.
  * When using server client, RLS filters automatically.
