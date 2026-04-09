@@ -172,8 +172,8 @@ export const getEntryWithInsight = async (
 
 /**
  * Fetch compact entry previews linked to a source (pattern or progress insight).
- * Decrypts each entry and returns the first 120 chars as a preview.
- * Used to render the "Your reflections" section on detail pages.
+ * Fetches entries linked to a source and decrypts their Tier 1 insight prose.
+ * Used to render the "Your reflections" accordion on pattern/progress detail pages.
  */
 export const getEntryReflectionPreviews = async (
     supabase: SupabaseClient,
@@ -190,15 +190,24 @@ export const getEntryReflectionPreviews = async (
 
     try {
         const previews: EntryReflectionPreview[] = rows.map((row) => {
-            const content = decrypt({
-                encryptedContent: row.encrypted_content ?? "",
-                iv: row.content_iv ?? "",
-                tag: row.content_tag ?? "",
-            });
+            // Supabase returns 1:1 joins as a single object at runtime despite the TS array type
+            const insightRaw = row.entry_insights;
+            const insight = Array.isArray(insightRaw)
+                ? (insightRaw[0] ?? null)
+                : (insightRaw ?? null);
+            let insightContent: string | null = null;
+            if (insight?.encrypted_content) {
+                insightContent = decrypt({
+                    encryptedContent: insight.encrypted_content,
+                    iv: insight.content_iv ?? "",
+                    tag: insight.content_tag ?? "",
+                });
+            }
             return {
                 id: row.id,
                 createdAt: row.created_at,
-                contentPreview: content.slice(0, 120).trimEnd(),
+                wordCount: row.word_count,
+                insightContent,
             };
         });
 

@@ -115,7 +115,8 @@ export interface EntryWithInsight extends Entry {
 export interface EntryReflectionPreview {
     id: string;
     createdAt: string;
-    contentPreview: string; // first ~120 chars of decrypted content
+    wordCount: number;
+    insightContent: string | null; // null if no insight generated yet
 }
 
 // 3. SERVICE PAYLOADS (Inputs)

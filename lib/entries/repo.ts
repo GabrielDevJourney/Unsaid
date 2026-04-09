@@ -1,7 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
     Entry,
-    EntryRowEncrypted,
     EntryWithInsight,
     EntryWithSimilarity,
     InsertEntryData,
@@ -96,25 +95,37 @@ export const getEntriesByIds = async (
 
 /**
  * Get entries linked to a specific source (pattern or progress insight).
- * Returns raw encrypted rows — service layer decrypts.
+ * Joins entry_insights so the service layer can decrypt insight prose.
  * RLS scopes results to the authenticated user automatically.
  */
+type EntrySourceRow = {
+    id: string;
+    word_count: number;
+    created_at: string;
+    entry_insights: {
+        encrypted_content: string | null;
+        content_iv: string | null;
+        content_tag: string | null;
+    }[];
+};
+
 export const getEntriesBySource = async (
     supabase: SupabaseClient,
     sourceType: string,
     sourceId: string,
-): Promise<{ data: EntryRowEncrypted[]; error: Error | null }> => {
+): Promise<{ data: EntrySourceRow[]; error: Error | null }> => {
     const { data: rows, error } = await supabase
         .from("entries")
         .select(
-            "id, user_id, encrypted_content, content_iv, content_tag, word_count, created_at, updated_at",
+            `id, word_count, created_at,
+             entry_insights ( encrypted_content, content_iv, content_tag )`,
         )
         .eq("source_type", sourceType)
         .eq("source_id", sourceId)
         .order("created_at", { ascending: false });
 
     if (error || !rows) return { data: [], error };
-    return { data: rows as EntryRowEncrypted[], error: null };
+    return { data: rows as EntrySourceRow[], error: null };
 };
 
 /**
