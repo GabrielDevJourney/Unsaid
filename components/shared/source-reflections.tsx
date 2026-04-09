@@ -1,11 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import {
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+} from "@/components/ui/accordion";
 import { formatDate } from "@/lib/date-utils";
 import type { EntryReflectionPreview } from "@/types";
-
-const DEFAULT_VISIBLE = 3;
 
 interface SourceReflectionsProps {
     items: EntryReflectionPreview[];
@@ -13,46 +16,58 @@ interface SourceReflectionsProps {
 }
 
 const SourceReflections = ({ items, from }: SourceReflectionsProps) => {
-    const [showAll, setShowAll] = useState(false);
-
     if (items.length === 0) return null;
 
-    const visible = showAll ? items : items.slice(0, DEFAULT_VISIBLE);
-    const overflow = items.length - DEFAULT_VISIBLE;
+    const handleAnimationEnd = (e: React.AnimationEvent<HTMLDivElement>) => {
+        if (!e.animationName.includes("accordion-down")) return;
+        e.currentTarget.style.scrollMarginBottom = "6px";
+        e.currentTarget.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest",
+        });
+    };
 
     return (
         <div className="flex flex-col gap-3 pt-4">
-            <p className="text-[11px] font-medium uppercase tracking-wide text-zinc-500">
-                Your reflections
-            </p>
-            <div className="flex flex-col gap-2">
-                {visible.map((item) => (
-                    <Link
+            <p className="font-semibold text-neutral-500">Your reflections</p>
+            <Accordion type="multiple" className="flex flex-col gap-1">
+                {items.map((item) => (
+                    <AccordionItem
                         key={item.id}
-                        href={`/entries/${item.id}?from=${encodeURIComponent(from)}`}
-                        className="flex items-baseline gap-3 rounded-lg border border-zinc-200 bg-white px-3 py-2 transition-colors hover:bg-zinc-50"
+                        value={item.id}
+                        className="rounded-lg border border-zinc-200 bg-white px-4"
                     >
-                        <span className="shrink-0 text-xs text-zinc-400">
-                            {formatDate(item.createdAt, {
-                                month: "short",
-                                day: "numeric",
-                            })}
-                        </span>
-                        <span className="truncate text-sm text-zinc-600">
-                            {item.contentPreview}
-                        </span>
-                    </Link>
+                        <AccordionTrigger className="flex cursor-pointer items-center justify-between px-2 py-2.5 hover:no-underline [&>svg]:hidden">
+                            <span className="font-serif italic text-sm text-zinc-600">
+                                {formatDate(item.createdAt, {
+                                    month: "long",
+                                    day: "numeric",
+                                    year: "numeric",
+                                }).toLowerCase()}
+                            </span>
+                            <span className="text-xs text-zinc-400">
+                                {item.wordCount} words
+                            </span>
+                        </AccordionTrigger>
+                        <AccordionContent
+                            onAnimationEnd={handleAnimationEnd}
+                            className="flex flex-col gap-2 p-2"
+                        >
+                            {item.insightContent && (
+                                <p className="font-sans text-base leading-relaxed text-zinc-500">
+                                    {item.insightContent}
+                                </p>
+                            )}
+                            <Link
+                                href={`/entries/${item.id}?from=${encodeURIComponent(from)}`}
+                                className="self-end text-xs text-zinc-500 transition-colors hover:text-zinc-900"
+                            >
+                                Read more
+                            </Link>
+                        </AccordionContent>
+                    </AccordionItem>
                 ))}
-            </div>
-            {!showAll && overflow > 0 && (
-                <button
-                    type="button"
-                    onClick={() => setShowAll(true)}
-                    className="self-start text-xs text-zinc-400 transition-colors hover:text-zinc-600"
-                >
-                    +{overflow} more
-                </button>
-            )}
+            </Accordion>
         </div>
     );
 };
