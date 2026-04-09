@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { generateEmbedding } from "@/lib/ai/embeddings";
+import { decrypt } from "@/lib/crypto";
 import { checkEntryRateLimit } from "@/lib/rate-limit";
 import { canUserWriteEntry } from "@/lib/subscriptions/entitlements";
 import { checkAndTriggerProgress } from "@/lib/triggers/check-progress-trigger";
@@ -7,12 +8,14 @@ import { getUserProgress } from "@/lib/users/repo";
 import type {
     CreateEntryPayload,
     Entry,
+    EntryReflectionPreview,
     EntryWithInsight,
     ServiceResult,
 } from "@/types";
 import {
     decrementUserProgress,
     deleteEntry,
+    getEntriesBySource,
     getEntriesWithInsights,
     getEntryWithInsightById,
     incrementUserProgress,
@@ -84,6 +87,8 @@ export const createEntry = async (
         userId,
         content: payload.content,
         wordCount,
+        sourceType: payload.sourceType ?? null,
+        sourceId: payload.sourceId ?? null,
     });
 
     if (insertError) throw insertError;
@@ -163,4 +168,42 @@ export const getEntryWithInsight = async (
     }
 
     return { data };
+};
+
+/**
+ * Fetch compact entry previews linked to a source (pattern or progress insight).
+ * Decrypts each entry and returns the first 120 chars as a preview.
+ * Used to render the "Your reflections" section on detail pages.
+ */
+export const getEntryReflectionPreviews = async (
+    supabase: SupabaseClient,
+    sourceType: string,
+    sourceId: string,
+): Promise<ServiceResult<EntryReflectionPreview[]>> => {
+    const { data: rows, error } = await getEntriesBySource(
+        supabase,
+        sourceType,
+        sourceId,
+    );
+
+    if (error) return { error: "Failed to fetch reflections" };
+
+    try {
+        const previews: EntryReflectionPreview[] = rows.map((row) => {
+            const content = decrypt({
+                encryptedContent: row.encrypted_content ?? "",
+                iv: row.content_iv ?? "",
+                tag: row.content_tag ?? "",
+            });
+            return {
+                id: row.id,
+                createdAt: row.created_at,
+                contentPreview: content.slice(0, 120).trimEnd(),
+            };
+        });
+
+        return { data: previews };
+    } catch {
+        return { error: "Failed to decrypt reflections" };
+    }
 };

@@ -8,6 +8,8 @@ import type { Entry, ServiceResult } from "@/types";
 
 export const createEntryAction = async (
     content: string,
+    sourceType?: string | null,
+    sourceId?: string | null,
 ): Promise<ServiceResult<Entry>> => {
     const { userId } = await auth();
     if (!userId) return { error: "Unauthorized" };
@@ -19,7 +21,11 @@ export const createEntryAction = async (
 
     try {
         const supabase = await createSupabaseServer();
-        return createEntry(supabase, userId, validated.data);
+        return createEntry(supabase, userId, {
+            content: validated.data.content,
+            sourceType: sourceType ?? null,
+            sourceId: sourceId ?? null,
+        });
     } catch (err) {
         console.error("createEntryAction failed:", err);
         return { error: "Failed to create entry" };

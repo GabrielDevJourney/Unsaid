@@ -108,6 +108,16 @@ export interface EntryWithInsight extends Entry {
     entryInsight: EntryInsightSummary | null;
 }
 
+/**
+ * Compact entry preview for the "Your reflections" section on pattern/progress detail pages.
+ * Contains just enough data to render a linked preview row.
+ */
+export interface EntryReflectionPreview {
+    id: string;
+    createdAt: string;
+    contentPreview: string; // first ~120 chars of decrypted content
+}
+
 // 3. SERVICE PAYLOADS (Inputs)
 
 /**
@@ -115,6 +125,8 @@ export interface EntryWithInsight extends Entry {
  */
 export interface CreateEntryPayload {
     content: string;
+    sourceType?: string | null;
+    sourceId?: string | null;
 }
 
 /**
@@ -125,6 +137,8 @@ export interface InsertEntryData {
     userId: string;
     content: string;
     wordCount: number;
+    sourceType?: string | null;
+    sourceId?: string | null;
 }
 
 // 4. PAGINATED RESULTS

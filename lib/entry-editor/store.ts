@@ -15,6 +15,8 @@ interface EntryEditorState {
     suggestion: string | null;
     isLoadingSuggestion: boolean;
     reflectionContext: string | null;
+    sourceType: string | null;
+    sourceId: string | null;
 }
 
 interface EntryEditorActions {
@@ -29,6 +31,7 @@ interface EntryEditorActions {
     setSuggestion: (v: string | null) => void;
     setIsLoadingSuggestion: (v: boolean) => void;
     setReflectionContext: (ctx: string | null) => void;
+    setSource: (sourceType: string | null, sourceId: string | null) => void;
     saveNow: () => Promise<{ entryId: string | null; isNew: boolean }>;
     reset: () => void;
 }
@@ -45,6 +48,8 @@ const initialState: EntryEditorState = {
     suggestion: null,
     isLoadingSuggestion: true,
     reflectionContext: null,
+    sourceType: null,
+    sourceId: null,
 };
 
 export const useEntryEditorStore = create<
@@ -81,8 +86,17 @@ export const useEntryEditorStore = create<
 
     setReflectionContext: (ctx) => set({ reflectionContext: ctx }),
 
+    setSource: (sourceType, sourceId) => set({ sourceType, sourceId }),
+
     saveNow: async () => {
-        const { entryId, content, savedContent, isSaving } = get();
+        const {
+            entryId,
+            content,
+            savedContent,
+            isSaving,
+            sourceType,
+            sourceId,
+        } = get();
 
         if (isSaving || content === savedContent) {
             return { entryId, isNew: false };
@@ -92,7 +106,11 @@ export const useEntryEditorStore = create<
 
         try {
             if (!entryId) {
-                const result = await createEntryAction(content);
+                const result = await createEntryAction(
+                    content,
+                    sourceType,
+                    sourceId,
+                );
                 if (isServiceError(result)) {
                     set({ isSaving: false, saveError: result.error });
                     return { entryId: null, isNew: false };
