@@ -10,6 +10,7 @@ interface JournalingSuggestionProps {
     isNewEntry: boolean;
     hasContent: boolean;
     onDismiss: () => void;
+    autoActivate?: boolean;
 }
 
 export const JournalingSuggestion = ({
@@ -18,8 +19,9 @@ export const JournalingSuggestion = ({
     isNewEntry,
     hasContent,
     onDismiss,
+    autoActivate,
 }: JournalingSuggestionProps) => {
-    const [isUsed, setIsUsed] = useState(false);
+    const [isUsed, setIsUsed] = useState(autoActivate ?? false);
     const [isDismissed, setIsDismissed] = useState(false);
 
     if (isDismissed) return null;

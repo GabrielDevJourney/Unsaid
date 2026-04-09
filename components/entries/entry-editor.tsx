@@ -80,6 +80,7 @@ interface EntryEditorProps {
     onDismiss: () => void;
     initialContent?: string;
     initialInsight?: string | null;
+    isContextualEntry?: boolean;
 }
 
 export const EntryEditor = ({
@@ -90,6 +91,7 @@ export const EntryEditor = ({
     onDismiss,
     initialContent,
     initialInsight,
+    isContextualEntry,
 }: EntryEditorProps) => {
     const { setContent, saveNow, insight, isGeneratingInsight } =
         useEntryEditorStore();
@@ -215,6 +217,7 @@ export const EntryEditor = ({
                     isNewEntry={isNewEntry}
                     hasContent={combinedContent.trim().length > 0}
                     onDismiss={onDismiss}
+                    autoActivate={isContextualEntry}
                 />
                 {segments.map((seg, idx) => (
                     <div key={seg.id}>

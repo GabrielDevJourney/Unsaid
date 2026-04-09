@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { ReferenceTimeline } from "@/components/shared/reference-timeline";
+import { Button } from "@/components/ui/button";
 import {
     PATTERN_TYPE_BADGE_STYLES,
     PATTERN_TYPES,
@@ -87,6 +89,19 @@ const PatternDetailPage = ({ pattern }: PatternDetailPageProps) => {
                                 <p className="font-serif italic text-neutral-500 text-3xl leading-relaxed">
                                     {pattern.question}
                                 </p>
+                                <div className="flex justify-start pt-4">
+                                    <Button
+                                        asChild
+                                        variant="outline"
+                                        className="rounded-xl font-light"
+                                    >
+                                        <Link
+                                            href={`/entries/new?suggestion=${encodeURIComponent(pattern.question)}&sourceType=pattern&sourceId=${pattern.id}&from=/patterns/${pattern.id}`}
+                                        >
+                                            Write about this
+                                        </Link>
+                                    </Button>
+                                </div>
                             </div>
                         )}
                     </div>

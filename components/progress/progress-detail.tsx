@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { PageHeader } from "@/components/layout/page-header";
 import { ReferenceTimeline } from "@/components/shared/reference-timeline";
+import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/date-utils";
 import type { ProgressInsight } from "@/types";
 
@@ -60,9 +62,9 @@ const ProgressDetail = ({ insight, keyEntryData }: ProgressDetailProps) => {
                     )}
 
                     {/* Right: card itself scrolls */}
-                    <div className="flex-1 flex flex-col pt-10 pr-26 min-w-0 overflow-hidden">
+                    <div className="flex-1 flex flex-col pt-10 pr-10 pb-10 min-w-0">
                         {parsedContent ? (
-                            <div className="w-full h-full rounded-t-2xl overflow-hidden">
+                            <div className="w-full h-full rounded-2xl overflow-hidden shadow-sm border border-border">
                                 <div className="flex flex-col gap-10 h-full overflow-y-auto bg-zinc-50 p-8 [&::-webkit-scrollbar]:w-0">
                                     {/* Headline */}
                                     <h2 className="font-serif text-4xl italic text-neutral-500 leading-relaxed">
@@ -105,10 +107,23 @@ const ProgressDetail = ({ insight, keyEntryData }: ProgressDetailProps) => {
                                     </div>
 
                                     {/* The question */}
-                                    <div className="flex flex-col pt-2">
+                                    <div className="flex flex-col pt-2 gap-4">
                                         <p className="font-serif text-3xl italic text-zinc-600 leading-snug -mt-6">
                                             "{parsedContent.theQuestion}
                                         </p>
+                                        <div className="flex justify-start">
+                                            <Button
+                                                asChild
+                                                variant="outline"
+                                                className="rounded-xl font-light"
+                                            >
+                                                <Link
+                                                    href={`/entries/new?suggestion=${encodeURIComponent(parsedContent.theQuestion)}&sourceType=progress&sourceId=${insight.id}&from=/progress/${insight.id}`}
+                                                >
+                                                    Write about this
+                                                </Link>
+                                            </Button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

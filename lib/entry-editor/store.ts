@@ -14,6 +14,7 @@ interface EntryEditorState {
     isGeneratingInsight: boolean;
     suggestion: string | null;
     isLoadingSuggestion: boolean;
+    reflectionContext: string | null;
 }
 
 interface EntryEditorActions {
@@ -27,6 +28,7 @@ interface EntryEditorActions {
     setIsGeneratingInsight: (v: boolean) => void;
     setSuggestion: (v: string | null) => void;
     setIsLoadingSuggestion: (v: boolean) => void;
+    setReflectionContext: (ctx: string | null) => void;
     saveNow: () => Promise<{ entryId: string | null; isNew: boolean }>;
     reset: () => void;
 }
@@ -42,6 +44,7 @@ const initialState: EntryEditorState = {
     isGeneratingInsight: false,
     suggestion: null,
     isLoadingSuggestion: true,
+    reflectionContext: null,
 };
 
 export const useEntryEditorStore = create<
@@ -75,6 +78,8 @@ export const useEntryEditorStore = create<
     setSuggestion: (v) => set({ suggestion: v }),
 
     setIsLoadingSuggestion: (v) => set({ isLoadingSuggestion: v }),
+
+    setReflectionContext: (ctx) => set({ reflectionContext: ctx }),
 
     saveNow: async () => {
         const { entryId, content, savedContent, isSaving } = get();

@@ -18,6 +18,8 @@ interface InitialEntry {
 
 interface EntryEditorPageProps {
     initialEntry?: InitialEntry;
+    initialSuggestion?: string | null;
+    reflectionContext?: string | null;
 }
 
 const formatRelativeTime = (date: Date): string => {
@@ -29,7 +31,11 @@ const formatRelativeTime = (date: Date): string => {
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 };
 
-export const EntryEditorPage = ({ initialEntry }: EntryEditorPageProps) => {
+export const EntryEditorPage = ({
+    initialEntry,
+    initialSuggestion,
+    reflectionContext,
+}: EntryEditorPageProps) => {
     const searchParams = useSearchParams();
     const {
         loadExistingEntry,
@@ -42,6 +48,7 @@ export const EntryEditorPage = ({ initialEntry }: EntryEditorPageProps) => {
         isLoadingSuggestion,
         setSuggestion,
         setIsLoadingSuggestion,
+        setReflectionContext,
     } = useEntryEditorStore();
     const storeEntryId = useEntryEditorStore((s) => s.entryId);
     const [, setTick] = useState(0);
@@ -50,6 +57,7 @@ export const EntryEditorPage = ({ initialEntry }: EntryEditorPageProps) => {
     const initialEntryId = useRef(initialEntry?.id ?? null);
     const hasSavedPrompt = useRef(false);
     const isDismissed = useRef(false);
+    const _hasInitialSuggestion = useRef(!!initialSuggestion);
 
     useEffect(() => {
         if (initialEntry) {
@@ -60,13 +68,29 @@ export const EntryEditorPage = ({ initialEntry }: EntryEditorPageProps) => {
             );
         } else {
             reset();
+            if (initialSuggestion) {
+                setSuggestion(initialSuggestion);
+                setIsLoadingSuggestion(false);
+            }
+            if (reflectionContext) {
+                setReflectionContext(reflectionContext);
+            }
         }
-    }, [loadExistingEntry, initialEntry, reset]);
+    }, [
+        loadExistingEntry,
+        initialEntry,
+        reset,
+        initialSuggestion,
+        reflectionContext,
+        setSuggestion,
+        setIsLoadingSuggestion,
+        setReflectionContext,
+    ]);
 
     // Fetch suggestion on mount — guarded so it doesn't re-fetch after /new → /[id] navigation
     useEffect(() => {
         if (isNewEntry.current) {
-            if (suggestion !== null) return; // already fetched this session
+            if (suggestion !== null || _hasInitialSuggestion.current) return;
             fetch("/api/prompts/entry-theme")
                 .then((res) => res.json())
                 .then((json) => setSuggestion(json.data.promptText))
@@ -157,6 +181,7 @@ export const EntryEditorPage = ({ initialEntry }: EntryEditorPageProps) => {
                         }}
                         initialContent={initialEntry?.content}
                         initialInsight={initialEntry?.insight?.content ?? null}
+                        isContextualEntry={_hasInitialSuggestion.current}
                     />
                 </div>
             </div>

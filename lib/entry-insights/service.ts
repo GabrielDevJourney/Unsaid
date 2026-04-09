@@ -21,7 +21,11 @@ import { getEntryInsightByEntryId, upsertEntryInsight } from "./repo";
  *
  * @throws If AI streaming fails
  */
-export const generateEntryInsight = async (userId: string, entryId: string) => {
+export const generateEntryInsight = async (
+    userId: string,
+    entryId: string,
+    _reflectionContext?: string,
+) => {
     // Verify ownership and fetch content server-side.
     // createSupabaseServer injects the Clerk session token — RLS ensures only
     // the authenticated user's own entries are returned. If the entry doesn't
@@ -59,6 +63,7 @@ export const generateEntryInsight = async (userId: string, entryId: string) => {
     const result = await streamEntryInsight(content, {
         previousInsight,
         previousTags,
+        reflectionContext: _reflectionContext,
         onFinish: async ({ text }) => {
             let parsed: { insight: string; tags: string[] } | undefined;
 

@@ -92,7 +92,14 @@ const InsightDisplay = forwardRef<InsightDisplayHandle, InsightDisplayProps>(
         const handleGenerate = useCallback(() => {
             if (!entryId || isLoading || isAtLimit || !hasContent) return;
             setIsComplete(false);
-            submit({ entry_id: entryId });
+            const reflectionContext =
+                useEntryEditorStore.getState().reflectionContext;
+            submit({
+                entry_id: entryId,
+                ...(reflectionContext && {
+                    reflection_context: reflectionContext,
+                }),
+            });
         }, [entryId, hasContent, isLoading, isAtLimit, submit]);
 
         useImperativeHandle(ref, () => ({ generate: handleGenerate }));
