@@ -67,7 +67,7 @@ const PatternDetailPage = ({
                         </span>
 
                         {/* Title */}
-                        <h2 className="font-serif text-5xl italic text-zinc-800 leading-tight">
+                        <h2 className="font-serif text-5xl italic text-neutral-500 leading-tight">
                             {pattern.title}
                         </h2>
 
