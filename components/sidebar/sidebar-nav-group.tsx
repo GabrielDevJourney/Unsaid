@@ -17,12 +17,14 @@ interface SidebarNavGroupProps {
     items: NavItem[];
     label?: string;
     className?: string;
+    children?: React.ReactNode;
 }
 
 export const SidebarNavGroup = ({
     items,
     label,
     className,
+    children,
 }: SidebarNavGroupProps) => {
     const pathname = usePathname();
     const { state } = useSidebar();
@@ -42,6 +44,7 @@ export const SidebarNavGroup = ({
         <SidebarGroup className={className}>
             {label && <SidebarGroupLabel>{label}</SidebarGroupLabel>}
             <SidebarMenu>
+                {children}
                 {items.map((item) => {
                     const colors = badgeStyles[item.badgeColor ?? "slate"];
                     const hasBadge = item.badge != null && item.badge > 0;
