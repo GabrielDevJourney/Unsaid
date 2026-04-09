@@ -1,5 +1,7 @@
 "use client";
 
+import { Add01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
 import { PageHeader } from "@/components/layout/page-header";
 import { ReferenceTimeline } from "@/components/shared/reference-timeline";
@@ -114,13 +116,17 @@ const ProgressDetail = ({ insight, keyEntryData }: ProgressDetailProps) => {
                                         <div className="flex justify-start">
                                             <Button
                                                 asChild
-                                                variant="outline"
-                                                className="rounded-xl font-light"
+                                                variant="sunrise-sm"
+                                                size="sm"
                                             >
                                                 <Link
                                                     href={`/entries/new?suggestion=${encodeURIComponent(parsedContent.theQuestion)}&sourceType=progress&sourceId=${insight.id}&from=/progress/${insight.id}`}
                                                 >
-                                                    Write about this
+                                                    <HugeiconsIcon
+                                                        icon={Add01Icon}
+                                                        className="size-4 text-white"
+                                                    />
+                                                    Reflect about this
                                                 </Link>
                                             </Button>
                                         </div>

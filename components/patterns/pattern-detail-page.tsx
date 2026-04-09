@@ -1,3 +1,5 @@
+import { Add01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
 import { ReferenceTimeline } from "@/components/shared/reference-timeline";
 import { Button } from "@/components/ui/button";
@@ -92,13 +94,17 @@ const PatternDetailPage = ({ pattern }: PatternDetailPageProps) => {
                                 <div className="flex justify-start pt-4">
                                     <Button
                                         asChild
-                                        variant="outline"
-                                        className="rounded-xl font-light"
+                                        variant="sunrise-sm"
+                                        size="sm"
                                     >
                                         <Link
                                             href={`/entries/new?suggestion=${encodeURIComponent(pattern.question)}&sourceType=pattern&sourceId=${pattern.id}&from=/patterns/${pattern.id}`}
                                         >
-                                            Write about this
+                                            <HugeiconsIcon
+                                                icon={Add01Icon}
+                                                className="size-4 text-white"
+                                            />
+                                            Reflect about this
                                         </Link>
                                     </Button>
                                 </div>
