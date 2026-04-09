@@ -42,6 +42,8 @@ export type Database = {
                     embedding: string | null;
                     encrypted_content: string | null;
                     id: string;
+                    source_id: string | null;
+                    source_type: string | null;
                     updated_at: string;
                     user_id: string;
                     word_count: number;
@@ -53,6 +55,8 @@ export type Database = {
                     embedding?: string | null;
                     encrypted_content?: string | null;
                     id?: string;
+                    source_id?: string | null;
+                    source_type?: string | null;
                     updated_at?: string;
                     user_id: string;
                     word_count?: number;
@@ -64,6 +68,8 @@ export type Database = {
                     embedding?: string | null;
                     encrypted_content?: string | null;
                     id?: string;
+                    source_id?: string | null;
+                    source_type?: string | null;
                     updated_at?: string;
                     user_id?: string;
                     word_count?: number;
