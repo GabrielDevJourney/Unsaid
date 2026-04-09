@@ -107,7 +107,7 @@ const FeedbackView = ({
 
     return (
         <div className="flex h-full flex-col overflow-hidden">
-            <PageHeader>
+            <PageHeader backHref="/home">
                 <h1 className="font-serif text-3xl italic text-zinc-600">
                     Feedback
                 </h1>
