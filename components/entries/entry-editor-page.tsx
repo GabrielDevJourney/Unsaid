@@ -20,6 +20,8 @@ interface EntryEditorPageProps {
     initialEntry?: InitialEntry;
     initialSuggestion?: string | null;
     reflectionContext?: string | null;
+    sourceType?: string | null;
+    sourceId?: string | null;
 }
 
 const formatRelativeTime = (date: Date): string => {
@@ -35,6 +37,8 @@ export const EntryEditorPage = ({
     initialEntry,
     initialSuggestion,
     reflectionContext,
+    sourceType,
+    sourceId,
 }: EntryEditorPageProps) => {
     const searchParams = useSearchParams();
     const {
@@ -49,6 +53,7 @@ export const EntryEditorPage = ({
         setSuggestion,
         setIsLoadingSuggestion,
         setReflectionContext,
+        setSource,
     } = useEntryEditorStore();
     const storeEntryId = useEntryEditorStore((s) => s.entryId);
     const [, setTick] = useState(0);
@@ -75,6 +80,9 @@ export const EntryEditorPage = ({
             if (reflectionContext) {
                 setReflectionContext(reflectionContext);
             }
+            if (sourceType && sourceId) {
+                setSource(sourceType, sourceId);
+            }
         }
     }, [
         loadExistingEntry,
@@ -82,9 +90,12 @@ export const EntryEditorPage = ({
         reset,
         initialSuggestion,
         reflectionContext,
+        sourceType,
+        sourceId,
         setSuggestion,
         setIsLoadingSuggestion,
         setReflectionContext,
+        setSource,
     ]);
 
     // Fetch suggestion on mount — guarded so it doesn't re-fetch after /new → /[id] navigation
@@ -145,7 +156,8 @@ export const EntryEditorPage = ({
               : "";
 
     const resolvedEntryId = initialEntry?.id ?? entryId ?? null;
-    const backHref = searchParams.get("from") ?? "/home";
+    // Capture on mount — URL is later replaced to /entries/[id] which strips query params
+    const backHref = useRef(searchParams.get("from") ?? "/home").current;
 
     return (
         <div className="flex h-full flex-col overflow-hidden">
