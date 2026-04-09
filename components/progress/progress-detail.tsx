@@ -5,9 +5,10 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
 import { PageHeader } from "@/components/layout/page-header";
 import { ReferenceTimeline } from "@/components/shared/reference-timeline";
+import { SourceReflections } from "@/components/shared/source-reflections";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/date-utils";
-import type { ProgressInsight } from "@/types";
+import type { EntryReflectionPreview, ProgressInsight } from "@/types";
 
 interface KeyEntryItem {
     id: string;
@@ -21,9 +22,14 @@ const formatEntryLabel = (createdAt: string) =>
 interface ProgressDetailProps {
     insight: ProgressInsight;
     keyEntryData: KeyEntryItem[];
+    reflections: EntryReflectionPreview[];
 }
 
-const ProgressDetail = ({ insight, keyEntryData }: ProgressDetailProps) => {
+const ProgressDetail = ({
+    insight,
+    keyEntryData,
+    reflections,
+}: ProgressDetailProps) => {
     const { parsedContent, createdAt } = insight;
 
     const date = formatDate(createdAt, {
@@ -130,6 +136,10 @@ const ProgressDetail = ({ insight, keyEntryData }: ProgressDetailProps) => {
                                                 </Link>
                                             </Button>
                                         </div>
+                                        <SourceReflections
+                                            items={reflections}
+                                            from={`/progress/${insight.id}`}
+                                        />
                                     </div>
                                 </div>
                             </div>

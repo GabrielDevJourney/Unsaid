@@ -2,19 +2,24 @@ import { Add01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
 import { ReferenceTimeline } from "@/components/shared/reference-timeline";
+import { SourceReflections } from "@/components/shared/source-reflections";
 import { Button } from "@/components/ui/button";
 import {
     PATTERN_TYPE_BADGE_STYLES,
     PATTERN_TYPES,
 } from "@/lib/constants/pattern-types";
-import type { WeeklyInsightPattern } from "@/types";
+import type { EntryReflectionPreview, WeeklyInsightPattern } from "@/types";
 import { PageHeader } from "../layout/page-header";
 
 interface PatternDetailPageProps {
     pattern: WeeklyInsightPattern;
+    reflections: EntryReflectionPreview[];
 }
 
-const PatternDetailPage = ({ pattern }: PatternDetailPageProps) => {
+const PatternDetailPage = ({
+    pattern,
+    reflections,
+}: PatternDetailPageProps) => {
     const badgeStyle =
         PATTERN_TYPE_BADGE_STYLES[pattern.patternType] ??
         "border-zinc-300 bg-zinc-100 text-zinc-600";
@@ -108,6 +113,10 @@ const PatternDetailPage = ({ pattern }: PatternDetailPageProps) => {
                                         </Link>
                                     </Button>
                                 </div>
+                                <SourceReflections
+                                    items={reflections}
+                                    from={`/patterns/${pattern.id}`}
+                                />
                             </div>
                         )}
                     </div>

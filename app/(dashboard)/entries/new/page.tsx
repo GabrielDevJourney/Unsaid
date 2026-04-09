@@ -82,6 +82,8 @@ const NewEntryPage = async ({
         <EntryEditorPage
             initialSuggestion={initialSuggestion}
             reflectionContext={reflectionContext}
+            sourceType={sourceType}
+            sourceId={sourceId}
         />
     );
 };

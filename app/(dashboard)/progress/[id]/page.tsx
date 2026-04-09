@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { notFound, redirect } from "next/navigation";
 import { after } from "next/server";
 import { ProgressDetail } from "@/components/progress/progress-detail";
+import { getEntryReflectionPreviews } from "@/lib/entries/service";
 import {
     getProgressInsightDetail,
     markProgressInsightViewed,
@@ -19,7 +20,11 @@ const ProgressInsightPage = async ({ params }: Props) => {
     const { id } = await params;
     const supabase = await createSupabaseServer();
 
-    const result = await getProgressInsightDetail(supabase, id);
+    const [result, { data: reflections }] = await Promise.all([
+        getProgressInsightDetail(supabase, id),
+        getEntryReflectionPreviews(supabase, "progress", id),
+    ]);
+
     if (!result) notFound();
 
     if (!result.insight.isViewed) {
@@ -30,6 +35,7 @@ const ProgressInsightPage = async ({ params }: Props) => {
         <ProgressDetail
             insight={result.insight}
             keyEntryData={result.keyEntryData}
+            reflections={reflections ?? []}
         />
     );
 };
