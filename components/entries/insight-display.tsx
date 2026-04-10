@@ -2,13 +2,7 @@
 
 import { experimental_useObject as useObject } from "@ai-sdk/react";
 import Image from "next/image";
-import {
-    forwardRef,
-    useCallback,
-    useEffect,
-    useImperativeHandle,
-    useRef,
-} from "react";
+import { forwardRef, useCallback, useImperativeHandle, useRef } from "react";
 import { MAX_INSIGHT_COUNT } from "@/lib/constants";
 import { useEntryEditorStore } from "@/lib/entry-editor/store";
 import { insightSchema } from "@/lib/schemas/entry-insight";
@@ -79,9 +73,8 @@ const InsightDisplay = forwardRef<InsightDisplayHandle, InsightDisplayProps>(
             },
         });
 
-        useEffect(() => {
-            setIsGeneratingInsight(isLoading);
-        }, [isLoading, setIsGeneratingInsight]);
+        // Zustand setters are stable references — safe to call inline
+        setIsGeneratingInsight(isLoading);
 
         const handleGenerate = useCallback(() => {
             if (!entryId || isLoading || isAtLimit || !hasContent) return;
