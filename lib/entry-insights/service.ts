@@ -24,7 +24,7 @@ import { getEntryInsightsByEntryId, insertEntryInsight } from "./repo";
 export const generateEntryInsight = async (
     userId: string,
     entryId: string,
-    _reflectionContext?: string,
+    reflectionContext?: string,
 ) => {
     // Verify ownership and fetch content server-side.
     const serverSupabase = await createSupabaseServer();
@@ -35,6 +35,13 @@ export const generateEntryInsight = async (
         .single();
 
     if (!entryRow) return null;
+    if (
+        !entryRow.encrypted_content ||
+        !entryRow.content_iv ||
+        !entryRow.content_tag
+    ) {
+        return null;
+    }
 
     const content = decrypt({
         encryptedContent: entryRow.encrypted_content,
@@ -64,7 +71,7 @@ export const generateEntryInsight = async (
     const result = await streamEntryInsight(content, {
         previousInsight,
         previousTags,
-        reflectionContext: _reflectionContext,
+        reflectionContext,
         onFinish: async ({ text }) => {
             let parsed: { insight: string; tags: string[] } | undefined;
 

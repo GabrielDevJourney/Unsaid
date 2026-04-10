@@ -7,11 +7,16 @@ import { decrypt } from "../crypto";
 export const toEntryInsight = (
     insightRow: EntryInsightRowEncrypted,
 ): EntryInsight => {
-    const content = decrypt({
-        encryptedContent: insightRow.encrypted_content ?? "",
-        iv: insightRow.content_iv ?? "",
-        tag: insightRow.content_tag ?? "",
-    });
+    const content =
+        insightRow.encrypted_content &&
+        insightRow.content_iv &&
+        insightRow.content_tag
+            ? decrypt({
+                  encryptedContent: insightRow.encrypted_content,
+                  iv: insightRow.content_iv,
+                  tag: insightRow.content_tag,
+              })
+            : "";
 
     return {
         id: insightRow.id,
