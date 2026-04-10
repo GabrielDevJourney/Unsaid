@@ -643,7 +643,7 @@ const seedEntryInsights = async (
         return;
     }
 
-    const { upsertEntryInsight } = await import("../lib/entry-insights/repo");
+    const { insertEntryInsight } = await import("../lib/entry-insights/repo");
 
     if (withAi) {
         const { streamEntryInsight } = await import(
@@ -658,12 +658,12 @@ const seedEntryInsights = async (
                     insight: string;
                     tags: string[];
                 };
-                await upsertEntryInsight(supabase, {
+                await insertEntryInsight(supabase, {
                     userId,
                     entryId: entries[i].id,
                     content: parsed.insight,
                     tags: parsed.tags,
-                    insightCount: 1,
+                    generationOrder: 1,
                 });
             } catch (e) {
                 console.error(`\n  ❌ AI insight ${i + 1} failed:`, e);
@@ -678,12 +678,12 @@ const seedEntryInsights = async (
     for (let i = 0; i < entries.length; i++) {
         const template = MOCK_ENTRIES[i % MOCK_ENTRIES.length];
         process.stdout.write(`\r  Insight ${i + 1}/${entries.length}`);
-        await upsertEntryInsight(supabase, {
+        await insertEntryInsight(supabase, {
             userId,
             entryId: entries[i].id,
             content: template.insight,
             tags: template.tags,
-            insightCount: 1,
+            generationOrder: 1,
         });
     }
     console.log(`\n  ✓ ${entries.length} mock insights created`);

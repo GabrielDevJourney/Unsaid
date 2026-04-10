@@ -24,10 +24,11 @@ export const POST = async (req: NextRequest) => {
             );
         }
 
-        const result = await generateEntryInsight(userId, {
-            entryId: validated.data.entry_id,
-            content: validated.data.content,
-        });
+        const result = await generateEntryInsight(
+            userId,
+            validated.data.entry_id,
+            validated.data.reflection_context,
+        );
 
         if (!result) {
             return NextResponse.json(

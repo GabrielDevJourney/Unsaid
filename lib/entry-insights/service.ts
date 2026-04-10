@@ -1,8 +1,9 @@
 import { streamEntryInsight } from "@/lib/ai/stream-entry-insight";
 import { MAX_INSIGHT_COUNT } from "@/lib/constants";
+import { decrypt } from "@/lib/crypto";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
-import type { CreateEntryInsightPayload } from "@/types";
-import { getEntryInsightByEntryId, upsertEntryInsight } from "./repo";
+import { createSupabaseServer } from "@/lib/supabase/server";
+import { getEntryInsightsByEntryId, insertEntryInsight } from "./repo";
 
 /**
  * Generate and stream a structured entry insight.
@@ -10,35 +11,67 @@ import { getEntryInsightByEntryId, upsertEntryInsight } from "./repo";
  * STREAMING SERVICE: Returns StreamObjectResult directly (not ServiceResult).
  * Controller should call result.toTextStreamResponse() to send to client.
  *
- * Uses admin client for DB upsert (bypasses RLS - insights are system-created).
- * Saves insight and tags to DB via onFinish callback (errors logged, not thrown).
+ * Ownership verification: fetches entry via server client (RLS-scoped).
+ * If the entry does not belong to the authenticated user, returns null.
  *
- * Enforces max 3 regenerations per entry. Returns null if limit reached.
+ * Uses admin client for DB insert (bypasses RLS - insights are system-created).
+ * Saves insight to DB via onFinish callback (errors logged, not thrown).
+ *
+ * Enforces max MAX_INSIGHT_COUNT generations per entry. Returns null if limit reached.
  *
  * @throws If AI streaming fails
  */
 export const generateEntryInsight = async (
     userId: string,
-    payload: CreateEntryInsightPayload,
+    entryId: string,
+    reflectionContext?: string,
 ) => {
-    const supabase = createSupabaseAdmin();
+    // Verify ownership and fetch content server-side.
+    const serverSupabase = await createSupabaseServer();
+    const { data: entryRow } = await serverSupabase
+        .from("entries")
+        .select("encrypted_content, content_iv, content_tag")
+        .eq("id", entryId)
+        .single();
 
-    const { data: existing } = await getEntryInsightByEntryId(
-        supabase,
-        payload.entryId,
-    );
-
-    if (existing && existing.insightCount >= MAX_INSIGHT_COUNT) {
+    if (!entryRow) return null;
+    if (
+        !entryRow.encrypted_content ||
+        !entryRow.content_iv ||
+        !entryRow.content_tag
+    ) {
         return null;
     }
 
-    const newCount = existing ? existing.insightCount + 1 : 1;
-    const previousInsight = existing?.content;
-    const previousTags = existing?.tags;
+    const content = decrypt({
+        encryptedContent: entryRow.encrypted_content,
+        iv: entryRow.content_iv,
+        tag: entryRow.content_tag,
+    });
 
-    const result = await streamEntryInsight(payload.content, {
+    // Character count of content at generation time — used to split segments on reload
+    const contentBeforeLength = content.length;
+
+    const supabase = createSupabaseAdmin();
+
+    const { data: existingInsights } = await getEntryInsightsByEntryId(
+        supabase,
+        entryId,
+    );
+
+    if (existingInsights && existingInsights.length >= MAX_INSIGHT_COUNT) {
+        return null;
+    }
+
+    const existing = existingInsights ?? [];
+    const newGenerationOrder = existing.length + 1;
+    const previousInsight = existing.at(-1)?.content;
+    const previousTags = existing.at(-1)?.tags;
+
+    const result = await streamEntryInsight(content, {
         previousInsight,
         previousTags,
+        reflectionContext,
         onFinish: async ({ text }) => {
             let parsed: { insight: string; tags: string[] } | undefined;
 
@@ -55,12 +88,13 @@ export const generateEntryInsight = async (
                 return;
             }
 
-            const { error } = await upsertEntryInsight(supabase, {
+            const { error } = await insertEntryInsight(supabase, {
                 userId,
-                entryId: payload.entryId,
+                entryId,
                 content: parsed.insight,
                 tags: parsed.tags ?? [],
-                insightCount: newCount,
+                generationOrder: newGenerationOrder,
+                contentBeforeLength,
             });
 
             if (error) {

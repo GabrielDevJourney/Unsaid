@@ -1,7 +1,7 @@
 "use client";
 
 import { Flag03Icon } from "@hugeicons/core-free-icons";
-import { FilterButton } from "@/components/home/filter-button";
+import { FilterButton } from "@/components/shared/filter-button";
 import { FilterBadge } from "./filter-badge";
 
 interface FilterOption {

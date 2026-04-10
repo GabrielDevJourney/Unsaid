@@ -11,28 +11,28 @@ export const PATTERN_TYPES = {
     recurring_theme: {
         code: "recurring_theme",
         label: "Recurring Theme",
-        color: "border-green-300 bg-green-100 text-green-500",
+        color: "border-[#b8e8c5] bg-[#f0faf3] text-[#2a7048]",
         description: "A topic or subject that appears across multiple entries",
         example: "Work-life balance, Family relationships",
     },
     emotional_trigger: {
         code: "emotional_trigger",
         label: "Emotional Trigger",
-        color: "border-red-300 bg-red-100 text-red-500",
+        color: "border-[#f5c0c8] bg-[#fdf0f2] text-[#a02838]",
         description: "Something that consistently causes an emotional response",
         example: "Criticism from authority figures triggers defensiveness",
     },
     behavioral_pattern: {
         code: "behavioral_pattern",
         label: "Behavioral Pattern",
-        color: "border-blue-300 bg-blue-100 text-blue-500",
+        color: "border-[#c2d0f0] bg-[#f0f4fd] text-[#2d4a8f]",
         description: "A recurring way of behaving or acting",
         example: "Procrastination, Overcommitting to tasks",
     },
     blind_spot: {
         code: "blind_spot",
         label: "Blind Spot",
-        color: "border-purple-300 bg-purple-100 text-purple-500",
+        color: "border-[#d8c8f5] bg-[#f5f0fd] text-[#6030a0]",
         description:
             "A pattern of behavior or thinking that the person is unaware of but is evident across entries",
         example:
@@ -41,7 +41,7 @@ export const PATTERN_TYPES = {
     unmet_need: {
         code: "unmet_need",
         label: "Unmet Need",
-        color: "border-orange-300 bg-orange-100 text-orange-500",
+        color: "border-[#f5d5b2] bg-[#fdf4ed] text-[#8f4a20]",
         description:
             "An underlying need that surfaces across entries, leading to patterns of behavior",
         example: "Need for connection, Need for recognition",
@@ -49,7 +49,7 @@ export const PATTERN_TYPES = {
     growth: {
         code: "growth",
         label: "Growth",
-        color: "border-sky-300 bg-sky-100 text-sky-500",
+        color: "border-[#b0e8c8] bg-[#f0fdf5] text-[#206848]",
         description: "Evidence of positive change or progress",
         example: "Handling conflict better than last month",
     },

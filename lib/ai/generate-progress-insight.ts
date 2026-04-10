@@ -127,7 +127,7 @@ ${formattedPast}${formattedPatterns}`;
 
     try {
         const { object } = await generateObject({
-            model: anthropic("claude-sonnet-4-5"),
+            model: anthropic("claude-sonnet-4-6"),
             schema: ProgressInsightAIOutputSchema,
             system: systemPrompt,
             messages: [{ role: "user", content: userPrompt }],

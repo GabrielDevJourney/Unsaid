@@ -2,6 +2,7 @@ import {
     Activity01Icon,
     BookOpen01Icon,
     DashboardSquare01Icon,
+    LockedIcon,
     SentIcon,
 } from "@hugeicons/core-free-icons";
 import type { NavItem } from "@/types/navigation";
@@ -30,5 +31,13 @@ export const footerNavItems: NavItem[] = [
         label: "Feedback",
         icon: SentIcon,
         url: "/feedback",
+    },
+];
+
+export const adminNavItems: NavItem[] = [
+    {
+        label: "Admin — Feedback",
+        icon: LockedIcon,
+        url: "/backstage/feedback",
     },
 ];

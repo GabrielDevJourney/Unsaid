@@ -97,7 +97,12 @@ export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
         }
 
         const supabase = await createSupabaseServer();
-        const result = await saveEntry(supabase, id, validated.data.content);
+        const result = await saveEntry(
+            supabase,
+            id,
+            userId,
+            validated.data.content,
+        );
 
         if ("error" in result) {
             return NextResponse.json({ error: result.error }, { status: 500 });

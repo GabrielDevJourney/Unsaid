@@ -21,6 +21,7 @@ import {
 import { useDebounce } from "@/lib/hooks/use-debounce";
 import { useInfiniteScroll } from "@/lib/hooks/use-infinite-scroll";
 import type { EntryWithInsight, EntryWithSimilarity } from "@/types";
+import { UpgradeBanner } from "../shared/upgrade-banner";
 
 const PAGE_SIZE = 20;
 
@@ -231,6 +232,8 @@ const HomeView = ({
                                     onDateRangeChange={setDateRange}
                                 />
                             )}
+
+                            <UpgradeBanner />
 
                             {isSearching ? (
                                 <div className="flex items-center justify-center py-20">

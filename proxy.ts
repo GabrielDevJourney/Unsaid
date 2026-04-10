@@ -13,7 +13,12 @@ const isDashboardRoute = createRouteMatcher([
     "/progress(.*)",
     "/settings(.*)",
     "/feedback(.*)",
+    "/backstage(.*)",
+    "/onboarding(.*)",
 ]);
+
+const isOnboardingRoute = createRouteMatcher(["/onboarding(.*)"]);
+const isBackstageRoute = createRouteMatcher(["/backstage(.*)"]);
 
 export default clerkMiddleware(async (auth, req: NextRequest) => {
     const pathname = req.nextUrl.pathname;
@@ -34,9 +39,10 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
 
     const supabase = await createSupabaseMiddleware();
 
+    // Fetch role alongside user_id — used for both provisioning check and admin gate
     const { data: user } = await supabase
         .from("users")
-        .select("user_id")
+        .select("user_id, role")
         .eq("user_id", userId)
         .single();
 
@@ -54,15 +60,36 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
             {
                 status: 503,
                 headers: {
-                    "Content-Type": "text/html",
+                    "Content-Type": "text/html; charset=utf-8",
                     "Retry-After": "2",
                 },
             },
         );
     }
 
-    // User is authenticated + provisioned
-    return NextResponse.next();
+    // Backstage is admin-only — block non-admins at the middleware level
+    if (isBackstageRoute(req) && user.role !== "admin") {
+        return NextResponse.redirect(new URL("/home", req.url));
+    }
+
+    // Redirect new users to onboarding (only for dashboard routes, not onboarding itself)
+    if (isDashboardRoute(req) && !isOnboardingRoute(req)) {
+        const { data: progress } = await supabase
+            .from("user_progress")
+            .select("has_completed_onboarding")
+            .eq("user_id", userId)
+            .single();
+
+        if (progress && !progress.has_completed_onboarding) {
+            return NextResponse.redirect(new URL("/onboarding", req.url));
+        }
+    }
+
+    // Pass user role to Server Components via request header — avoids a redundant DB
+    // query in the dashboard layout which needs to know if the user is an admin
+    const requestHeaders = new Headers(req.headers);
+    requestHeaders.set("x-user-role", user.role ?? "");
+    return NextResponse.next({ request: { headers: requestHeaders } });
 });
 
 export const config = {

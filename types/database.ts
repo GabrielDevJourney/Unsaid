@@ -42,6 +42,8 @@ export type Database = {
                     embedding: string | null;
                     encrypted_content: string | null;
                     id: string;
+                    source_id: string | null;
+                    source_type: string | null;
                     updated_at: string;
                     user_id: string;
                     word_count: number;
@@ -53,6 +55,8 @@ export type Database = {
                     embedding?: string | null;
                     encrypted_content?: string | null;
                     id?: string;
+                    source_id?: string | null;
+                    source_type?: string | null;
                     updated_at?: string;
                     user_id: string;
                     word_count?: number;
@@ -64,6 +68,8 @@ export type Database = {
                     embedding?: string | null;
                     encrypted_content?: string | null;
                     id?: string;
+                    source_id?: string | null;
+                    source_type?: string | null;
                     updated_at?: string;
                     user_id?: string;
                     word_count?: number;
@@ -80,37 +86,40 @@ export type Database = {
             };
             entry_insights: {
                 Row: {
+                    content_before_length: number | null;
                     content_iv: string | null;
                     content_tag: string | null;
                     created_at: string;
                     encrypted_content: string | null;
                     entry_id: string;
+                    generation_order: number;
                     id: string;
-                    insight_count: number;
                     tags: string[];
                     updated_at: string;
                     user_id: string;
                 };
                 Insert: {
+                    content_before_length?: number | null;
                     content_iv?: string | null;
                     content_tag?: string | null;
                     created_at?: string;
                     encrypted_content?: string | null;
                     entry_id: string;
+                    generation_order?: number;
                     id?: string;
-                    insight_count?: number;
                     tags?: string[];
                     updated_at?: string;
                     user_id: string;
                 };
                 Update: {
+                    content_before_length?: number | null;
                     content_iv?: string | null;
                     content_tag?: string | null;
                     created_at?: string;
                     encrypted_content?: string | null;
                     entry_id?: string;
+                    generation_order?: number;
                     id?: string;
-                    insight_count?: number;
                     tags?: string[];
                     updated_at?: string;
                     user_id?: string;
@@ -119,7 +128,7 @@ export type Database = {
                     {
                         foreignKeyName: "entry_insights_entry_id_fkey";
                         columns: ["entry_id"];
-                        isOneToOne: true;
+                        isOneToOne: false;
                         referencedRelation: "entries";
                         referencedColumns: ["id"];
                     },
@@ -186,6 +195,89 @@ export type Database = {
                     },
                 ];
             };
+            feedback_items: {
+                Row: {
+                    admin_reply: string | null;
+                    admin_reply_at: string | null;
+                    author_name: string | null;
+                    created_at: string;
+                    description: string;
+                    fts: unknown;
+                    id: string;
+                    image_url: string | null;
+                    is_anonymous: boolean;
+                    is_approved: boolean;
+                    rejected_at: string | null;
+                    rejected_by: string | null;
+                    status: Database["public"]["Enums"]["feedback_status"];
+                    submitted_by: string;
+                    title: string;
+                    upvote_count: number;
+                };
+                Insert: {
+                    admin_reply?: string | null;
+                    admin_reply_at?: string | null;
+                    author_name?: string | null;
+                    created_at?: string;
+                    description: string;
+                    fts?: unknown;
+                    id?: string;
+                    image_url?: string | null;
+                    is_anonymous?: boolean;
+                    is_approved?: boolean;
+                    rejected_at?: string | null;
+                    rejected_by?: string | null;
+                    status?: Database["public"]["Enums"]["feedback_status"];
+                    submitted_by: string;
+                    title: string;
+                    upvote_count?: number;
+                };
+                Update: {
+                    admin_reply?: string | null;
+                    admin_reply_at?: string | null;
+                    author_name?: string | null;
+                    created_at?: string;
+                    description?: string;
+                    fts?: unknown;
+                    id?: string;
+                    image_url?: string | null;
+                    is_anonymous?: boolean;
+                    is_approved?: boolean;
+                    rejected_at?: string | null;
+                    rejected_by?: string | null;
+                    status?: Database["public"]["Enums"]["feedback_status"];
+                    submitted_by?: string;
+                    title?: string;
+                    upvote_count?: number;
+                };
+                Relationships: [];
+            };
+            feedback_upvotes: {
+                Row: {
+                    created_at: string;
+                    feedback_id: string;
+                    user_id: string;
+                };
+                Insert: {
+                    created_at?: string;
+                    feedback_id: string;
+                    user_id: string;
+                };
+                Update: {
+                    created_at?: string;
+                    feedback_id?: string;
+                    user_id?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: "feedback_upvotes_feedback_id_fkey";
+                        columns: ["feedback_id"];
+                        isOneToOne: false;
+                        referencedRelation: "feedback_items";
+                        referencedColumns: ["id"];
+                    },
+                ];
+            };
             feedback_votes: {
                 Row: {
                     created_at: string;
@@ -216,6 +308,41 @@ export type Database = {
                         isOneToOne: false;
                         referencedRelation: "users";
                         referencedColumns: ["user_id"];
+                    },
+                ];
+            };
+            onboarding_previews: {
+                Row: {
+                    created_at: string;
+                    entry_id: string;
+                    id: string;
+                    pattern: Json;
+                    progress: Json;
+                    user_id: string;
+                };
+                Insert: {
+                    created_at?: string;
+                    entry_id: string;
+                    id?: string;
+                    pattern: Json;
+                    progress: Json;
+                    user_id: string;
+                };
+                Update: {
+                    created_at?: string;
+                    entry_id?: string;
+                    id?: string;
+                    pattern?: Json;
+                    progress?: Json;
+                    user_id?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: "onboarding_previews_entry_id_fkey";
+                        columns: ["entry_id"];
+                        isOneToOne: false;
+                        referencedRelation: "entries";
+                        referencedColumns: ["id"];
                     },
                 ];
             };
@@ -414,18 +541,21 @@ export type Database = {
             user_progress: {
                 Row: {
                     entry_count_at_last_progress: number;
+                    has_completed_onboarding: boolean;
                     total_entries: number;
                     updated_at: string;
                     user_id: string;
                 };
                 Insert: {
                     entry_count_at_last_progress?: number;
+                    has_completed_onboarding?: boolean;
                     total_entries?: number;
                     updated_at?: string;
                     user_id: string;
                 };
                 Update: {
                     entry_count_at_last_progress?: number;
+                    has_completed_onboarding?: boolean;
                     total_entries?: number;
                     updated_at?: string;
                     user_id?: string;
@@ -623,6 +753,10 @@ export type Database = {
             [_ in never]: never;
         };
         Functions: {
+            decrement_entry_count: {
+                Args: { uid: string };
+                Returns: undefined;
+            };
             find_related_entries: {
                 Args: {
                     entry_id_param: string;
@@ -653,6 +787,10 @@ export type Database = {
                     user_id: string;
                     week_start: string;
                 }[];
+            };
+            increment_entry_count: {
+                Args: { uid: string };
+                Returns: undefined;
             };
             search_entries_by_embedding: {
                 Args: {
@@ -710,7 +848,12 @@ export type Database = {
             };
         };
         Enums: {
-            [_ in never]: never;
+            feedback_status:
+                | "open"
+                | "in_progress"
+                | "completed"
+                | "wont_do"
+                | "rejected";
         };
         CompositeTypes: {
             [_ in never]: never;
@@ -843,6 +986,14 @@ export const Constants = {
         Enums: {},
     },
     public: {
-        Enums: {},
+        Enums: {
+            feedback_status: [
+                "open",
+                "in_progress",
+                "completed",
+                "wont_do",
+                "rejected",
+            ],
+        },
     },
 } as const;

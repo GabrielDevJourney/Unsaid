@@ -1,16 +1,25 @@
+import { Add01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import Link from "next/link";
 import { ReferenceTimeline } from "@/components/shared/reference-timeline";
+import { SourceReflections } from "@/components/shared/source-reflections";
+import { Button } from "@/components/ui/button";
 import {
     PATTERN_TYPE_BADGE_STYLES,
     PATTERN_TYPES,
 } from "@/lib/constants/pattern-types";
-import type { WeeklyInsightPattern } from "@/types";
+import type { EntryReflectionPreview, WeeklyInsightPattern } from "@/types";
 import { PageHeader } from "../layout/page-header";
 
 interface PatternDetailPageProps {
     pattern: WeeklyInsightPattern;
+    reflections: EntryReflectionPreview[];
 }
 
-const PatternDetailPage = ({ pattern }: PatternDetailPageProps) => {
+const PatternDetailPage = ({
+    pattern,
+    reflections,
+}: PatternDetailPageProps) => {
     const badgeStyle =
         PATTERN_TYPE_BADGE_STYLES[pattern.patternType] ??
         "border-zinc-300 bg-zinc-100 text-zinc-600";
@@ -58,7 +67,7 @@ const PatternDetailPage = ({ pattern }: PatternDetailPageProps) => {
                         </span>
 
                         {/* Title */}
-                        <h2 className="font-serif text-5xl italic text-zinc-800 leading-tight">
+                        <h2 className="font-serif text-5xl italic text-neutral-500 leading-tight">
                             {pattern.title}
                         </h2>
 
@@ -87,6 +96,27 @@ const PatternDetailPage = ({ pattern }: PatternDetailPageProps) => {
                                 <p className="font-serif italic text-neutral-500 text-3xl leading-relaxed">
                                     {pattern.question}
                                 </p>
+                                <div className="flex justify-start pt-4">
+                                    <Button
+                                        asChild
+                                        variant="sunrise-sm"
+                                        size="sm"
+                                    >
+                                        <Link
+                                            href={`/entries/new?suggestion=${encodeURIComponent(pattern.question)}&sourceType=pattern&sourceId=${pattern.id}&from=/patterns/${pattern.id}`}
+                                        >
+                                            <HugeiconsIcon
+                                                icon={Add01Icon}
+                                                className="size-4 text-white"
+                                            />
+                                            Reflect about this
+                                        </Link>
+                                    </Button>
+                                </div>
+                                <SourceReflections
+                                    items={reflections}
+                                    from={`/patterns/${pattern.id}`}
+                                />
                             </div>
                         )}
                     </div>

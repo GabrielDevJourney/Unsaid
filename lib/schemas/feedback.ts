@@ -1,32 +1,26 @@
 import { z } from "zod";
 
-// Feedback categories
-export const FeedbackCategory = z.enum([
-    "bug",
-    "feature",
-    "improvement",
-    "other",
-]);
-export type FeedbackCategoryType = z.infer<typeof FeedbackCategory>;
-
-// Feedback status (admin-managed)
-export const FeedbackStatus = z.enum([
-    "new",
-    "planned",
+// Status enum matches the feedback_status DB enum
+export const FeedbackStatusEnum = z.enum([
+    "open",
     "in_progress",
     "completed",
     "wont_do",
+    "rejected",
 ]);
-export type FeedbackStatusType = z.infer<typeof FeedbackStatus>;
+export type FeedbackStatusType = z.infer<typeof FeedbackStatusEnum>;
 
-// Sort options for feedback list
-export const FeedbackSort = z.enum(["votes", "newest"]);
-export type FeedbackSortType = z.infer<typeof FeedbackSort>;
+// Sort options for the feedback list — reserved for future sort UI
+export const FeedbackSortEnum = z.enum(["relevant", "recent", "upvoted"]);
+export type FeedbackSortType = z.infer<typeof FeedbackSortEnum>;
 
-/**
- * Schema for creating new feedback post
- */
-export const FeedbackCreateSchema = z.object({
+// UUID validator for feedback item IDs
+export const FeedbackIdSchema = z
+    .string()
+    .uuid({ message: "Invalid feedback ID" });
+
+// Schema for user submissions
+export const SubmitFeedbackSchema = z.object({
     title: z
         .string()
         .min(5, { message: "Title must be at least 5 characters" })
@@ -35,47 +29,39 @@ export const FeedbackCreateSchema = z.object({
         .string()
         .min(10, { message: "Description must be at least 10 characters" })
         .max(2000, { message: "Description must be at most 2000 characters" }),
-    category: FeedbackCategory,
-});
-
-export type FeedbackCreateInput = z.infer<typeof FeedbackCreateSchema>;
-
-/**
- * Schema for creating a comment on feedback
- */
-export const FeedbackCommentSchema = z.object({
-    description: z
+    isAnonymous: z.boolean().default(true),
+    authorName: z.string().max(100).nullable().optional(),
+    // Only accept URLs from this project's Supabase storage (prod + local dev)
+    imageUrl: z
         .string()
-        .min(2, { message: "Comment must be at least 2 characters" })
-        .max(1000, { message: "Comment must be at most 1000 characters" }),
+        .url()
+        .refine(
+            (url) => {
+                try {
+                    const { hostname, pathname } = new URL(url);
+                    const isAllowedHost =
+                        hostname === "vmhlernvxnixomfvpbsp.supabase.co" ||
+                        hostname === "127.0.0.1";
+                    return (
+                        isAllowedHost &&
+                        pathname.startsWith("/storage/v1/object/public/")
+                    );
+                } catch {
+                    return false;
+                }
+            },
+            { message: "Image must be from Supabase storage" },
+        )
+        .nullable()
+        .optional(),
 });
+export type SubmitFeedbackInput = z.infer<typeof SubmitFeedbackSchema>;
 
-export type FeedbackCommentInput = z.infer<typeof FeedbackCommentSchema>;
-
-/**
- * Schema for updating feedback status (admin only)
- */
-export const FeedbackStatusUpdateSchema = z.object({
-    status: FeedbackStatus,
+// Schema for admin reply
+export const AdminReplySchema = z.object({
+    reply: z
+        .string()
+        .min(1, { message: "Reply cannot be empty" })
+        .max(2000, { message: "Reply must be at most 2000 characters" }),
 });
-
-export type FeedbackStatusUpdateInput = z.infer<
-    typeof FeedbackStatusUpdateSchema
->;
-
-/**
- * Schema for feedback list query params
- */
-export const FeedbackListQuerySchema = z.object({
-    page: z.coerce.number().int().positive().default(1),
-    pageSize: z.coerce.number().int().min(1).max(50).default(20),
-    sort: FeedbackSort.default("votes"),
-    status: FeedbackStatus.or(z.literal("all")).default("all"),
-});
-
-export type FeedbackListQueryInput = z.infer<typeof FeedbackListQuerySchema>;
-
-/**
- * Schema for feedback ID param
- */
-export const FeedbackIdSchema = z.string().uuid("Invalid feedback ID");
+export type AdminReplyInput = z.infer<typeof AdminReplySchema>;

@@ -21,6 +21,9 @@ const libreBaskerville = Libre_Baskerville({
 export const metadata: Metadata = {
     title: "Unsaid",
     description: "AI-powered journaling for self-discovery",
+    icons: {
+        icon: "/logo-black-bg.svg",
+    },
 };
 
 const localization = {
