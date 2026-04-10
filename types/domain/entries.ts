@@ -45,16 +45,38 @@ export interface EntryRowEncryptedMinimal extends EncryptedRowBase {}
  */
 export interface EntryInsightRowMinimal extends EncryptedRowBase {
     tags: string[] | null;
-    insight_count: number;
+    generation_order: number;
+    content_before_length: number | null;
 }
 
 /**
- * Entry row with nested insight from Supabase join query.
- * PostgREST returns a single object (not array) when the FK has a UNIQUE
- * constraint (1:1 relation). Both cases must be handled at runtime.
+ * Entry row with nested insight(s) from Supabase join query.
+ * With 1:N relation PostgREST always returns an array.
  */
 export interface EntryRowWithInsights extends EntryRowEncrypted {
     entry_insights: EntryInsightRowMinimal | EntryInsightRowMinimal[] | null;
+}
+
+/**
+ * Row shape returned by getEntriesBySource (entries + nested insight).
+ * For repo layer use only.
+ */
+export interface EntrySourceRow {
+    id: string;
+    word_count: number;
+    created_at: string;
+    entry_insights:
+        | {
+              encrypted_content: string | null;
+              content_iv: string | null;
+              content_tag: string | null;
+          }
+        | {
+              encrypted_content: string | null;
+              content_iv: string | null;
+              content_tag: string | null;
+          }[]
+        | null;
 }
 
 // 2. DOMAIN MODELS (decrypted, camelCase, frontend contract)
@@ -97,15 +119,25 @@ export interface EntryInsightSummary {
     id: string;
     content: string;
     tags: string[];
+    /** @deprecated use generationOrder — kept for consumer compat */
     insightCount: number;
+    generationOrder: number;
+    contentBeforeLength: number | null;
     createdAt: string;
 }
 
 /**
- * Entry with its associated insight (1:1 relation).
+ * Entry with its latest insight (for list views, cards, exports, etc.).
  */
 export interface EntryWithInsight extends Entry {
     entryInsight: EntryInsightSummary | null;
+}
+
+/**
+ * Entry with all insight generations ordered ASC. Editor use only.
+ */
+export interface EntryWithAllInsights extends EntryWithInsight {
+    entryInsights: EntryInsightSummary[];
 }
 
 /**

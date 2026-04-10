@@ -3,7 +3,7 @@ import { MAX_INSIGHT_COUNT } from "@/lib/constants";
 import { decrypt } from "@/lib/crypto";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
 import { createSupabaseServer } from "@/lib/supabase/server";
-import { getEntryInsightByEntryId, upsertEntryInsight } from "./repo";
+import { getEntryInsightsByEntryId, insertEntryInsight } from "./repo";
 
 /**
  * Generate and stream a structured entry insight.
@@ -14,10 +14,10 @@ import { getEntryInsightByEntryId, upsertEntryInsight } from "./repo";
  * Ownership verification: fetches entry via server client (RLS-scoped).
  * If the entry does not belong to the authenticated user, returns null.
  *
- * Uses admin client for DB upsert (bypasses RLS - insights are system-created).
- * Saves insight and tags to DB via onFinish callback (errors logged, not thrown).
+ * Uses admin client for DB insert (bypasses RLS - insights are system-created).
+ * Saves insight to DB via onFinish callback (errors logged, not thrown).
  *
- * Enforces max 3 regenerations per entry. Returns null if limit reached.
+ * Enforces max MAX_INSIGHT_COUNT generations per entry. Returns null if limit reached.
  *
  * @throws If AI streaming fails
  */
@@ -27,9 +27,6 @@ export const generateEntryInsight = async (
     _reflectionContext?: string,
 ) => {
     // Verify ownership and fetch content server-side.
-    // createSupabaseServer injects the Clerk session token — RLS ensures only
-    // the authenticated user's own entries are returned. If the entry doesn't
-    // belong to this user (or doesn't exist), data will be null and we bail.
     const serverSupabase = await createSupabaseServer();
     const { data: entryRow } = await serverSupabase
         .from("entries")
@@ -45,20 +42,24 @@ export const generateEntryInsight = async (
         tag: entryRow.content_tag,
     });
 
+    // Character count of content at generation time — used to split segments on reload
+    const contentBeforeLength = content.length;
+
     const supabase = createSupabaseAdmin();
 
-    const { data: existing } = await getEntryInsightByEntryId(
+    const { data: existingInsights } = await getEntryInsightsByEntryId(
         supabase,
         entryId,
     );
 
-    if (existing && existing.insightCount >= MAX_INSIGHT_COUNT) {
+    if (existingInsights && existingInsights.length >= MAX_INSIGHT_COUNT) {
         return null;
     }
 
-    const newCount = existing ? existing.insightCount + 1 : 1;
-    const previousInsight = existing?.content;
-    const previousTags = existing?.tags;
+    const existing = existingInsights ?? [];
+    const newGenerationOrder = existing.length + 1;
+    const previousInsight = existing.at(-1)?.content;
+    const previousTags = existing.at(-1)?.tags;
 
     const result = await streamEntryInsight(content, {
         previousInsight,
@@ -80,12 +81,13 @@ export const generateEntryInsight = async (
                 return;
             }
 
-            const { error } = await upsertEntryInsight(supabase, {
+            const { error } = await insertEntryInsight(supabase, {
                 userId,
                 entryId,
                 content: parsed.insight,
                 tags: parsed.tags ?? [],
-                insightCount: newCount,
+                generationOrder: newGenerationOrder,
+                contentBeforeLength,
             });
 
             if (error) {

@@ -19,7 +19,9 @@ export const toEntryInsight = (
         entryId: insightRow.entry_id,
         content,
         tags: insightRow.tags ?? [],
-        insightCount: insightRow.insight_count,
+        insightCount: insightRow.generation_order,
+        generationOrder: insightRow.generation_order,
+        contentBeforeLength: insightRow.content_before_length ?? null,
         createdAt: insightRow.created_at,
         updatedAt: insightRow.updated_at,
     };

@@ -9,6 +9,7 @@ import {
     MIN_ENTRY_LENGTH,
 } from "@/lib/constants";
 import { useEntryEditorStore } from "@/lib/entry-editor/store";
+import type { EntryInsightSummary } from "@/types";
 import type { InsightDisplayHandle } from "./insight-display";
 import { InsightBlockquote, InsightDisplay } from "./insight-display";
 import { JournalingSuggestion } from "./journaling-suggestion";
@@ -72,6 +73,60 @@ const SegmentTextarea = ({
     );
 };
 
+/**
+ * Reconstruct TextSegment[] from persisted insights on page load.
+ * If all insights have contentBeforeLength, split content at each position.
+ * Falls back to all-content-then-last-insight for old entries without split info.
+ */
+const buildInitialSegments = (
+    content: string,
+    insights: EntryInsightSummary[],
+): TextSegment[] => {
+    if (insights.length === 0) {
+        return [
+            { id: crypto.randomUUID(), text: content, completedInsight: null },
+        ];
+    }
+
+    const sorted = [...insights].sort(
+        (a, b) => a.generationOrder - b.generationOrder,
+    );
+    const allHaveSplit = sorted.every((i) => i.contentBeforeLength != null);
+
+    if (allHaveSplit) {
+        let prevEnd = 0;
+        const segs: TextSegment[] = [];
+        for (const ins of sorted) {
+            const splitAt = ins.contentBeforeLength ?? 0;
+            const raw = content.slice(prevEnd, splitAt);
+            const text = prevEnd === 0 ? raw : raw.replace(/^\n+/, "");
+            segs.push({
+                id: crypto.randomUUID(),
+                text,
+                completedInsight: ins.content,
+            });
+            prevEnd = splitAt;
+        }
+        const remaining = content.slice(prevEnd).replace(/^\n+/, "");
+        segs.push({
+            id: crypto.randomUUID(),
+            text: remaining,
+            completedInsight: null,
+        });
+        return segs;
+    }
+
+    // Fallback: old entry — all content in first segment, latest insight appended
+    return [
+        {
+            id: crypto.randomUUID(),
+            text: content,
+            completedInsight: sorted.at(-1)?.content ?? null,
+        },
+        { id: crypto.randomUUID(), text: "", completedInsight: null },
+    ];
+};
+
 interface EntryEditorProps {
     entryId: string | null;
     suggestion: string | null;
@@ -79,7 +134,7 @@ interface EntryEditorProps {
     isNewEntry: boolean;
     onDismiss: () => void;
     initialContent?: string;
-    initialInsight?: string | null;
+    initialInsights?: EntryInsightSummary[];
     isContextualEntry?: boolean;
 }
 
@@ -90,10 +145,10 @@ export const EntryEditor = ({
     isNewEntry,
     onDismiss,
     initialContent,
-    initialInsight,
+    initialInsights,
     isContextualEntry,
 }: EntryEditorProps) => {
-    const { setContent, saveNow, insight, isGeneratingInsight } =
+    const { setContent, saveNow, insights, isGeneratingInsight } =
         useEntryEditorStore();
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const insightRef = useRef<InsightDisplayHandle>(null);
@@ -101,23 +156,7 @@ export const EntryEditor = ({
     // Segments are the source of truth for what's displayed and saved
     const [segments, setSegments] = useState<TextSegment[]>(() => {
         if (initialContent !== undefined && initialContent !== "") {
-            const first: TextSegment = {
-                id: crypto.randomUUID(),
-                text: initialContent,
-                completedInsight: initialInsight ?? null,
-            };
-            // If there's an existing insight, add an empty continuation segment
-            if (initialInsight) {
-                return [
-                    first,
-                    {
-                        id: crypto.randomUUID(),
-                        text: "",
-                        completedInsight: null,
-                    },
-                ];
-            }
-            return [first];
+            return buildInitialSegments(initialContent, initialInsights ?? []);
         }
         return [{ id: crypto.randomUUID(), text: "", completedInsight: null }];
     });
@@ -199,7 +238,7 @@ export const EntryEditor = ({
     const isBelowMinLength =
         combinedContent.length > 0 &&
         combinedContent.trim().length < MIN_ENTRY_LENGTH;
-    const insightCount = insight?.insightCount ?? 0;
+    const insightCount = insights.length;
     const isAtLimit = insightCount >= MAX_INSIGHT_COUNT;
     const canGenerateInsight =
         !!entryId &&

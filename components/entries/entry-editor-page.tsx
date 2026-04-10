@@ -12,7 +12,7 @@ import { EntryEditor } from "./entry-editor";
 interface InitialEntry {
     id: string;
     content: string;
-    insight: EntryInsightSummary | null;
+    insights: EntryInsightSummary[];
     createdAt: string;
 }
 
@@ -69,7 +69,7 @@ export const EntryEditorPage = ({
             loadExistingEntry(
                 initialEntry.id,
                 initialEntry.content,
-                initialEntry.insight,
+                initialEntry.insights,
             );
         } else {
             reset();
@@ -192,7 +192,7 @@ export const EntryEditorPage = ({
                             isDismissed.current = true;
                         }}
                         initialContent={initialEntry?.content}
-                        initialInsight={initialEntry?.insight?.content ?? null}
+                        initialInsights={initialEntry?.insights ?? []}
                         isContextualEntry={_hasInitialSuggestion.current}
                     />
                 </div>
