@@ -18,7 +18,7 @@ export type InsightObject = z.infer<typeof insightSchema>;
  */
 export const EntryInsightGenerateSchema = z.object({
     entry_id: z.uuid(),
-    reflection_context: z.string().optional(),
+    reflection_context: z.string().max(500).optional(),
 });
 
 export type EntryInsightGenerateInput = z.infer<

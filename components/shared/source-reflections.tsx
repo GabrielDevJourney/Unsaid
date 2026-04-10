@@ -15,17 +15,17 @@ interface SourceReflectionsProps {
     from: string;
 }
 
+const handleAnimationEnd = (e: React.AnimationEvent<HTMLDivElement>) => {
+    if (!e.animationName.includes("accordion-down")) return;
+    e.currentTarget.style.scrollMarginBottom = "6px";
+    e.currentTarget.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+    });
+};
+
 const SourceReflections = ({ items, from }: SourceReflectionsProps) => {
     if (items.length === 0) return null;
-
-    const handleAnimationEnd = (e: React.AnimationEvent<HTMLDivElement>) => {
-        if (!e.animationName.includes("accordion-down")) return;
-        e.currentTarget.style.scrollMarginBottom = "6px";
-        e.currentTarget.scrollIntoView({
-            behavior: "smooth",
-            block: "nearest",
-        });
-    };
 
     return (
         <div className="flex flex-col gap-3 pt-4">
