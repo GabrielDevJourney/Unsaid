@@ -3,6 +3,10 @@ import { EntryEditorPage } from "@/components/entries/entry-editor-page";
 import { EntryGate } from "@/components/entries/entry-gate";
 import { getTotalInsightsCount } from "@/lib/entry-insights/repo";
 import { getLatestProgressInsight } from "@/lib/progress-insights/repo";
+import {
+    getPatternReflectionContext,
+    getProgressReflectionContext,
+} from "@/lib/reflections/service";
 import { canUserWriteEntry } from "@/lib/subscriptions/entitlements";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { getUserProgress } from "@/lib/users/repo";
@@ -11,9 +15,20 @@ import {
     getWeeklyInsightWithPatternsPaginated,
 } from "@/lib/weekly-insights/repo";
 
-const NewEntryPage = async () => {
+const NewEntryPage = async ({
+    searchParams,
+}: {
+    searchParams: Promise<Record<string, string>>;
+}) => {
     const { userId } = await auth();
     const supabase = await createSupabaseServer();
+
+    const params = await searchParams;
+    const initialSuggestion = params.suggestion
+        ? decodeURIComponent(params.suggestion)
+        : null;
+    const sourceType = params.sourceType ?? null;
+    const sourceId = params.sourceId ?? null;
 
     const [
         canWrite,
@@ -50,7 +65,27 @@ const NewEntryPage = async () => {
         );
     }
 
-    return <EntryEditorPage />;
+    let reflectionContext: string | null = null;
+    if (sourceType && sourceId && userId) {
+        reflectionContext =
+            sourceType === "pattern"
+                ? await getPatternReflectionContext(supabase, userId, sourceId)
+                : await getProgressReflectionContext(
+                      supabase,
+                      userId,
+                      sourceId,
+                  );
+        if (reflectionContext === "") reflectionContext = null;
+    }
+
+    return (
+        <EntryEditorPage
+            initialSuggestion={initialSuggestion}
+            reflectionContext={reflectionContext}
+            sourceType={sourceType}
+            sourceId={sourceId}
+        />
+    );
 };
 
 export default NewEntryPage;

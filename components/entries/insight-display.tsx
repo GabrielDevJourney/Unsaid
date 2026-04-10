@@ -7,7 +7,7 @@ import {
     useCallback,
     useEffect,
     useImperativeHandle,
-    useState,
+    useRef,
 } from "react";
 import { MAX_INSIGHT_COUNT } from "@/lib/constants";
 import { useEntryEditorStore } from "@/lib/entry-editor/store";
@@ -37,14 +37,8 @@ export const InsightBlockquote = ({ content }: { content: string }) => (
             height={12}
             className="mb-2"
         />
-        <blockquote
-            className="border-l-2 pl-4"
-            style={{ borderColor: "#79A1B9" }}
-        >
-            <p
-                className="font-serif text-base leading-relaxed"
-                style={{ color: "#79A1B9" }}
-            >
+        <blockquote className="border-l-2 border-[#79A1B9] pl-4">
+            <p className="font-serif text-base leading-relaxed text-[#79A1B9]">
                 {content}
             </p>
         </blockquote>
@@ -53,34 +47,34 @@ export const InsightBlockquote = ({ content }: { content: string }) => (
 
 const InsightDisplay = forwardRef<InsightDisplayHandle, InsightDisplayProps>(
     ({ entryId, onInsightComplete }, ref) => {
-        const { insight, content, setInsight, setIsGeneratingInsight } =
+        const { insights, content, addInsight, setIsGeneratingInsight } =
             useEntryEditorStore();
 
         const hasContent = content.trim().length > 0;
-        const hasInsight = !!insight;
-        const isAtLimit =
-            hasInsight && insight.insightCount >= MAX_INSIGHT_COUNT;
+        const isAtLimit = insights.length >= MAX_INSIGHT_COUNT;
 
-        const [isComplete, setIsComplete] = useState(false);
+        const isCompleteRef = useRef(false);
 
         const { object, submit, isLoading } = useObject({
             api: "/api/entry-insights",
             schema: insightSchema,
             onFinish: ({ object: done }) => {
                 if (!done) return;
-                const prev = useEntryEditorStore.getState().insight;
-                const newCount = (prev?.insightCount ?? 0) + 1;
-                setInsight({
-                    id: prev?.id ?? "",
+                const newOrder =
+                    useEntryEditorStore.getState().insights.length + 1;
+                addInsight({
+                    id: "",
                     content: done.insight,
                     tags: done.tags ?? [],
-                    insightCount: newCount,
-                    createdAt: prev?.createdAt ?? new Date().toISOString(),
+                    insightCount: newOrder,
+                    generationOrder: newOrder,
+                    contentBeforeLength: null,
+                    createdAt: new Date().toISOString(),
                 });
 
                 if (onInsightComplete) {
-                    setIsComplete(true);
-                    onInsightComplete(done.insight, done.tags ?? [], newCount);
+                    isCompleteRef.current = true;
+                    onInsightComplete(done.insight, done.tags ?? [], newOrder);
                 }
             },
         });
@@ -91,20 +85,27 @@ const InsightDisplay = forwardRef<InsightDisplayHandle, InsightDisplayProps>(
 
         const handleGenerate = useCallback(() => {
             if (!entryId || isLoading || isAtLimit || !hasContent) return;
-            setIsComplete(false);
-            submit({ entry_id: entryId });
+            isCompleteRef.current = false;
+            const reflectionContext =
+                useEntryEditorStore.getState().reflectionContext;
+            submit({
+                entry_id: entryId,
+                ...(reflectionContext && {
+                    reflection_context: reflectionContext,
+                }),
+            });
         }, [entryId, hasContent, isLoading, isAtLimit, submit]);
 
         useImperativeHandle(ref, () => ({ generate: handleGenerate }));
 
-        // When caller manages segment display, hide after completion
-        if (onInsightComplete && isComplete) return null;
+        // When caller manages segment display, only render during active streaming
+        if (onInsightComplete && !isLoading) return null;
 
-        if (!hasInsight && !isLoading) return null;
+        if (insights.length === 0 && !isLoading) return null;
 
         const displayContent = isLoading
             ? (object?.insight ?? "")
-            : (insight?.content ?? "");
+            : (insights.at(-1)?.content ?? "");
 
         return <InsightBlockquote content={displayContent} />;
     },

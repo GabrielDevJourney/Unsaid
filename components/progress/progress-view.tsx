@@ -97,7 +97,7 @@ const ProgressView = ({
     });
     return (
         <div className="flex h-full flex-col overflow-hidden">
-            <PageHeader>
+            <PageHeader backHref="/home">
                 <div className="flex flex-1 items-center justify-between">
                     <h1 className="font-serif text-4xl italic text-zinc-600">
                         Progress

@@ -9,10 +9,8 @@ import {
     Sidebar,
     SidebarContent,
     SidebarFooter,
-    SidebarGroup,
-    SidebarGroupContent,
-    SidebarGroupLabel,
     SidebarHeader,
+    SidebarMenuItem,
     SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { adminNavItems, brainNavItems, footerNavItems } from "@/config/sidebar";
@@ -71,26 +69,6 @@ export const AppSidebar = ({
             </SidebarHeader>
 
             <SidebarContent>
-                <SidebarGroup className="p-4">
-                    <SidebarGroupLabel>Journaling</SidebarGroupLabel>
-                    <SidebarGroupContent>
-                        <Link
-                            href="/entries/new"
-                            className="flex items-center text-zinc-600 w-36 h-10 group-data-[state=collapsed]:w-8 group-data-[state=collapsed]:h-8 group-data-[state=collapsed]:bg-transparent group-data-[state=collapsed]:border-none group-data-[state=collapsed]:p-0 group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:ring-6 group-data-[state=collapsed]:ring-border group-data-[state=collapsed]:rounded-md"
-                        >
-                            <span className="group-data-[state=collapsed]:hidden h-full flex-1 min-w-0 flex items-center justify-center border-y border-l border-border rounded-l-md text-zinc-600 bg-gray-3">
-                                Add entry
-                            </span>
-                            <span className="btn-add-entry-icon bg-slate-400 group-data-[state=collapsed]:rounded-md relative flex items-center justify-center w-10 group-data-[state=collapsed]:w-8 shrink-0 h-full overflow-hidden cursor-pointer rounded-r-md">
-                                <HugeiconsIcon
-                                    icon={Add01Icon}
-                                    className="relative z-10 size-5 text-white"
-                                />
-                            </span>
-                        </Link>
-                    </SidebarGroupContent>
-                </SidebarGroup>
-
                 <SidebarNavGroup
                     items={brainNavItems.map((item) => {
                         if (item.url === "/patterns")
@@ -99,9 +77,25 @@ export const AppSidebar = ({
                             return { ...item, badge: effectiveProgressCount };
                         return item;
                     })}
-                    label="Brain"
                     className="p-4"
-                />
+                >
+                    <SidebarMenuItem>
+                        <Link
+                            href="/entries/new"
+                            className="flex w-full items-center gap-2 rounded-sm p-2 text-zinc-600 hover:bg-sidebar-accent transition-[width,height,padding,gap] duration-400 ease-in-out group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:p-2! group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:justify-center"
+                        >
+                            <span className="btn-add-entry-icon bg-slate-400 relative flex items-center justify-center size-6 group-data-[state=collapsed]:size-8 shrink-0 rounded-md group-data-[state=collapsed]:rounded-lg overflow-hidden cursor-pointer transition-[width,height,border-radius] duration-400 ease-in-out group-data-[state=collapsed]:ring-6 group-data-[state=collapsed]:ring-border">
+                                <HugeiconsIcon
+                                    icon={Add01Icon}
+                                    className="relative z-10 size-4 text-white"
+                                />
+                            </span>
+                            <span className="font-medium overflow-hidden whitespace-nowrap max-w-40 transition-[max-width] duration-400 ease-in-out group-data-[collapsible=icon]:max-w-0">
+                                Add Entry
+                            </span>
+                        </Link>
+                    </SidebarMenuItem>
+                </SidebarNavGroup>
             </SidebarContent>
 
             <SidebarFooter>

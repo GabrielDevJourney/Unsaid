@@ -50,6 +50,8 @@ const baseEntry = (): EntryWithInsight => ({
         content: "You're finding stillness.",
         tags: ["calm", "presence"],
         insightCount: 1,
+        generationOrder: 1,
+        contentBeforeLength: null,
         createdAt: "2026-03-10T01:00:00.000Z",
     },
 });

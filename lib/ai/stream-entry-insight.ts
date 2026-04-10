@@ -8,6 +8,7 @@ export { insightSchema, type InsightObject };
 interface StreamEntryInsightOptions {
     previousInsight?: string;
     previousTags?: string[];
+    reflectionContext?: string;
     onFinish?: (event: { text: string }) => Promise<void> | void;
 }
 
@@ -40,8 +41,16 @@ export const streamEntryInsight = async (
             ? `\n\n---\n\n**Previous insight (refine this):** ${options.previousInsight}\n**Previous tags:** ${options.previousTags.join(", ")}`
             : "";
 
+    const contextBlock = options?.reflectionContext
+        ? `\n\n---\n\n${options.reflectionContext}`
+        : "";
+
+    const model = options?.reflectionContext
+        ? anthropic("claude-sonnet-4-6")
+        : anthropic("claude-haiku-4-5");
+
     return streamText({
-        model: anthropic("claude-haiku-4-5"),
+        model,
         experimental_output: Output.object({ schema: insightSchema }),
         experimental_transform: smoothStream({
             chunking: "word",
@@ -51,7 +60,7 @@ export const streamEntryInsight = async (
         messages: [
             {
                 role: "user",
-                content: `${taskPrompt}\n\n---\n\n${entryContent}${previousContext}`,
+                content: `${taskPrompt}\n\n---\n\n${entryContent}${previousContext}${contextBlock}`,
             },
         ],
         onFinish: options?.onFinish,

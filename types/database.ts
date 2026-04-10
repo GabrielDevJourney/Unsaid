@@ -42,6 +42,8 @@ export type Database = {
                     embedding: string | null;
                     encrypted_content: string | null;
                     id: string;
+                    source_id: string | null;
+                    source_type: string | null;
                     updated_at: string;
                     user_id: string;
                     word_count: number;
@@ -53,6 +55,8 @@ export type Database = {
                     embedding?: string | null;
                     encrypted_content?: string | null;
                     id?: string;
+                    source_id?: string | null;
+                    source_type?: string | null;
                     updated_at?: string;
                     user_id: string;
                     word_count?: number;
@@ -64,6 +68,8 @@ export type Database = {
                     embedding?: string | null;
                     encrypted_content?: string | null;
                     id?: string;
+                    source_id?: string | null;
+                    source_type?: string | null;
                     updated_at?: string;
                     user_id?: string;
                     word_count?: number;
@@ -80,37 +86,40 @@ export type Database = {
             };
             entry_insights: {
                 Row: {
+                    content_before_length: number | null;
                     content_iv: string | null;
                     content_tag: string | null;
                     created_at: string;
                     encrypted_content: string | null;
                     entry_id: string;
+                    generation_order: number;
                     id: string;
-                    insight_count: number;
                     tags: string[];
                     updated_at: string;
                     user_id: string;
                 };
                 Insert: {
+                    content_before_length?: number | null;
                     content_iv?: string | null;
                     content_tag?: string | null;
                     created_at?: string;
                     encrypted_content?: string | null;
                     entry_id: string;
+                    generation_order?: number;
                     id?: string;
-                    insight_count?: number;
                     tags?: string[];
                     updated_at?: string;
                     user_id: string;
                 };
                 Update: {
+                    content_before_length?: number | null;
                     content_iv?: string | null;
                     content_tag?: string | null;
                     created_at?: string;
                     encrypted_content?: string | null;
                     entry_id?: string;
+                    generation_order?: number;
                     id?: string;
-                    insight_count?: number;
                     tags?: string[];
                     updated_at?: string;
                     user_id?: string;
@@ -119,7 +128,7 @@ export type Database = {
                     {
                         foreignKeyName: "entry_insights_entry_id_fkey";
                         columns: ["entry_id"];
-                        isOneToOne: true;
+                        isOneToOne: false;
                         referencedRelation: "entries";
                         referencedColumns: ["id"];
                     },
@@ -744,6 +753,10 @@ export type Database = {
             [_ in never]: never;
         };
         Functions: {
+            decrement_entry_count: {
+                Args: { uid: string };
+                Returns: undefined;
+            };
             find_related_entries: {
                 Args: {
                     entry_id_param: string;
@@ -774,6 +787,10 @@ export type Database = {
                     user_id: string;
                     week_start: string;
                 }[];
+            };
+            increment_entry_count: {
+                Args: { uid: string };
+                Returns: undefined;
             };
             search_entries_by_embedding: {
                 Args: {

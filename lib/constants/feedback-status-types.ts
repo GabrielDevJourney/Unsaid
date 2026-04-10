@@ -13,14 +13,14 @@ export const FEEDBACK_STATUS_CONFIG = {
     },
     completed: {
         label: "Completed",
-        color: "border-green-200 bg-green-100 text-green-800",
+        color: "border-cyan-200 bg-cyan-100 text-cyan-800",
     },
     wont_do: {
         label: "Won't Do",
-        color: "border-red-200 bg-red-50 text-red-800",
+        color: "border-red-300 bg-red-100 text-red-800",
     },
     rejected: {
         label: "Rejected",
-        color: "border-zinc-200 bg-zinc-100 text-zinc-500",
+        color: "border-zinc-300 bg-zinc-100 text-zinc-800",
     },
 } as const;

@@ -10,10 +10,13 @@ interface EntryEditorState {
     isSaving: boolean;
     saveError: string | null;
     lastSavedAt: Date | null;
-    insight: EntryInsightSummary | null;
+    insights: EntryInsightSummary[];
     isGeneratingInsight: boolean;
     suggestion: string | null;
     isLoadingSuggestion: boolean;
+    reflectionContext: string | null;
+    sourceType: string | null;
+    sourceId: string | null;
 }
 
 interface EntryEditorActions {
@@ -21,12 +24,14 @@ interface EntryEditorActions {
     loadExistingEntry: (
         entryId: string,
         content: string,
-        insight: EntryInsightSummary | null,
+        insights: EntryInsightSummary[],
     ) => void;
-    setInsight: (insight: EntryInsightSummary) => void;
+    addInsight: (insight: EntryInsightSummary) => void;
     setIsGeneratingInsight: (v: boolean) => void;
     setSuggestion: (v: string | null) => void;
     setIsLoadingSuggestion: (v: boolean) => void;
+    setReflectionContext: (ctx: string | null) => void;
+    setSource: (sourceType: string | null, sourceId: string | null) => void;
     saveNow: () => Promise<{ entryId: string | null; isNew: boolean }>;
     reset: () => void;
 }
@@ -38,10 +43,13 @@ const initialState: EntryEditorState = {
     isSaving: false,
     saveError: null,
     lastSavedAt: null,
-    insight: null,
+    insights: [],
     isGeneratingInsight: false,
     suggestion: null,
     isLoadingSuggestion: true,
+    reflectionContext: null,
+    sourceType: null,
+    sourceId: null,
 };
 
 export const useEntryEditorStore = create<
@@ -51,10 +59,10 @@ export const useEntryEditorStore = create<
 
     setContent: (content) => set({ content }),
 
-    loadExistingEntry: (entryId, content, insight) => {
+    loadExistingEntry: (entryId, content, insights) => {
         const { entryId: currentEntryId } = get();
         if (currentEntryId === entryId) {
-            set({ insight });
+            set({ insights });
             return;
         }
         // Different entry — clear suggestion so it gets re-fetched
@@ -62,13 +70,14 @@ export const useEntryEditorStore = create<
             entryId,
             content,
             savedContent: content,
-            insight,
+            insights,
             suggestion: null,
             isLoadingSuggestion: false,
         });
     },
 
-    setInsight: (insight) => set({ insight }),
+    addInsight: (insight) =>
+        set((state) => ({ insights: [...state.insights, insight] })),
 
     setIsGeneratingInsight: (v) => set({ isGeneratingInsight: v }),
 
@@ -76,8 +85,19 @@ export const useEntryEditorStore = create<
 
     setIsLoadingSuggestion: (v) => set({ isLoadingSuggestion: v }),
 
+    setReflectionContext: (ctx) => set({ reflectionContext: ctx }),
+
+    setSource: (sourceType, sourceId) => set({ sourceType, sourceId }),
+
     saveNow: async () => {
-        const { entryId, content, savedContent, isSaving } = get();
+        const {
+            entryId,
+            content,
+            savedContent,
+            isSaving,
+            sourceType,
+            sourceId,
+        } = get();
 
         if (isSaving || content === savedContent) {
             return { entryId, isNew: false };
@@ -87,7 +107,11 @@ export const useEntryEditorStore = create<
 
         try {
             if (!entryId) {
-                const result = await createEntryAction(content);
+                const result = await createEntryAction(
+                    content,
+                    sourceType,
+                    sourceId,
+                );
                 if (isServiceError(result)) {
                     set({ isSaving: false, saveError: result.error });
                     return { entryId: null, isNew: false };

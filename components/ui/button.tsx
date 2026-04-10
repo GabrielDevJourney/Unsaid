@@ -26,6 +26,13 @@ const buttonVariants = cva(
                     "ring-4 ring-zinc-300",
                     "cursor-pointer",
                 ),
+                "sunrise-sm": cn(
+                    "bg-slate-400 text-white",
+                    "bg-[radial-gradient(circle_at_80%_200%,rgba(247,107,21,0.8)_0%,rgba(255,115,1,0.5)_30%,transparent_70%)]",
+                    "hover:bg-slate-400 hover:text-white",
+                    "ring-2 ring-zinc-300",
+                    "cursor-pointer",
+                ),
                 filter: "",
             },
             size: {
