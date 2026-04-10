@@ -1,6 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
     Entry,
+    EntrySourceRow,
+    EntryWithAllInsights,
     EntryWithInsight,
     EntryWithSimilarity,
     InsertEntryData,
@@ -9,6 +11,7 @@ import type {
 import { encrypt } from "../crypto";
 import {
     toEntry,
+    toEntryWithAllInsights,
     toEntryWithInsight,
     toEntryWithSimilarity,
 } from "./transformers";
@@ -98,16 +101,6 @@ export const getEntriesByIds = async (
  * Joins entry_insights so the service layer can decrypt insight prose.
  * RLS scopes results to the authenticated user automatically.
  */
-type EntrySourceRow = {
-    id: string;
-    word_count: number;
-    created_at: string;
-    entry_insights: {
-        encrypted_content: string | null;
-        content_iv: string | null;
-        content_tag: string | null;
-    }[];
-};
 
 export const getEntriesBySource = async (
     supabase: SupabaseClient,
@@ -203,7 +196,7 @@ export const getEntriesWithInsights = async (
         `
         id, user_id, encrypted_content, content_iv, content_tag, word_count, created_at, updated_at,
         entry_insights (
-            id, encrypted_content, content_iv, content_tag, tags, insight_count, created_at
+            id, encrypted_content, content_iv, content_tag, tags, generation_order, content_before_length, created_at
         )
         `,
     );
@@ -220,9 +213,10 @@ export const getEntriesWithInsights = async (
 };
 
 /**
- * Get paginated entries WITH their insights (1:1 relation).
+ * Get paginated entries WITH their latest insight.
  * Uses Supabase foreign table join to avoid N+1 queries.
  * Decrypts both entry content and insight content.
+ * Returns only the latest insight per entry (for list views, cards).
  */
 export const getEntriesWithInsightsPaginated = async (
     supabase: SupabaseClient,
@@ -240,7 +234,7 @@ export const getEntriesWithInsightsPaginated = async (
         `
         id, user_id, encrypted_content, content_iv, content_tag, word_count, created_at, updated_at,
         entry_insights (
-            id, encrypted_content, content_iv, content_tag, tags, insight_count, created_at
+            id, encrypted_content, content_iv, content_tag, tags, generation_order, content_before_length, created_at
         )
         `,
         { count: "exact" },
@@ -270,9 +264,8 @@ export const getEntriesWithInsightsPaginated = async (
 };
 
 /**
- * Get single entry WITH its insight.
- * Uses Supabase foreign table join.
- * Decrypts both entry content and insight content.
+ * Get single entry WITH its latest insight.
+ * Returns latest insight only (for general use, not editor).
  */
 export const getEntryWithInsightById = async (
     supabase: SupabaseClient,
@@ -284,7 +277,7 @@ export const getEntryWithInsightById = async (
             `
             id, user_id, encrypted_content, content_iv, content_tag, word_count, created_at, updated_at,
             entry_insights (
-                id, encrypted_content, content_iv, content_tag, tags, insight_count, created_at
+                id, encrypted_content, content_iv, content_tag, tags, generation_order, content_before_length, created_at
             )
             `,
         )
@@ -296,6 +289,38 @@ export const getEntryWithInsightById = async (
     }
 
     return { data: toEntryWithInsight(entryRow), error: null };
+};
+
+/**
+ * Get single entry WITH all insight generations, ordered ASC.
+ * Used by the editor to reconstruct segment layout on reload.
+ */
+export const getEntryWithAllInsightsById = async (
+    supabase: SupabaseClient,
+    entryId: string,
+): Promise<{ data: EntryWithAllInsights | null; error: Error | null }> => {
+    const { data: entryRow, error } = await supabase
+        .from("entries")
+        .select(
+            `
+            id, user_id, encrypted_content, content_iv, content_tag, word_count, created_at, updated_at,
+            entry_insights (
+                id, encrypted_content, content_iv, content_tag, tags, generation_order, content_before_length, created_at
+            )
+            `,
+        )
+        .eq("id", entryId)
+        .order("generation_order", {
+            ascending: true,
+            referencedTable: "entry_insights",
+        })
+        .single();
+
+    if (error || !entryRow) {
+        return { data: null, error };
+    }
+
+    return { data: toEntryWithAllInsights(entryRow), error: null };
 };
 
 /**
@@ -376,52 +401,31 @@ export const deleteEntry = async (
 };
 
 /**
- * Decrement the total_entries count in user_progress.
- * Floors at 0 to guard against data inconsistencies.
+ * Atomically decrement total_entries in user_progress via RPC.
+ * Floors at 0 in SQL — no race condition vs the old read-then-write pattern.
  */
 export const decrementUserProgress = async (
     supabase: SupabaseClient,
     userId: string,
-) => {
-    const { data: progress } = await supabase
-        .from("user_progress")
-        .select("total_entries")
-        .eq("user_id", userId)
-        .single();
-
-    const newTotal = Math.max(0, (progress?.total_entries ?? 0) - 1);
-
-    return supabase
-        .from("user_progress")
-        .update({ total_entries: newTotal })
-        .eq("user_id", userId)
-        .select()
-        .single();
+): Promise<{ error: Error | null }> => {
+    const { error } = await supabase.rpc("decrement_entry_count", {
+        uid: userId,
+    });
+    return { error: error as Error | null };
 };
 
 /**
- * Increment the total_entries count in user_progress.
- * The row is guaranteed to exist — created by the Clerk webhook on sign-up.
- * Uses UPDATE (not upsert) so the INSERT RLS policy (service_role only) is never triggered.
+ * Atomically increment total_entries in user_progress via RPC.
+ * Single round trip — no race condition vs the old read-then-write pattern.
  */
 export const incrementUserProgress = async (
     supabase: SupabaseClient,
     userId: string,
-) => {
-    const { data: progress } = await supabase
-        .from("user_progress")
-        .select("total_entries")
-        .eq("user_id", userId)
-        .single();
-
-    const newTotal = (progress?.total_entries ?? 0) + 1;
-
-    return supabase
-        .from("user_progress")
-        .update({ total_entries: newTotal })
-        .eq("user_id", userId)
-        .select()
-        .single();
+): Promise<{ error: Error | null }> => {
+    const { error } = await supabase.rpc("increment_entry_count", {
+        uid: userId,
+    });
+    return { error: error as Error | null };
 };
 
 /**

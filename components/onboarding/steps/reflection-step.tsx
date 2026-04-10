@@ -85,8 +85,8 @@ const ReflectionStep = ({
     const contentRef = useRef(initialContent ?? "");
 
     const loadExistingEntry = useEntryEditorStore((s) => s.loadExistingEntry);
-    const storeInsight = useEntryEditorStore((s) => s.insight);
-    const currentTags = (storeInsight?.tags ?? []) as InsightTagType[];
+    const storeInsights = useEntryEditorStore((s) => s.insights);
+    const currentTags = (storeInsights.at(-1)?.tags ?? []) as InsightTagType[];
 
     // Restore entry editor store when navigating back to an already-completed step
     useEffect(() => {
@@ -97,13 +97,17 @@ const ReflectionStep = ({
             !initialInsight
         )
             return;
-        loadExistingEntry(initialEntryId, initialContent, {
-            id: "",
-            content: initialInsight.text,
-            tags: initialInsight.tags,
-            insightCount: 1,
-            createdAt: new Date().toISOString(),
-        });
+        loadExistingEntry(initialEntryId, initialContent, [
+            {
+                id: "",
+                content: initialInsight.text,
+                tags: initialInsight.tags,
+                insightCount: 1,
+                generationOrder: 1,
+                contentBeforeLength: null,
+                createdAt: new Date().toISOString(),
+            },
+        ]);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
         initialContent,
@@ -143,13 +147,17 @@ const ReflectionStep = ({
 
             // Bootstrap the entry editor store so InsightDisplay works natively
             if (entryIdRef.current) {
-                loadExistingEntry(entryIdRef.current, contentRef.current, {
-                    id: "",
-                    content: done.insight,
-                    tags: done.tags ?? [],
-                    insightCount: newCount,
-                    createdAt: new Date().toISOString(),
-                });
+                loadExistingEntry(entryIdRef.current, contentRef.current, [
+                    {
+                        id: "",
+                        content: done.insight,
+                        tags: done.tags ?? [],
+                        insightCount: newCount,
+                        generationOrder: newCount,
+                        contentBeforeLength: null,
+                        createdAt: new Date().toISOString(),
+                    },
+                ]);
             }
 
             setPhase("revealed");
@@ -307,7 +315,22 @@ const ReflectionStep = ({
                             isNewEntry={false}
                             onDismiss={() => {}}
                             initialContent={content}
-                            initialInsight={savedInsight?.text ?? null}
+                            initialInsights={
+                                savedInsight
+                                    ? [
+                                          {
+                                              id: "",
+                                              content: savedInsight.text,
+                                              tags: savedInsight.tags,
+                                              insightCount: 1,
+                                              generationOrder: 1,
+                                              contentBeforeLength: null,
+                                              createdAt:
+                                                  new Date().toISOString(),
+                                          },
+                                      ]
+                                    : []
+                            }
                         />
                     </div>
                     <div className="flex items-center justify-between">
