@@ -55,7 +55,10 @@ const NotificationsSection = ({ preferences }: NotificationsSectionProps) => {
     };
 
     return (
-        <section className="flex flex-col gap-6">
+        <section
+            id="notifications"
+            className="scroll-mt-24 flex flex-col gap-6"
+        >
             <div className="flex flex-col gap-2">
                 <h2 className="pl-2 text-2xl font-medium font-serif italic text-neutral-500">
                     Notifications
