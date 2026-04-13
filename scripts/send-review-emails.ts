@@ -10,12 +10,7 @@ import { config } from "dotenv";
 
 config({ path: ".env.local" });
 
-type TemplateKey =
-    | "writing"
-    | "weekly"
-    | "trial"
-    | "progress"
-    | "waitlist";
+type TemplateKey = "writing" | "weekly" | "trial" | "progress" | "waitlist";
 
 const ALL_TEMPLATES: TemplateKey[] = [
     "writing",
