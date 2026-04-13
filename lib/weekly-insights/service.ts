@@ -1,10 +1,10 @@
 import type { PostgrestError, SupabaseClient } from "@supabase/supabase-js";
 import { generateWeeklyInsight } from "@/lib/ai/generate-weekly-insight";
 import { MIN_ENTRIES_FOR_WEEKLY_INSIGHT } from "@/lib/constants";
+import type { PatternTypeCode } from "@/lib/constants/pattern-types";
 import { getWeekRange, getWeekStart } from "@/lib/date-utils";
 import { sendWeeklyPatternsEmail } from "@/lib/email/service";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
-import type { PatternTypeCode } from "@/lib/constants/pattern-types";
 import type {
     CreateWeeklyInsightPayload,
     ServiceResult,

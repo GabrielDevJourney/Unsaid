@@ -20,8 +20,8 @@ import {
     editorialQuoteStyle,
     emailStyles,
     FeatureIcon,
-    heroBodyStyle,
     helperTextStyle,
+    heroBodyStyle,
     PrimaryCta,
     ProgressBar,
 } from "@/emails/components/email-ui";

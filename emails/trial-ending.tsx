@@ -9,8 +9,8 @@ import {
     EmailShell,
     EmailStatsRow,
     emailStyles,
-    heroBodyStyle,
     helperTextStyle,
+    heroBodyStyle,
     PrimaryCta,
 } from "@/emails/components/email-ui";
 

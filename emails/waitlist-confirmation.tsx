@@ -1,4 +1,11 @@
-import { Body, Hr, Html, Preview, Section, Text } from "@react-email/components";
+import {
+    Body,
+    Hr,
+    Html,
+    Preview,
+    Section,
+    Text,
+} from "@react-email/components";
 import { EmailHead } from "@/emails/components/email-head";
 import {
     bodyCopyStyle,
@@ -24,18 +31,15 @@ interface WaitlistConfirmationEmailProps {
 const valuePillars = [
     {
         title: "Patterns you can't see",
-        detail:
-            "Recurring themes and emotional triggers surface from your own words, not generic prompts.",
+        detail: "Recurring themes and emotional triggers surface from your own words, not generic prompts.",
     },
     {
         title: "Progress you can measure",
-        detail:
-            "It tracks whether your thinking is shifting or you're circling the same thing again.",
+        detail: "It tracks whether your thinking is shifting or you're circling the same thing again.",
     },
     {
         title: "Questions you're avoiding",
-        detail:
-            "Unsaid asks the uncomfortable question that actually moves the work forward.",
+        detail: "Unsaid asks the uncomfortable question that actually moves the work forward.",
     },
 ];
 
@@ -117,35 +121,36 @@ const WaitlistConfirmationEmail = ({
                                                 padding: "14px 18px",
                                             }}
                                         >
-                                        <Text
-                                            style={{
-                                                color: "#435063",
-                                                fontSize: "16px",
-                                                lineHeight: "1.4",
-                                                fontWeight: 700,
-                                                margin: "0 0 5px",
-                                            }}
-                                        >
-                                            {pillar.title}
-                                        </Text>
-                                        <Text
-                                            style={{
-                                                ...bodyCopyStyle,
-                                                color: "#78736c",
-                                                fontSize: "14px",
-                                                lineHeight: "1.55",
-                                            }}
-                                        >
-                                            {pillar.detail}
-                                        </Text>
-                                        {index !== valuePillars.length - 1 ? (
-                                            <Hr
+                                            <Text
                                                 style={{
-                                                    ...sectionDividerStyle,
-                                                    margin: "14px 0 0",
+                                                    color: "#435063",
+                                                    fontSize: "16px",
+                                                    lineHeight: "1.4",
+                                                    fontWeight: 700,
+                                                    margin: "0 0 5px",
                                                 }}
-                                            />
-                                        ) : null}
+                                            >
+                                                {pillar.title}
+                                            </Text>
+                                            <Text
+                                                style={{
+                                                    ...bodyCopyStyle,
+                                                    color: "#78736c",
+                                                    fontSize: "14px",
+                                                    lineHeight: "1.55",
+                                                }}
+                                            >
+                                                {pillar.detail}
+                                            </Text>
+                                            {index !==
+                                            valuePillars.length - 1 ? (
+                                                <Hr
+                                                    style={{
+                                                        ...sectionDividerStyle,
+                                                        margin: "14px 0 0",
+                                                    }}
+                                                />
+                                            ) : null}
                                         </Section>
                                     ))}
                                 </Section>
