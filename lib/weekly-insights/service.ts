@@ -4,6 +4,7 @@ import { MIN_ENTRIES_FOR_WEEKLY_INSIGHT } from "@/lib/constants";
 import { getWeekRange, getWeekStart } from "@/lib/date-utils";
 import { sendWeeklyPatternsEmail } from "@/lib/email/service";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
+import type { PatternTypeCode } from "@/lib/constants/pattern-types";
 import type {
     CreateWeeklyInsightPayload,
     ServiceResult,
@@ -222,12 +223,8 @@ const processUserWeeklyInsight = async (
 const sendWeeklyInsightEmail = async (
     supabase: ReturnType<typeof createSupabaseAdmin>,
     userId: string,
-    patterns: Array<{ title: string }>,
+    _patterns: WeeklyInsightPattern[],
 ): Promise<{ sent: boolean; error?: string }> => {
-    if (patterns.length === 0) {
-        return { sent: false };
-    }
-
     try {
         const { data: user } = await supabase
             .from("users")
@@ -243,12 +240,57 @@ const sendWeeklyInsightEmail = async (
             return { sent: false };
         }
 
-        const patternPreviews = patterns.slice(0, 3).map((p) => p.title);
+        const [progressResult, insightsResult] = await Promise.all([
+            supabase
+                .from("user_progress")
+                .select("total_entries")
+                .eq("user_id", userId)
+                .single(),
+            supabase
+                .from("entry_insights")
+                .select("id", { count: "exact", head: true })
+                .eq("user_id", userId),
+        ]);
+
+        const currentWeekStart = getWeekStart(new Date());
+        const { data: weeklyInsight } = await supabase
+            .from("weekly_insights")
+            .select("id")
+            .eq("user_id", userId)
+            .eq("week_start", currentWeekStart)
+            .single();
+
+        if (!weeklyInsight?.id) {
+            return { sent: false, error: "Weekly insight not found" };
+        }
+
+        const { data: patternRows, error: patternsError } = await supabase
+            .from("weekly_insight_patterns")
+            .select("title, pattern_type, created_at")
+            .eq("weekly_insight_id", weeklyInsight.id)
+            .order("created_at", { ascending: false })
+            .limit(3);
+
+        if (patternsError) {
+            return { sent: false, error: patternsError.message };
+        }
+
+        if (!patternRows || patternRows.length === 0) {
+            return { sent: false };
+        }
+
         const emailResult = await sendWeeklyPatternsEmail(
             user.email,
             user.username,
-            patterns.length,
-            patternPreviews,
+            {
+                patternCount: patternRows.length,
+                entryCount: progressResult.data?.total_entries ?? 0,
+                insightsCount: insightsResult.count ?? 0,
+                patterns: patternRows.map((pattern) => ({
+                    title: pattern.title,
+                    patternType: pattern.pattern_type as PatternTypeCode,
+                })),
+            },
         );
 
         return {

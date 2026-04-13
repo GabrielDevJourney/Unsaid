@@ -1,9 +1,10 @@
 import type { ReactElement } from "react";
 import { Resend } from "resend";
+import type { PatternTypeCode } from "@/lib/constants/pattern-types";
 
 const FROM_EMAIL = "Unsaid <noreply@emails.byunsaid.com>";
-const APP_URL =
-    process.env.NEXT_PUBLIC_APP_URL ?? "https://emails.byunsaid.com";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://byunsaid.com";
+const NOTIFICATION_SETTINGS_URL = `${APP_URL}/settings#notifications`;
 
 interface SendEmailParams {
     to: string;
@@ -71,7 +72,11 @@ export const sendTrialEndingEmail = async (
     to: string,
     userName: string,
     daysRemaining: number,
-    stats: { entriesWritten: number; insightsReceived: number },
+    stats: {
+        entriesWritten: number;
+        patternsFound: number;
+        insightsReceived: number;
+    },
 ): Promise<{ success: boolean; error?: string }> => {
     const { default: TrialEndingEmail } = await import("@/emails/trial-ending");
 
@@ -82,8 +87,11 @@ export const sendTrialEndingEmail = async (
             userName,
             daysRemaining,
             entriesWritten: stats.entriesWritten,
+            patternsFound: stats.patternsFound,
             insightsReceived: stats.insightsReceived,
             upgradeUrl: `${APP_URL}/settings`,
+            recipientEmail: to,
+            unsubscribeUrl: NOTIFICATION_SETTINGS_URL,
         }),
     });
 };
@@ -94,8 +102,16 @@ export const sendTrialEndingEmail = async (
 export const sendWeeklyPatternsEmail = async (
     to: string,
     userName: string,
-    patternCount: number,
-    patternPreviews: string[],
+    payload: {
+        patternCount: number;
+        entryCount: number;
+        insightsCount: number;
+        patterns: Array<{
+            title: string;
+            patternType: PatternTypeCode;
+        }>;
+        patternsIconUrl?: string;
+    },
 ): Promise<{ success: boolean; error?: string }> => {
     const { default: WeeklyPatternsEmail } = await import(
         "@/emails/weekly-patterns"
@@ -106,9 +122,16 @@ export const sendWeeklyPatternsEmail = async (
         subject: "Your weekly patterns are ready.",
         react: WeeklyPatternsEmail({
             userName,
-            patternCount,
-            patternPreviews,
+            patternCount: payload.patternCount,
+            entryCount: payload.entryCount,
+            insightsCount: payload.insightsCount,
+            patterns: payload.patterns,
+            patternsIconUrl:
+                payload.patternsIconUrl ??
+                `${APP_URL}/emails/dashboard-square-01.png`,
             viewUrl: `${APP_URL}/patterns`,
+            recipientEmail: to,
+            unsubscribeUrl: NOTIFICATION_SETTINGS_URL,
         }),
     });
 };
@@ -120,7 +143,14 @@ export const sendProgressCheckEmail = async (
     to: string,
     userName: string,
     headline: string,
-    entryCount: number,
+    payload: {
+        entryCount: number;
+        patternsFound: number;
+        insightsGiven: number;
+        nextMilestone: number;
+        progressLabel: string;
+        fillPct: number;
+    },
 ): Promise<{ success: boolean; error?: string }> => {
     const { default: ProgressCheckEmail } = await import(
         "@/emails/progress-check"
@@ -132,8 +162,46 @@ export const sendProgressCheckEmail = async (
         react: ProgressCheckEmail({
             userName,
             headline,
-            entryCount,
+            entryCount: payload.entryCount,
+            patternsFound: payload.patternsFound,
+            insightsGiven: payload.insightsGiven,
+            nextMilestone: payload.nextMilestone,
+            progressLabel: payload.progressLabel,
+            fillPct: payload.fillPct,
             viewUrl: `${APP_URL}/progress`,
+            activityIconUrl: `${APP_URL}/emails/activity-01.png`,
+            recipientEmail: to,
+            unsubscribeUrl: NOTIFICATION_SETTINGS_URL,
+        }),
+    });
+};
+
+/**
+ * Send writing reminder email.
+ */
+export const sendWritingReminderEmail = async (
+    to: string,
+    userName: string,
+    daysSinceLastEntry: number | null,
+): Promise<{ success: boolean; error?: string }> => {
+    const { default: WritingReminderEmail } = await import(
+        "@/emails/writing-reminder"
+    );
+
+    const subject =
+        daysSinceLastEntry !== null
+            ? `You haven't written in ${daysSinceLastEntry} day${daysSinceLastEntry === 1 ? "" : "s"}.`
+            : "You haven't written yet.";
+
+    return sendEmail({
+        to,
+        subject,
+        react: WritingReminderEmail({
+            userName,
+            daysSinceLastEntry,
+            writeUrl: `${APP_URL}`,
+            recipientEmail: to,
+            unsubscribeUrl: NOTIFICATION_SETTINGS_URL,
         }),
     });
 };
@@ -143,6 +211,7 @@ export const sendProgressCheckEmail = async (
  */
 export const sendWaitlistConfirmationEmail = async (
     to: string,
+    waitlistPosition: number,
 ): Promise<{ success: boolean; error?: string }> => {
     const { default: WaitlistConfirmationEmail } = await import(
         "@/emails/waitlist-confirmation"
@@ -151,6 +220,10 @@ export const sendWaitlistConfirmationEmail = async (
     return sendEmail({
         to,
         subject: "You're on the Unsaid waitlist",
-        react: WaitlistConfirmationEmail({ email: to }),
+        react: WaitlistConfirmationEmail({
+            email: to,
+            waitlistPosition,
+            unsubscribeUrl: "mailto:hello@byunsaid.com?subject=Unsubscribe",
+        }),
     });
 };

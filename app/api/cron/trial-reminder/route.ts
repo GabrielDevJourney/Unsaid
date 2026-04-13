@@ -79,16 +79,35 @@ export const GET = async (req: NextRequest) => {
                 continue;
             }
 
-            const [entriesResult, insightsResult] = await Promise.all([
-                supabase
-                    .from("entries")
+            const [entriesResult, insightsResult, weeklyInsightsResult] =
+                await Promise.all([
+                    supabase
+                        .from("entries")
+                        .select("id", { count: "exact", head: true })
+                        .eq("user_id", trial.user_id),
+                    supabase
+                        .from("entry_insights")
+                        .select("id", { count: "exact", head: true })
+                        .eq("user_id", trial.user_id),
+                    supabase
+                        .from("weekly_insights")
+                        .select("id")
+                        .eq("user_id", trial.user_id),
+                ]);
+
+            const weeklyInsightIds =
+                weeklyInsightsResult.data?.map((insight) => insight.id) ?? [];
+
+            let patternsFound = 0;
+
+            if (weeklyInsightIds.length > 0) {
+                const patternsResult = await supabase
+                    .from("weekly_insight_patterns")
                     .select("id", { count: "exact", head: true })
-                    .eq("user_id", trial.user_id),
-                supabase
-                    .from("entry_insights")
-                    .select("id", { count: "exact", head: true })
-                    .eq("user_id", trial.user_id),
-            ]);
+                    .in("weekly_insight_id", weeklyInsightIds);
+
+                patternsFound = patternsResult.count ?? 0;
+            }
 
             const emailResult = await sendTrialEndingEmail(
                 user.email,
@@ -96,6 +115,7 @@ export const GET = async (req: NextRequest) => {
                 DAYS_BEFORE_EXPIRY,
                 {
                     entriesWritten: entriesResult.count ?? 0,
+                    patternsFound,
                     insightsReceived: insightsResult.count ?? 0,
                 },
             );
