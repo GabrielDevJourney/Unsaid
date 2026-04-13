@@ -1,5 +1,3 @@
-import { Share04Icon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import {
     Button,
     Column,
@@ -21,7 +19,8 @@ const SITE_URL = "https://byunsaid.com";
 const INSTAGRAM_URL = `${SITE_URL}`;
 const LINKEDIN_URL = `${SITE_URL}`;
 const SHARE_URL = SITE_URL;
-const LOGO_URL = `${SITE_URL}/logo-black-bg.svg`;
+const LOGO_URL = `${SITE_URL}/emails/logo-emails.png`;
+const SHARE_ICON_URL = `${SITE_URL}/emails/share-04.png`;
 const HERO_BG_URL = `${SITE_URL}/emails/hero-bg.jpg`;
 const EMAIL_WIDTH = 640;
 
@@ -373,11 +372,16 @@ export function EmailShell({
                             lineHeight: 0,
                         }}
                     >
-                        <HugeiconsIcon
-                            icon={Share04Icon}
-                            strokeWidth={1.7}
-                            size={16}
-                            color={palette.mutedText}
+                        <Img
+                            src={SHARE_ICON_URL}
+                            alt=""
+                            width="16"
+                            height="16"
+                            style={{
+                                display: "block",
+                                width: "16px",
+                                height: "16px",
+                            }}
                         />
                     </span>
                     <span style={{ verticalAlign: "middle" }}>
