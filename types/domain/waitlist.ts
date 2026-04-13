@@ -8,4 +8,5 @@ export type WaitlistInsert = TablesInsert<"waitlist">;
 export interface WaitlistSignupResult {
     message: string;
     isExisting: boolean;
+    position: number | null;
 }

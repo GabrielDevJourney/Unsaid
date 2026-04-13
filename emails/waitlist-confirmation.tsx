@@ -1,170 +1,196 @@
-import {
-    Body,
-    Container,
-    Hr,
-    Html,
-    Img,
-    Link,
-    Preview,
-    Section,
-    Text,
-} from "@react-email/components";
+import { Body, Hr, Html, Preview, Section, Text } from "@react-email/components";
 import { EmailHead } from "@/emails/components/email-head";
-
-const LOGO_URL = "https://byunsaid.com/logo-white-bg.svg";
+import {
+    bodyCopyStyle,
+    bodySectionStyle,
+    bodyStrongStyle,
+    cardStyle,
+    EmailHero,
+    EmailInnerCard,
+    EmailShell,
+    editorialQuoteStyle,
+    emailStyles,
+    sectionDividerStyle,
+    splitLabelStyle,
+    WaitlistBadge,
+} from "@/emails/components/email-ui";
 
 interface WaitlistConfirmationEmailProps {
     email?: string;
+    waitlistPosition?: number | null;
+    unsubscribeUrl?: string;
 }
+
+const valuePillars = [
+    {
+        title: "Patterns you can't see",
+        detail:
+            "Recurring themes and emotional triggers surface from your own words, not generic prompts.",
+    },
+    {
+        title: "Progress you can measure",
+        detail:
+            "It tracks whether your thinking is shifting or you're circling the same thing again.",
+    },
+    {
+        title: "Questions you're avoiding",
+        detail:
+            "Unsaid asks the uncomfortable question that actually moves the work forward.",
+    },
+];
 
 const WaitlistConfirmationEmail = ({
     email = "you@example.com",
+    waitlistPosition = 247,
+    unsubscribeUrl = "mailto:hello@byunsaid.com?subject=Unsubscribe",
 }: WaitlistConfirmationEmailProps) => {
     return (
         <Html>
             <EmailHead />
             <Preview>You're on the list. We'll be in touch.</Preview>
-            <Body style={main}>
-                <Container style={container}>
-                    <div style={inner}>
-                        <div style={logoWrap}>
-                            <Img
-                                src={LOGO_URL}
-                                width="38"
-                                height="38"
-                                alt="unsaid"
-                                style={{ display: "block", margin: "0 auto" }}
-                            />
-                        </div>
+            <Body style={emailStyles.mainStyle}>
+                <EmailShell
+                    recipientEmail={email}
+                    unsubscribeUrl={unsubscribeUrl}
+                    legalKind="waitlist"
+                >
+                    <EmailInnerCard>
+                        <EmailHero
+                            title="You're in!"
+                            description={
+                                <>
+                                    Thanks for joining the waitlist. You&apos;ve
+                                    taken the first step toward understanding{" "}
+                                    <strong
+                                        style={{
+                                            ...bodyStrongStyle,
+                                            color: emailStyles.palette.heroText,
+                                        }}
+                                    >
+                                        the patterns that shape your life.
+                                    </strong>
+                                </>
+                            }
+                            badge={
+                                waitlistPosition ? (
+                                    <WaitlistBadge
+                                        position={waitlistPosition}
+                                    />
+                                ) : null
+                            }
+                            style={{ padding: "44px 24px 40px" }}
+                        />
 
-                        <Text style={heading}>You're in.</Text>
+                        <Section
+                            style={{
+                                ...bodySectionStyle,
+                                backgroundColor: "#F2F2F2",
+                                padding: "0 22px 24px",
+                            }}
+                        >
+                            <Section style={{ padding: "24px 0 0" }}>
+                                <Text
+                                    style={{
+                                        ...editorialQuoteStyle,
+                                        maxWidth: "360px",
+                                        margin: "0 auto",
+                                    }}
+                                >
+                                    Unsaid has been paying attention. It spots
+                                    what repeats, what shifts, and what
+                                    you&apos;ve been avoiding.
+                                </Text>
+                            </Section>
 
-                        <Text style={paragraph}>
-                            Thanks for joining the waitlist. You've taken the
-                            first step toward understanding the patterns that
-                            shape your life.
-                        </Text>
+                            <Section style={{ padding: "20px 0 0" }}>
+                                <Section
+                                    style={{
+                                        ...cardStyle,
+                                        backgroundColor: "#ffffff",
+                                        padding: "6px 0",
+                                    }}
+                                >
+                                    {valuePillars.map((pillar, index) => (
+                                        <Section
+                                            key={pillar.title}
+                                            style={{
+                                                padding: "14px 18px",
+                                            }}
+                                        >
+                                        <Text
+                                            style={{
+                                                color: "#435063",
+                                                fontSize: "16px",
+                                                lineHeight: "1.4",
+                                                fontWeight: 700,
+                                                margin: "0 0 5px",
+                                            }}
+                                        >
+                                            {pillar.title}
+                                        </Text>
+                                        <Text
+                                            style={{
+                                                ...bodyCopyStyle,
+                                                color: "#78736c",
+                                                fontSize: "14px",
+                                                lineHeight: "1.55",
+                                            }}
+                                        >
+                                            {pillar.detail}
+                                        </Text>
+                                        {index !== valuePillars.length - 1 ? (
+                                            <Hr
+                                                style={{
+                                                    ...sectionDividerStyle,
+                                                    margin: "14px 0 0",
+                                                }}
+                                            />
+                                        ) : null}
+                                        </Section>
+                                    ))}
+                                </Section>
+                            </Section>
 
-                        <Text style={paragraph}>
-                            Unsaid is a journaling app that doesn't sugarcoat.
-                            It catches the patterns you miss, reflects the
-                            shifts you avoid, and helps you own your evolution
-                            over time.
-                        </Text>
-
-                        <Section style={highlightBox}>
-                            <Text style={highlightText}>
-                                We're building something for the unflinching —
-                                those ready to see themselves clearly.
-                            </Text>
+                            <Section style={{ padding: "24px 0 0" }}>
+                                <Hr style={sectionDividerStyle} />
+                            </Section>
                         </Section>
 
-                        <Text style={paragraph}>
-                            When we launch, you'll be the first to know. No
-                            spam. Just one email when the doors open.
-                        </Text>
-
-                        <Hr style={hr} />
-
-                        <Text style={footer}>
-                            This email was sent to{" "}
-                            <Link href={`mailto:${email}`} style={link}>
-                                {email}
-                            </Link>{" "}
-                            because you signed up for the Unsaid waitlist.
-                        </Text>
-
-                        <Text style={tagline}>The truth has no filter.</Text>
-                    </div>
-                </Container>
+                        <Section
+                            style={{
+                                backgroundColor: "#F2F2F2",
+                                padding: "24px 22px 24px",
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    ...splitLabelStyle,
+                                    textAlign: "center",
+                                    fontSize: "18px",
+                                    color: "#2b333e",
+                                }}
+                            >
+                                When we launch, you&apos;ll be the first to
+                                know. No spam.
+                            </Text>
+                            <Text
+                                style={{
+                                    ...splitLabelStyle,
+                                    textAlign: "center",
+                                    fontSize: "18px",
+                                    color: "#425369",
+                                    fontWeight: 700,
+                                    marginTop: "6px",
+                                }}
+                            >
+                                Just one email when the doors open.
+                            </Text>
+                        </Section>
+                    </EmailInnerCard>
+                </EmailShell>
             </Body>
         </Html>
     );
 };
 
 export default WaitlistConfirmationEmail;
-
-const main = {
-    backgroundColor: "#f2f2f2",
-    fontFamily:
-        'Satoshi, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-};
-
-const container = {
-    backgroundColor: "#fcfcfc",
-    margin: "0 auto",
-    maxWidth: "520px",
-    borderRadius: "14px",
-    border: "1px solid #e5e5e5",
-    overflow: "hidden",
-};
-
-const inner = {
-    padding: "36px 32px 40px",
-};
-
-const logoWrap = {
-    textAlign: "center" as const,
-    margin: "0 0 32px",
-};
-
-const heading = {
-    color: "#52525b",
-    fontSize: "28px",
-    fontWeight: "400",
-    fontStyle: "italic",
-    fontFamily: "'Libre Baskerville', Georgia, serif",
-    lineHeight: "1.2",
-    margin: "0 0 24px",
-};
-
-const paragraph = {
-    color: "#737373",
-    fontSize: "15px",
-    lineHeight: "1.7",
-    margin: "0 0 20px",
-};
-
-const highlightBox = {
-    backgroundColor: "#f2f2f2",
-    borderRadius: "10px",
-    border: "1px solid #e5e5e5",
-    padding: "16px 20px",
-    margin: "28px 0",
-};
-
-const highlightText = {
-    color: "#52525b",
-    fontSize: "15px",
-    fontStyle: "italic",
-    fontFamily: "'Libre Baskerville', Georgia, serif",
-    lineHeight: "1.7",
-    margin: "0",
-};
-
-const hr = {
-    borderColor: "#e5e5e5",
-    margin: "28px 0 20px",
-};
-
-const footer = {
-    color: "#a1a1aa",
-    fontSize: "13px",
-    lineHeight: "1.6",
-    margin: "0 0 16px",
-};
-
-const link = {
-    color: "#52525b",
-    textDecoration: "underline",
-};
-
-const tagline = {
-    color: "#71717a",
-    fontSize: "14px",
-    fontStyle: "italic",
-    fontFamily: "'Libre Baskerville', Georgia, serif",
-    textAlign: "center" as const,
-    margin: "8px 0 0",
-    letterSpacing: "0.02em",
-};
