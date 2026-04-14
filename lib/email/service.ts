@@ -10,6 +10,7 @@ interface SendEmailParams {
     to: string;
     subject: string;
     react: ReactElement;
+    templateName: string;
 }
 
 /**
@@ -39,11 +40,12 @@ export const sendEmail = async ({
     to,
     subject,
     react,
+    templateName,
 }: SendEmailParams): Promise<{ success: boolean; error?: string }> => {
     try {
         const resend = getResend();
 
-        const { error } = await resend.emails.send({
+        const { data, error } = await resend.emails.send({
             from: FROM_EMAIL,
             to,
             subject,
@@ -51,13 +53,30 @@ export const sendEmail = async ({
         });
 
         if (error) {
-            console.error("Email send error:", error);
+            console.error("Email send error:", {
+                templateName,
+                to,
+                subject,
+                error: error.message,
+            });
             return { success: false, error: error.message };
         }
 
+        console.info("Email sent:", {
+            templateName,
+            to,
+            subject,
+            messageId: data?.id ?? null,
+        });
+
         return { success: true };
     } catch (err) {
-        console.error("Email send failed:", err);
+        console.error("Email send failed:", {
+            templateName,
+            to,
+            subject,
+            error: err instanceof Error ? err.message : "Unknown error",
+        });
         return {
             success: false,
             error: err instanceof Error ? err.message : "Unknown error",
@@ -83,6 +102,7 @@ export const sendTrialEndingEmail = async (
     return sendEmail({
         to,
         subject: `Your trial ends in ${daysRemaining} day${daysRemaining === 1 ? "" : "s"}`,
+        templateName: "trial-ending",
         react: TrialEndingEmail({
             userName,
             daysRemaining,
@@ -120,6 +140,7 @@ export const sendWeeklyPatternsEmail = async (
     return sendEmail({
         to,
         subject: "Your weekly patterns are ready.",
+        templateName: "weekly-patterns",
         react: WeeklyPatternsEmail({
             userName,
             patternCount: payload.patternCount,
@@ -128,7 +149,7 @@ export const sendWeeklyPatternsEmail = async (
             patterns: payload.patterns,
             patternsIconUrl:
                 payload.patternsIconUrl ??
-                `${APP_URL}/emails/dashboard-square-01.png`,
+                `${APP_URL}/emails/patterns-header-dot-not.png`,
             viewUrl: `${APP_URL}/patterns`,
             recipientEmail: to,
             unsubscribeUrl: NOTIFICATION_SETTINGS_URL,
@@ -159,6 +180,7 @@ export const sendProgressCheckEmail = async (
     return sendEmail({
         to,
         subject: "Your progress check is ready.",
+        templateName: "progress-check",
         react: ProgressCheckEmail({
             userName,
             headline,
@@ -169,7 +191,7 @@ export const sendProgressCheckEmail = async (
             progressLabel: payload.progressLabel,
             fillPct: payload.fillPct,
             viewUrl: `${APP_URL}/progress`,
-            activityIconUrl: `${APP_URL}/emails/activity-01.png`,
+            activityIconUrl: `${APP_URL}/emails/progress-header-dot-not.png`,
             recipientEmail: to,
             unsubscribeUrl: NOTIFICATION_SETTINGS_URL,
         }),
@@ -196,6 +218,7 @@ export const sendWritingReminderEmail = async (
     return sendEmail({
         to,
         subject,
+        templateName: "writing-reminder",
         react: WritingReminderEmail({
             userName,
             daysSinceLastEntry,
@@ -220,6 +243,7 @@ export const sendWaitlistConfirmationEmail = async (
     return sendEmail({
         to,
         subject: "You're on the Unsaid waitlist",
+        templateName: "waitlist-confirmation",
         react: WaitlistConfirmationEmail({
             email: to,
             waitlistPosition,
