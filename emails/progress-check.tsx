@@ -19,7 +19,6 @@ import {
     EmailStatsRow,
     editorialQuoteStyle,
     emailStyles,
-    FeatureIcon,
     helperTextStyle,
     heroBodyStyle,
     PrimaryCta,
@@ -51,7 +50,7 @@ const ProgressCheckEmail = ({
     progressLabel = "15/30",
     fillPct = 50,
     viewUrl = "https://byunsaid.com/progress",
-    activityIconUrl = "https://byunsaid.com/emails/activity-01.png",
+    activityIconUrl = "https://byunsaid.com/emails/progress-header-dot-not.png",
     recipientEmail = "you@example.com",
     unsubscribeUrl = "https://byunsaid.com/settings#notifications",
 }: ProgressCheckEmailProps) => {
@@ -70,20 +69,18 @@ const ProgressCheckEmail = ({
                     <EmailInnerCard>
                         <EmailHero
                             icon={
-                                <FeatureIcon>
-                                    <Img
-                                        src={activityIconUrl}
-                                        alt=""
-                                        width="20"
-                                        height="20"
-                                        style={{
-                                            display: "block",
-                                            margin: "8px auto",
-                                            width: "20px",
-                                            height: "20px",
-                                        }}
-                                    />
-                                </FeatureIcon>
+                                <Img
+                                    src={activityIconUrl}
+                                    alt=""
+                                    width="52"
+                                    height="52"
+                                    style={{
+                                        display: "block",
+                                        margin: "0 auto",
+                                        width: "52px",
+                                        height: "52px",
+                                    }}
+                                />
                             }
                             title={`${entryCount} entries in`}
                             description={

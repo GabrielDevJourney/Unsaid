@@ -41,7 +41,7 @@ const palette = {
     ctaEdge: "#ee8a3a",
     iconBorder: "#9b826e",
     iconDot: "#C2713F",
-    iconDotRing: "rgba(194, 113, 63, 0.35)",
+    iconDotRing: "rgba(194, 113, 63, 0.3)",
     iconBg: "#4d4a58",
     iconFg: "#f2efea",
 } as const;
@@ -482,12 +482,11 @@ export function FeatureIcon({
                 lineHeight: 0,
             }}
         >
-            <span
+            <div
                 style={{
-                    display: "block",
+                    display: "table",
                     width: `${size}px`,
                     height: `${size}px`,
-                    lineHeight: `${size}px`,
                     borderRadius: "9px",
                     border: `1px solid ${palette.iconBorder}`,
                     backgroundColor,
@@ -498,20 +497,32 @@ export function FeatureIcon({
                     overflow: "hidden",
                 }}
             >
-                {children ?? glyph}
-            </span>
+                <div
+                    style={{
+                        display: "table-cell",
+                        width: `${size}px`,
+                        height: `${size}px`,
+                        verticalAlign: "middle",
+                        textAlign: "center",
+                        lineHeight: 0,
+                    }}
+                >
+                    {children ?? glyph}
+                </div>
+            </div>
             <span
                 style={{
                     position: "absolute",
-                    left: "-3px",
-                    top: "-3px",
+                    left: "-4px",
+                    top: "-4px",
                     display: "inline-block",
                     width: "12px",
                     height: "12px",
                     borderRadius: "999px",
                     backgroundColor: palette.iconDot,
-                    border: `4px solid ${palette.iconDotRing}`,
+                    boxShadow: `0 0 0 3px ${palette.iconDotRing}`,
                     boxSizing: "border-box",
+                    zIndex: 2,
                 }}
             />
         </Section>

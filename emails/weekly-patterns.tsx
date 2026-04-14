@@ -17,7 +17,6 @@ import {
     EmailShell,
     EmailStatsRow,
     emailStyles,
-    FeatureIcon,
     helperTextStyle,
     heroBodyStyle,
     PatternBadge,
@@ -64,7 +63,7 @@ const WeeklyPatternsEmail = ({
     entryCount = 15,
     insightsCount = 19,
     patterns = defaultPatterns,
-    patternsIconUrl = "https://byunsaid.com/emails/dashboard-square-01.png",
+    patternsIconUrl = "https://byunsaid.com/emails/patterns-header-dot-not.png",
     viewUrl = "https://byunsaid.com/patterns",
     recipientEmail = "you@example.com",
     unsubscribeUrl = "https://byunsaid.com/settings#notifications",
@@ -84,20 +83,18 @@ const WeeklyPatternsEmail = ({
                     <EmailInnerCard>
                         <EmailHero
                             icon={
-                                <FeatureIcon>
-                                    <Img
-                                        src={patternsIconUrl}
-                                        alt=""
-                                        width="20"
-                                        height="20"
-                                        style={{
-                                            display: "block",
-                                            margin: "8px auto",
-                                            width: "20px",
-                                            height: "20px",
-                                        }}
-                                    />
-                                </FeatureIcon>
+                                <Img
+                                    src={patternsIconUrl}
+                                    alt=""
+                                    width="52"
+                                    height="52"
+                                    style={{
+                                        display: "block",
+                                        margin: "0 auto",
+                                        width: "52px",
+                                        height: "52px",
+                                    }}
+                                />
                             }
                             title={`${patternCount} pattern${patternCount === 1 ? "" : "s"} this week!`}
                             description={
