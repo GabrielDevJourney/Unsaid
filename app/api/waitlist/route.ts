@@ -28,12 +28,18 @@ export const POST = async (req: Request) => {
         const result = await addToWaitlist(supabase, email, source);
 
         if (result.data && !result.data.isExisting) {
-            sendWaitlistConfirmationEmail(email).catch((emailError) => {
-                console.error(
-                    "Failed to send waitlist confirmation email:",
-                    emailError,
+            const position = result.data.position;
+
+            if (position !== null) {
+                sendWaitlistConfirmationEmail(email, position).catch(
+                    (emailError) => {
+                        console.error(
+                            "Failed to send waitlist confirmation email:",
+                            emailError,
+                        );
+                    },
                 );
-            });
+            }
         }
 
         return NextResponse.json({

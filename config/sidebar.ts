@@ -36,7 +36,7 @@ export const footerNavItems: NavItem[] = [
 
 export const adminNavItems: NavItem[] = [
     {
-        label: "Admin — Feedback",
+        label: "Backstage",
         icon: LockedIcon,
         url: "/backstage/feedback",
     },

@@ -1,180 +1,251 @@
 import {
     Body,
-    Button,
-    Container,
-    Head,
-    Heading,
-    Hr,
+    Column,
     Html,
+    Img,
     Preview,
+    Row,
     Section,
     Text,
 } from "@react-email/components";
+import { EmailHead } from "@/emails/components/email-head";
+import {
+    bodyCopyStyle,
+    bodySectionStyle,
+    cardStyle,
+    EmailHero,
+    EmailInnerCard,
+    EmailShell,
+    EmailStatsRow,
+    editorialQuoteStyle,
+    emailStyles,
+    helperTextStyle,
+    heroBodyStyle,
+    PrimaryCta,
+    ProgressBar,
+} from "@/emails/components/email-ui";
 
 interface ProgressCheckEmailProps {
     userName: string;
     headline: string;
     entryCount: number;
+    patternsFound?: number;
+    insightsGiven?: number;
+    nextMilestone: number;
+    progressLabel: string;
+    fillPct: number;
     viewUrl: string;
+    activityIconUrl?: string;
+    recipientEmail?: string;
+    unsubscribeUrl?: string;
 }
 
 const ProgressCheckEmail = ({
-    userName = "there",
-    headline = "You're developing greater self-awareness",
+    userName: _userName = "there",
+    headline = "You're developing greater self-awareness and starting to catch yourself mid-pattern.",
     entryCount = 15,
+    patternsFound = 3,
+    insightsGiven = 19,
+    nextMilestone = 30,
+    progressLabel = "15/30",
+    fillPct = 50,
     viewUrl = "https://byunsaid.com/progress",
+    activityIconUrl = "https://byunsaid.com/emails/progress-header-dot-not.png",
+    recipientEmail = "you@example.com",
+    unsubscribeUrl = "https://byunsaid.com/settings#notifications",
 }: ProgressCheckEmailProps) => {
-    const previewText = `Milestone reached: ${entryCount} entries`;
+    const previewText = `${entryCount} entries in. Your progress check is ready.`;
 
     return (
         <Html>
-            <Head />
+            <EmailHead />
             <Preview>{previewText}</Preview>
-            <Body style={main}>
-                <Container style={container}>
-                    <Section style={milestoneTag}>
-                        <Text style={tagText}>
-                            🎉 {entryCount} entries milestone
-                        </Text>
-                    </Section>
+            <Body style={emailStyles.mainStyle}>
+                <EmailShell
+                    recipientEmail={recipientEmail}
+                    unsubscribeUrl={unsubscribeUrl}
+                    legalKind="account"
+                >
+                    <EmailInnerCard>
+                        <EmailHero
+                            icon={
+                                <Img
+                                    src={activityIconUrl}
+                                    alt=""
+                                    width="52"
+                                    height="52"
+                                    style={{
+                                        display: "block",
+                                        margin: "0 auto",
+                                        width: "52px",
+                                        height: "52px",
+                                    }}
+                                />
+                            }
+                            title={`${entryCount} entries in`}
+                            description={
+                                <>
+                                    Unsaid has been reading.
+                                    <br />
+                                    <strong
+                                        style={{
+                                            color: emailStyles.palette.heroText,
+                                            fontWeight: 700,
+                                        }}
+                                    >
+                                        Here&apos;s what {entryCount} entries
+                                        revealed about you.
+                                    </strong>
+                                </>
+                            }
+                            style={{ padding: "42px 24px 38px" }}
+                            titleStyle={{ fontSize: "48px" }}
+                            descriptionStyle={{
+                                ...heroBodyStyle,
+                                maxWidth: "330px",
+                            }}
+                        />
 
-                    <Heading style={heading}>
-                        Your progress check is ready 💡
-                    </Heading>
+                        <EmailStatsRow
+                            backgroundColor="#F2F2F2"
+                            topPadding={16}
+                            stats={[
+                                {
+                                    key: "entries",
+                                    value: entryCount,
+                                    label: (
+                                        <>
+                                            Entries
+                                            <br />
+                                            written
+                                        </>
+                                    ),
+                                },
+                                {
+                                    key: "patterns",
+                                    value: patternsFound,
+                                    label: (
+                                        <>
+                                            Patterns
+                                            <br />
+                                            found
+                                        </>
+                                    ),
+                                },
+                                {
+                                    key: "insights",
+                                    value: insightsGiven,
+                                    label: (
+                                        <>
+                                            Insights
+                                            <br />
+                                            given
+                                        </>
+                                    ),
+                                },
+                            ]}
+                        />
 
-                    <Text style={paragraph}>Hi {userName},</Text>
+                        <Section
+                            style={{
+                                backgroundColor: "#F2F2F2",
+                                borderTop: `1px solid ${emailStyles.palette.panelBorder}`,
+                                borderBottom: `1px solid ${emailStyles.palette.panelBorder}`,
+                                padding: "24px 18px",
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    ...editorialQuoteStyle,
+                                    maxWidth: "360px",
+                                    margin: "0 auto",
+                                }}
+                            >
+                                {headline}
+                            </Text>
+                        </Section>
 
-                    <Text style={paragraph}>
-                        You've reached{" "}
-                        <strong>{entryCount} journal entries</strong>! This is a
-                        meaningful milestone in your self-discovery journey.
-                    </Text>
+                        <Section
+                            style={{
+                                ...bodySectionStyle,
+                                backgroundColor: "#F2F2F2",
+                                paddingTop: "20px",
+                            }}
+                        >
+                            <Section
+                                style={{
+                                    ...cardStyle,
+                                    backgroundColor: "#ECECEC",
+                                    padding: "18px 20px",
+                                }}
+                            >
+                                <Row>
+                                    <Column style={{ width: "44%" }}>
+                                        <Text
+                                            style={{
+                                                color: "#3D4958",
+                                                fontSize: "17px",
+                                                lineHeight: "1.55",
+                                                margin: "0 0 4px",
+                                            }}
+                                        >
+                                            <strong>
+                                                Next milestone: {nextMilestone}{" "}
+                                                entries
+                                            </strong>
+                                        </Text>
+                                        <Text
+                                            style={{
+                                                ...bodyCopyStyle,
+                                                color: "#a49f97",
+                                                fontSize: "14px",
+                                            }}
+                                        >
+                                            Halfway there, keep going.
+                                        </Text>
+                                    </Column>
+                                    <Column style={{ width: "56%" }}>
+                                        <Row>
+                                            <Column style={{ width: "78%" }}>
+                                                <ProgressBar
+                                                    fillPct={fillPct}
+                                                />
+                                            </Column>
+                                            <Column style={{ width: "22%" }}>
+                                                <Text
+                                                    style={{
+                                                        color: "#a49f97",
+                                                        fontSize: "14px",
+                                                        lineHeight: "1.2",
+                                                        textAlign: "right",
+                                                        margin: "0",
+                                                    }}
+                                                >
+                                                    {progressLabel}
+                                                </Text>
+                                            </Column>
+                                        </Row>
+                                    </Column>
+                                </Row>
+                            </Section>
 
-                    <Section style={headlineSection}>
-                        <Text style={headlineLabel}>THE HEADLINE</Text>
-                        <Text style={headlineText}>"{headline}"</Text>
-                    </Section>
-
-                    <Text style={paragraph}>
-                        Your full progress report includes how you've evolved,
-                        recurring themes, and personalized insights based on
-                        your journey so far.
-                    </Text>
-
-                    <Section style={buttonSection}>
-                        <Button style={button} href={viewUrl}>
-                            View your progress
-                        </Button>
-                    </Section>
-
-                    <Hr style={hr} />
-
-                    <Text style={footer}>
-                        Next milestone: {entryCount + 15} entries. Keep going!
-                    </Text>
-                </Container>
+                            <Section style={{ paddingTop: "28px" }}>
+                                <PrimaryCta
+                                    href={viewUrl}
+                                    style={{ boxShadow: "0 0 0 2px #d8d3cb" }}
+                                >
+                                    View your full progress report
+                                </PrimaryCta>
+                                <Text style={helperTextStyle}>
+                                    The full picture lives in Unsaid.
+                                </Text>
+                            </Section>
+                        </Section>
+                    </EmailInnerCard>
+                </EmailShell>
             </Body>
         </Html>
     );
 };
 
 export default ProgressCheckEmail;
-
-const main = {
-    backgroundColor: "#f6f9fc",
-    fontFamily:
-        '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-};
-
-const container = {
-    backgroundColor: "#ffffff",
-    margin: "0 auto",
-    padding: "40px 20px",
-    maxWidth: "560px",
-    borderRadius: "8px",
-};
-
-const milestoneTag = {
-    textAlign: "center" as const,
-    margin: "0 0 24px",
-};
-
-const tagText = {
-    backgroundColor: "#fef3c7",
-    color: "#92400e",
-    fontSize: "14px",
-    fontWeight: "600",
-    padding: "8px 16px",
-    borderRadius: "20px",
-    display: "inline-block",
-    margin: "0",
-};
-
-const heading = {
-    color: "#1a1a1a",
-    fontSize: "24px",
-    fontWeight: "600",
-    lineHeight: "1.3",
-    margin: "0 0 24px",
-};
-
-const paragraph = {
-    color: "#4a4a4a",
-    fontSize: "16px",
-    lineHeight: "1.6",
-    margin: "0 0 16px",
-};
-
-const headlineSection = {
-    backgroundColor: "#eff6ff",
-    borderRadius: "8px",
-    padding: "20px 24px",
-    margin: "24px 0",
-    borderLeft: "4px solid #3b82f6",
-};
-
-const headlineLabel = {
-    color: "#1e40af",
-    fontSize: "12px",
-    fontWeight: "700",
-    margin: "0 0 8px",
-    letterSpacing: "1px",
-};
-
-const headlineText = {
-    color: "#1a1a1a",
-    fontSize: "18px",
-    fontWeight: "500",
-    lineHeight: "1.5",
-    margin: "0",
-    fontStyle: "italic",
-};
-
-const buttonSection = {
-    textAlign: "center" as const,
-    margin: "32px 0",
-};
-
-const button = {
-    backgroundColor: "#0f172a",
-    borderRadius: "6px",
-    color: "#ffffff",
-    fontSize: "16px",
-    fontWeight: "600",
-    textDecoration: "none",
-    padding: "12px 24px",
-    display: "inline-block",
-};
-
-const hr = {
-    borderColor: "#e6e6e6",
-    margin: "32px 0",
-};
-
-const footer = {
-    color: "#8898aa",
-    fontSize: "14px",
-    lineHeight: "1.5",
-    margin: "0",
-    textAlign: "center" as const,
-};

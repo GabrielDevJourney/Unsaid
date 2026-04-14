@@ -293,6 +293,7 @@ const sendTrialReminder = async (email: string, dryRun: boolean) => {
 
     const result = await sendTrialEndingEmail(email, email.split("@")[0], 3, {
         entriesWritten: 15,
+        patternsFound: 3,
         insightsReceived: 15,
     });
 
@@ -354,15 +355,21 @@ const sendWeeklyPatterns = async (
     // Send email
     const { sendWeeklyPatternsEmail } = await import("../lib/email/service");
 
-    const patternPreviews = (result.data.patterns ?? [])
-        .slice(0, 3)
-        .map((p) => p.title);
-
     const emailResult = await sendWeeklyPatternsEmail(
         email,
         email.split("@")[0],
-        result.data.patterns?.length ?? 0,
-        patternPreviews,
+        {
+            patternCount: result.data.patterns?.length ?? 0,
+            entryCount: 15,
+            insightsCount: 19,
+            patterns: (result.data.patterns ?? [])
+                .slice(0, 3)
+                .map((pattern) => ({
+                    title: pattern.title,
+                    patternType: pattern.patternType,
+                    description: pattern.description,
+                })),
+        },
     );
 
     if (emailResult.success) {
@@ -424,7 +431,14 @@ const sendProgressCheck = async (
         email,
         email.split("@")[0],
         headline,
-        15,
+        {
+            entryCount: 15,
+            patternsFound: 3,
+            insightsGiven: 19,
+            nextMilestone: 30,
+            progressLabel: "15/30",
+            fillPct: 50,
+        },
     );
 
     if (emailResult.success) {

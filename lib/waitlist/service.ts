@@ -1,6 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ServiceResult, WaitlistSignupResult } from "@/types";
-import { getWaitlistEntryByEmail, insertWaitlistEntry } from "./repo";
+import {
+    getWaitlistCount,
+    getWaitlistEntryByEmail,
+    insertWaitlistEntry,
+} from "./repo";
 
 /**
  * Add email to the waitlist.
@@ -19,6 +23,7 @@ export const addToWaitlist = async (
             data: {
                 message: "You're already on the waitlist!",
                 isExisting: true,
+                position: null,
             },
         };
     }
@@ -28,10 +33,18 @@ export const addToWaitlist = async (
         throw error;
     }
 
+    const { count, error: countError } = await getWaitlistCount(supabase);
+
+    if (countError) {
+        console.error("Failed to count waitlist entries:", countError);
+        throw countError;
+    }
+
     return {
         data: {
             message: "You're on the list! We'll be in touch soon.",
             isExisting: false,
+            position: count ?? null,
         },
     };
 };

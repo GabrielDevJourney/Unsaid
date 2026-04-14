@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import { type NextRequest, NextResponse } from "next/server";
+import { sendWritingReminderEmail } from "@/lib/email/service";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
 import {
     getUsersOptedIntoWritingReminders,
@@ -93,7 +94,7 @@ export const GET = async (req: NextRequest) => {
                 continue;
             }
 
-            const _daysSinceLastEntry = latestEntry
+            const daysSinceLastEntry = latestEntry
                 ? Math.floor(
                       (Date.now() -
                           new Date(latestEntry.created_at).getTime()) /
@@ -101,10 +102,19 @@ export const GET = async (req: NextRequest) => {
                   )
                 : null;
 
-            // TODO(UNS-272): wire up sendWritingReminderEmail once the
-            // writing-reminder email template is implemented.
-            await updateLastWritingReminderSent(supabase, user.user_id);
-            results.sent++;
+            const emailResult = await sendWritingReminderEmail(
+                user.email,
+                user.username,
+                daysSinceLastEntry,
+            );
+
+            if (emailResult.success) {
+                await updateLastWritingReminderSent(supabase, user.user_id);
+                results.sent++;
+            } else {
+                results.failed++;
+                results.errors.push(`${user.user_id}: ${emailResult.error}`);
+            }
         } catch (error) {
             console.error(`Error for ${user.user_id}:`, error);
             results.failed++;

@@ -1,172 +1,240 @@
 import {
     Body,
-    Button,
-    Container,
-    Head,
-    Heading,
-    Hr,
     Html,
+    Img,
     Preview,
+    Row,
     Section,
     Text,
 } from "@react-email/components";
+import { EmailHead } from "@/emails/components/email-head";
+import {
+    bodySectionStyle,
+    bodyStrongStyle,
+    cardStyle,
+    EmailHero,
+    EmailInnerCard,
+    EmailShell,
+    EmailStatsRow,
+    emailStyles,
+    helperTextStyle,
+    heroBodyStyle,
+    PatternBadge,
+    PrimaryCta,
+    previewPatternTitleStyle,
+} from "@/emails/components/email-ui";
+import type { PatternTypeCode } from "@/lib/constants/pattern-types";
+
+interface WeeklyPatternPreview {
+    title: string;
+    patternType: PatternTypeCode;
+}
 
 interface WeeklyPatternsEmailProps {
     userName: string;
     patternCount: number;
-    patternPreviews: string[];
+    entryCount?: number;
+    insightsCount?: number;
+    patterns?: WeeklyPatternPreview[];
+    patternsIconUrl?: string;
     viewUrl: string;
+    recipientEmail?: string;
+    unsubscribeUrl?: string;
 }
 
+const defaultPatterns: WeeklyPatternPreview[] = [
+    {
+        title: "Progress Blindness",
+        patternType: "behavioral_pattern",
+    },
+    {
+        title: "Boundary Avoidance",
+        patternType: "growth",
+    },
+    {
+        title: "Sunday Anticipation Spiral",
+        patternType: "emotional_trigger",
+    },
+];
+
 const WeeklyPatternsEmail = ({
-    userName = "there",
+    userName: _userName = "there",
     patternCount = 3,
-    patternPreviews = ["Pattern 1", "Pattern 2", "Pattern 3"],
+    entryCount = 15,
+    insightsCount = 19,
+    patterns = defaultPatterns,
+    patternsIconUrl = "https://byunsaid.com/emails/patterns-header-dot-not.png",
     viewUrl = "https://byunsaid.com/patterns",
+    recipientEmail = "you@example.com",
+    unsubscribeUrl = "https://byunsaid.com/settings#notifications",
 }: WeeklyPatternsEmailProps) => {
-    const previewText = `${patternCount} new patterns discovered this week`;
+    const previewText = `${patternCount} pattern${patternCount === 1 ? "" : "s"} surfaced this week.`;
 
     return (
         <Html>
-            <Head />
+            <EmailHead />
             <Preview>{previewText}</Preview>
-            <Body style={main}>
-                <Container style={container}>
-                    <Heading style={heading}>
-                        Your weekly patterns are ready 📊
-                    </Heading>
+            <Body style={emailStyles.mainStyle}>
+                <EmailShell
+                    recipientEmail={recipientEmail}
+                    unsubscribeUrl={unsubscribeUrl}
+                    legalKind="account"
+                >
+                    <EmailInnerCard>
+                        <EmailHero
+                            icon={
+                                <Img
+                                    src={patternsIconUrl}
+                                    alt=""
+                                    width="52"
+                                    height="52"
+                                    style={{
+                                        display: "block",
+                                        margin: "0 auto",
+                                        width: "52px",
+                                        height: "52px",
+                                    }}
+                                />
+                            }
+                            title={`${patternCount} pattern${patternCount === 1 ? "" : "s"} this week!`}
+                            description={
+                                <>
+                                    Unsaid found{" "}
+                                    <strong
+                                        style={{
+                                            ...bodyStrongStyle,
+                                            color: emailStyles.palette.heroText,
+                                        }}
+                                    >
+                                        {patternCount} recurring theme
+                                        {patternCount === 1 ? "" : "s"}
+                                    </strong>{" "}
+                                    across your entries this week. Each one
+                                    comes with evidence from your own words and
+                                    a small experiment to try.
+                                </>
+                            }
+                            titleStyle={{ fontSize: "48px" }}
+                            descriptionStyle={{
+                                ...heroBodyStyle,
+                                maxWidth: "330px",
+                            }}
+                        />
 
-                    <Text style={paragraph}>Hi {userName},</Text>
+                        <EmailStatsRow
+                            backgroundColor="#F2F2F2"
+                            topPadding={16}
+                            stats={[
+                                {
+                                    key: "entries",
+                                    value: entryCount,
+                                    label: (
+                                        <>
+                                            Entries
+                                            <br />
+                                            written
+                                        </>
+                                    ),
+                                },
+                                {
+                                    key: "patterns",
+                                    value: patternCount,
+                                    label: (
+                                        <>
+                                            Patterns
+                                            <br />
+                                            found
+                                        </>
+                                    ),
+                                },
+                                {
+                                    key: "insights",
+                                    value: insightsCount,
+                                    label: (
+                                        <>
+                                            Insights
+                                            <br />
+                                            given
+                                        </>
+                                    ),
+                                },
+                            ]}
+                        />
 
-                    <Text style={paragraph}>
-                        Based on your journal entries this week, I've identified{" "}
-                        <strong>{patternCount} patterns</strong> in your
-                        thoughts and behaviors.
-                    </Text>
+                        <Section
+                            style={{
+                                ...bodySectionStyle,
+                                backgroundColor: "#F2F2F2",
+                                paddingTop: "0",
+                            }}
+                        >
+                            <Section
+                                style={{
+                                    ...cardStyle,
+                                    backgroundColor: "#ffffff",
+                                    padding: "22px 28px",
+                                }}
+                            >
+                                {patterns.slice(0, 3).map((pattern, index) => (
+                                    <Section
+                                        key={`${pattern.title}-${index}`}
+                                        style={{
+                                            padding: "0",
+                                            marginBottom:
+                                                index === patterns.length - 1
+                                                    ? "0"
+                                                    : "16px",
+                                        }}
+                                    >
+                                        <Row>
+                                            <td
+                                                style={{
+                                                    width: "148px",
+                                                    verticalAlign: "middle",
+                                                    paddingRight: "16px",
+                                                }}
+                                            >
+                                                <PatternBadge
+                                                    patternType={
+                                                        pattern.patternType
+                                                    }
+                                                />
+                                            </td>
+                                            <td
+                                                style={{
+                                                    verticalAlign: "middle",
+                                                }}
+                                            >
+                                                <Text
+                                                    style={{
+                                                        ...previewPatternTitleStyle,
+                                                        fontSize: "16px",
+                                                        lineHeight: "1.4",
+                                                        margin: "0",
+                                                    }}
+                                                >
+                                                    {pattern.title}
+                                                </Text>
+                                            </td>
+                                        </Row>
+                                    </Section>
+                                ))}
+                            </Section>
 
-                    <Section style={patternsSection}>
-                        <Text style={sectionLabel}>This week's patterns:</Text>
-                        {patternPreviews.slice(0, 3).map((pattern) => (
-                            <Text key={pattern} style={patternItem}>
-                                • {pattern}
-                            </Text>
-                        ))}
-                        {patternCount > 3 && (
-                            <Text style={morePatterns}>
-                                +{patternCount - 3} more patterns
-                            </Text>
-                        )}
-                    </Section>
-
-                    <Text style={paragraph}>
-                        Understanding your patterns is the first step to
-                        meaningful change. Dive deeper to see the evidence and
-                        suggested experiments.
-                    </Text>
-
-                    <Section style={buttonSection}>
-                        <Button style={button} href={viewUrl}>
-                            View all patterns
-                        </Button>
-                    </Section>
-
-                    <Hr style={hr} />
-
-                    <Text style={footer}>
-                        Keep journaling to discover more patterns each week.
-                    </Text>
-                </Container>
+                            <Section style={{ paddingTop: "28px" }}>
+                                <PrimaryCta href={viewUrl}>
+                                    View all patterns in Unsaid
+                                </PrimaryCta>
+                                <Text style={helperTextStyle}>
+                                    Keep writing to surface more.
+                                </Text>
+                            </Section>
+                        </Section>
+                    </EmailInnerCard>
+                </EmailShell>
             </Body>
         </Html>
     );
 };
 
 export default WeeklyPatternsEmail;
-
-const main = {
-    backgroundColor: "#f6f9fc",
-    fontFamily:
-        '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-};
-
-const container = {
-    backgroundColor: "#ffffff",
-    margin: "0 auto",
-    padding: "40px 20px",
-    maxWidth: "560px",
-    borderRadius: "8px",
-};
-
-const heading = {
-    color: "#1a1a1a",
-    fontSize: "24px",
-    fontWeight: "600",
-    lineHeight: "1.3",
-    margin: "0 0 24px",
-};
-
-const paragraph = {
-    color: "#4a4a4a",
-    fontSize: "16px",
-    lineHeight: "1.6",
-    margin: "0 0 16px",
-};
-
-const patternsSection = {
-    backgroundColor: "#f0fdf4",
-    borderRadius: "8px",
-    padding: "16px 20px",
-    margin: "24px 0",
-    borderLeft: "4px solid #22c55e",
-};
-
-const sectionLabel = {
-    color: "#166534",
-    fontSize: "14px",
-    fontWeight: "600",
-    margin: "0 0 12px",
-    textTransform: "uppercase" as const,
-    letterSpacing: "0.5px",
-};
-
-const patternItem = {
-    color: "#1a1a1a",
-    fontSize: "15px",
-    lineHeight: "1.6",
-    margin: "0 0 8px",
-};
-
-const morePatterns = {
-    color: "#6b7280",
-    fontSize: "14px",
-    fontStyle: "italic",
-    margin: "8px 0 0",
-};
-
-const buttonSection = {
-    textAlign: "center" as const,
-    margin: "32px 0",
-};
-
-const button = {
-    backgroundColor: "#0f172a",
-    borderRadius: "6px",
-    color: "#ffffff",
-    fontSize: "16px",
-    fontWeight: "600",
-    textDecoration: "none",
-    padding: "12px 24px",
-    display: "inline-block",
-};
-
-const hr = {
-    borderColor: "#e6e6e6",
-    margin: "32px 0",
-};
-
-const footer = {
-    color: "#8898aa",
-    fontSize: "14px",
-    lineHeight: "1.5",
-    margin: "0",
-};

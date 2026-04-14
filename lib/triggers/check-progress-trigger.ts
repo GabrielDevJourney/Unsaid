@@ -96,12 +96,52 @@ export const checkAndTriggerProgress = async (
                     .single();
 
                 if (user?.email) {
+                    const [insightsResult, weeklyInsightsResult] =
+                        await Promise.all([
+                            supabase
+                                .from("entry_insights")
+                                .select("id", { count: "exact", head: true })
+                                .eq("user_id", userId),
+                            supabase
+                                .from("weekly_insights")
+                                .select("id")
+                                .eq("user_id", userId),
+                        ]);
+
+                    const weeklyInsightIds =
+                        weeklyInsightsResult.data?.map((item) => item.id) ?? [];
+
+                    let patternsFound = 0;
+
+                    if (weeklyInsightIds.length > 0) {
+                        const patternsResult = await supabase
+                            .from("weekly_insight_patterns")
+                            .select("id", { count: "exact", head: true })
+                            .in("weekly_insight_id", weeklyInsightIds);
+
+                        patternsFound = patternsResult.count ?? 0;
+                    }
+
                     const headline = extractHeadline(insight.content);
+                    const nextMilestone =
+                        triggerCheck.totalEntries + PROGRESS_TRIGGER_INTERVAL;
+                    const progressLabel = `${triggerCheck.totalEntries}/${nextMilestone}`;
+                    const fillPct = Math.min(
+                        100,
+                        (triggerCheck.totalEntries / nextMilestone) * 100,
+                    );
                     const emailResult = await sendProgressCheckEmail(
                         user.email,
                         user.username,
                         headline,
-                        triggerCheck.totalEntries,
+                        {
+                            entryCount: triggerCheck.totalEntries,
+                            patternsFound,
+                            insightsGiven: insightsResult.count ?? 0,
+                            nextMilestone,
+                            progressLabel,
+                            fillPct,
+                        },
                     );
 
                     if (!emailResult.success) {

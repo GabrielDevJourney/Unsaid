@@ -18,6 +18,12 @@ export const insertWaitlistEntry = async (
         .single();
 };
 
+export const getWaitlistCount = async (supabase: SupabaseClient) => {
+    return supabase
+        .from("waitlist")
+        .select("id", { count: "exact", head: true });
+};
+
 /**
  * Get waitlist entry by email.
  */
