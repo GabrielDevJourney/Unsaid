@@ -69,7 +69,7 @@ const WritingReminderEmail = ({
                             titleStyle={{ fontSize: "48px" }}
                             descriptionStyle={{
                                 ...heroBodyStyle,
-                                maxWidth: "330px",
+                                maxWidth: "350px",
                             }}
                         />
 
