@@ -665,12 +665,13 @@ export function PromptRow({
 }) {
     return (
         <Section style={{ ...promptRowStyle, marginBottom: "14px" }}>
-            <Row style={{ verticalAlign: "middle" }}>
+            <Row>
                 <Column
                     style={{
                         width: "34px",
                         padding: "14px 0 14px 14px",
                         verticalAlign: "middle",
+                        textAlign: "center",
                     }}
                 >
                     <span
@@ -681,45 +682,43 @@ export function PromptRow({
                             borderRadius: "999px",
                             backgroundColor: dotColor,
                             boxShadow: `0 0 0 3px ${dotRingColor}`,
-                            verticalAlign: "middle",
                         }}
                     />
                 </Column>
                 <Column
                     style={{
-                        padding: "12px 8px 12px 0",
+                        padding: "14px 8px 14px 0",
                         verticalAlign: "middle",
                     }}
                 >
-                    <Text
+                    <span
                         style={{
+                            display: "block",
                             color: "#6e6a63",
-                            fontSize: "15px",
+                            fontSize: "14px",
                             lineHeight: "1.5",
-                            margin: 0,
                         }}
                     >
                         {text}
-                    </Text>
+                    </span>
                 </Column>
                 <Column
                     style={{
                         width: "36px",
-                        paddingRight: "14px",
+                        padding: "14px 14px 14px 0",
                         textAlign: "right",
                         verticalAlign: "middle",
                     }}
                 >
-                    <Text
+                    <span
                         style={{
                             color: "#807b72",
                             fontSize: "20px",
                             lineHeight: "1",
-                            margin: 0,
                         }}
                     >
                         ›
-                    </Text>
+                    </span>
                 </Column>
             </Row>
         </Section>
@@ -753,29 +752,23 @@ export function BenefitList({
                             verticalAlign: "middle",
                         }}
                     >
-                        <Text
+                        <Img
+                            src={`${ASSETS_BASE_URL}/emails/check-icon.png`}
+                            alt="✓"
+                            width="16"
+                            height="16"
                             style={{
                                 display: "block",
                                 width: "16px",
                                 height: "16px",
-                                lineHeight: "16px",
-                                borderRadius: "999px",
-                                backgroundColor: "#435063",
-                                color: "#ffffff",
-                                fontSize: "10px",
-                                fontWeight: 700,
-                                textAlign: "center",
-                                margin: "0",
                             }}
-                        >
-                            ✓
-                        </Text>
+                        />
                     </Column>
                     <Column style={{ verticalAlign: "middle" }}>
                         <Text
                             style={{
                                 color: "#435063",
-                                fontSize: "15px",
+                                fontSize: "14px",
                                 lineHeight: "1.6",
                                 margin: 0,
                             }}
