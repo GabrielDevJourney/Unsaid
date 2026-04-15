@@ -16,13 +16,16 @@ import {
 } from "@/lib/constants/pattern-types";
 
 const SITE_URL = "https://byunsaid.com";
-const INSTAGRAM_URL = `${SITE_URL}`;
-const LINKEDIN_URL = `${SITE_URL}`;
+const ASSETS_BASE_URL = process.env.EMAIL_ASSETS_BASE_URL ?? SITE_URL;
+const INSTAGRAM_URL = `https://www.instagram.com/by.unsaid/`;
+const LINKEDIN_URL = `https://www.linkedin.com/company/byunsaid`;
 const SHARE_URL = SITE_URL;
-const LOGO_URL = `${SITE_URL}/emails/logo-emails.png`;
-const SHARE_ICON_URL = `${SITE_URL}/emails/share-04.png`;
-const HERO_BG_URL = `${SITE_URL}/emails/hero-bg.jpg`;
-const EMAIL_WIDTH = 640;
+const LOGO_URL = `${ASSETS_BASE_URL}/emails/logo-emails.png`;
+const SHARE_ICON_URL = `${ASSETS_BASE_URL}/emails/share-04.png`;
+const INSTAGRAM_ICON_URL = `${ASSETS_BASE_URL}/emails/instagram-icon.png`;
+const LINKEDIN_ICON_URL = `${ASSETS_BASE_URL}/emails/linkedin-icon.png`;
+const HERO_BG_URL = `${ASSETS_BASE_URL}/emails/hero-bg.jpg`;
+const EMAIL_WIDTH = 600;
 
 const palette = {
     pageBg: "#f5f4f1",
@@ -51,7 +54,7 @@ const fontStacks = {
     serif: '"Libre Baskerville", Georgia, serif',
 };
 
-const shellPaddingX = 36;
+const shellPaddingX = 40;
 
 const mainStyle: CSSProperties = {
     backgroundColor: palette.pageBg,
@@ -71,7 +74,7 @@ const containerStyle: CSSProperties = {
 };
 
 const shellInnerStyle: CSSProperties = {
-    padding: "24px 18px 18px",
+    padding: "24px 20px 18px",
 };
 
 const logoWrapStyle: CSSProperties = {
@@ -128,13 +131,10 @@ const socialCircleStyle: CSSProperties = {
     borderRadius: "999px",
     border: `1px solid ${palette.shellBorder}`,
     backgroundColor: "#F5F5F5",
-    color: palette.mutedText,
     textDecoration: "none",
-    fontSize: "18px",
     textAlign: "center",
     marginRight: "8px",
-    fontFamily: fontStacks.sans,
-    fontWeight: 500,
+    verticalAlign: "middle",
 };
 
 const sharePillStyle: CSSProperties = {
@@ -358,10 +358,31 @@ export function EmailShell({
 
             <Section style={footerActionsStyle}>
                 <Link href={INSTAGRAM_URL} style={socialCircleStyle}>
-                    ig
+                    <Img
+                        src={INSTAGRAM_ICON_URL}
+                        alt="Instagram"
+                        width="16"
+                        height="16"
+                        style={{
+                            display: "inline-block",
+                            verticalAlign: "middle",
+                            width: "16px",
+                            height: "16px",
+                        }}
+                    />
                 </Link>
                 <Link href={LINKEDIN_URL} style={socialCircleStyle}>
-                    in
+                    <Img
+                        src={LINKEDIN_ICON_URL}
+                        alt="LinkedIn"
+                        width="12"
+                        height="12"
+                        style={{
+                            display: "inline-block",
+                            width: "12px",
+                            height: "12px",
+                        }}
+                    />
                 </Link>
                 <Link href={SHARE_URL} style={sharePillStyle}>
                     <span
@@ -644,12 +665,13 @@ export function PromptRow({
 }) {
     return (
         <Section style={{ ...promptRowStyle, marginBottom: "14px" }}>
-            <Row style={{ verticalAlign: "middle" }}>
+            <Row>
                 <Column
                     style={{
                         width: "34px",
                         padding: "14px 0 14px 14px",
                         verticalAlign: "middle",
+                        textAlign: "center",
                     }}
                 >
                     <span
@@ -660,45 +682,43 @@ export function PromptRow({
                             borderRadius: "999px",
                             backgroundColor: dotColor,
                             boxShadow: `0 0 0 3px ${dotRingColor}`,
-                            verticalAlign: "middle",
                         }}
                     />
                 </Column>
                 <Column
                     style={{
-                        padding: "12px 8px 12px 0",
+                        padding: "14px 8px 14px 0",
                         verticalAlign: "middle",
                     }}
                 >
-                    <Text
+                    <span
                         style={{
+                            display: "block",
                             color: "#6e6a63",
-                            fontSize: "15px",
+                            fontSize: "14px",
                             lineHeight: "1.5",
-                            margin: 0,
                         }}
                     >
                         {text}
-                    </Text>
+                    </span>
                 </Column>
                 <Column
                     style={{
                         width: "36px",
-                        paddingRight: "14px",
+                        padding: "14px 14px 14px 0",
                         textAlign: "right",
                         verticalAlign: "middle",
                     }}
                 >
-                    <Text
+                    <span
                         style={{
                             color: "#807b72",
                             fontSize: "20px",
                             lineHeight: "1",
-                            margin: 0,
                         }}
                     >
                         ›
-                    </Text>
+                    </span>
                 </Column>
             </Row>
         </Section>
@@ -732,29 +752,23 @@ export function BenefitList({
                             verticalAlign: "middle",
                         }}
                     >
-                        <Text
+                        <Img
+                            src={`${ASSETS_BASE_URL}/emails/check-icon.png`}
+                            alt="✓"
+                            width="16"
+                            height="16"
                             style={{
                                 display: "block",
                                 width: "16px",
                                 height: "16px",
-                                lineHeight: "16px",
-                                borderRadius: "999px",
-                                backgroundColor: "#435063",
-                                color: "#ffffff",
-                                fontSize: "10px",
-                                fontWeight: 700,
-                                textAlign: "center",
-                                margin: "0",
                             }}
-                        >
-                            ✓
-                        </Text>
+                        />
                     </Column>
                     <Column style={{ verticalAlign: "middle" }}>
                         <Text
                             style={{
                                 color: "#435063",
-                                fontSize: "15px",
+                                fontSize: "14px",
                                 lineHeight: "1.6",
                                 margin: 0,
                             }}
@@ -810,29 +824,18 @@ export function WaitlistBadge({ position }: { position: number }) {
         >
             <span
                 style={{
-                    color: palette.heroText,
-                    fontSize: "13px",
-                    lineHeight: "14px",
-                    whiteSpace: "nowrap",
                     display: "inline-block",
+                    width: "10px",
+                    height: "10px",
+                    borderRadius: "999px",
+                    backgroundColor: palette.iconDot,
+                    marginRight: "8px",
+                    verticalAlign: "middle",
+                    position: "relative",
                 }}
-            >
-                <span
-                    style={{
-                        display: "inline-block",
-                        width: "10px",
-                        height: "10px",
-                        borderRadius: "999px",
-                        backgroundColor: palette.iconDot,
-                        marginRight: "8px",
-                        verticalAlign: "middle",
-                        position: "relative",
-                        top: "-1px",
-                    }}
-                />
-                <span style={{ verticalAlign: "middle" }}>
-                    You&apos;re <strong>#{position}</strong> on the waitlist
-                </span>
+            />
+            <span style={{ verticalAlign: "middle" }}>
+                You&apos;re <strong>#{position}</strong> on the waitlist
             </span>
         </span>
     );

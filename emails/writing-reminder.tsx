@@ -94,24 +94,26 @@ const WritingReminderEmail = ({
                                 backgroundColor: "#F2F2F2",
                             }}
                         >
-                            <Text style={sectionLabelStyle}>
-                                Start with one of these:
-                            </Text>
-                            <PromptRow
-                                dotColor="#657288"
-                                dotRingColor="rgba(101,114,136,0.30)"
-                                text="What happened after your last entry?"
-                            />
-                            <PromptRow
-                                dotColor="#624234"
-                                dotRingColor="rgba(98,66,52,0.30)"
-                                text="What's been sitting with you this week?"
-                            />
-                            <PromptRow
-                                dotColor="#B8886E"
-                                dotRingColor="rgba(184,136,110,0.30)"
-                                text="What are you not saying out loud?"
-                            />
+                            <Section style={{ padding: "0 36px" }}>
+                                <Text style={sectionLabelStyle}>
+                                    Start with one of these:
+                                </Text>
+                                <PromptRow
+                                    dotColor="#657288"
+                                    dotRingColor="rgba(101,114,136,0.30)"
+                                    text="What happened after your last entry?"
+                                />
+                                <PromptRow
+                                    dotColor="#624234"
+                                    dotRingColor="rgba(98,66,52,0.30)"
+                                    text="What's been sitting with you this week?"
+                                />
+                                <PromptRow
+                                    dotColor="#B8886E"
+                                    dotRingColor="rgba(184,136,110,0.30)"
+                                    text="What are you not saying out loud?"
+                                />
+                            </Section>
 
                             <Section style={{ paddingTop: "18px" }}>
                                 <PrimaryCta href={writeUrl}>
