@@ -27,7 +27,7 @@ import {
 export const insertWeeklyInsight = async (
     supabase: SupabaseClient,
     data: InsertWeeklyInsightData,
-): Promise<{ data: WeeklyInsight | null; error: Error | null }> => {
+): Promise<{ data: WeeklyInsight | null; error: PostgrestError | null }> => {
     const { data: insightRow, error } = await supabase
         .from("weekly_insights")
         .insert({
@@ -56,7 +56,7 @@ export const insertWeeklyInsightPatterns = async (
     supabase: SupabaseClient,
     weeklyInsightId: string,
     patterns: Omit<InsertWeeklyInsightPatternData, "weeklyInsightId">[],
-): Promise<{ data: WeeklyInsightPattern[]; error: Error | null }> => {
+): Promise<{ data: WeeklyInsightPattern[]; error: PostgrestError | null }> => {
     const patternInserts = patterns.map((pattern) => {
         const descriptionEncrypted = encrypt(pattern.description);
         const questionEncrypted = pattern.question
@@ -106,7 +106,10 @@ export const getWeeklyInsightWithPatternsByWeekStart = async (
     supabase: SupabaseClient,
     userId: string,
     weekStart: string,
-): Promise<{ data: WeeklyInsightWithPatterns | null; error: Error | null }> => {
+): Promise<{
+    data: WeeklyInsightWithPatterns | null;
+    error: PostgrestError | null;
+}> => {
     const { data: insightRow, error: insightError } = await supabase
         .from("weekly_insights")
         .select("id, user_id, week_start, entry_ids, created_at, updated_at")
@@ -229,13 +232,13 @@ export const getPatternById = async (
 export const markPatternAsViewed = async (
     supabase: SupabaseClient,
     patternId: string,
-): Promise<{ success: boolean; error: PostgrestError | null }> => {
+): Promise<{ data: null; error: PostgrestError | null }> => {
     const { error } = await supabase
         .from("weekly_insight_patterns")
         .update({ is_viewed: true })
         .eq("id", patternId);
 
-    return { success: !error, error };
+    return { data: null, error };
 };
 
 /**
@@ -245,13 +248,13 @@ export const markPatternAsViewed = async (
  */
 export const getNewPatternsCount = async (
     supabase: SupabaseClient,
-): Promise<{ count: number; error: PostgrestError | null }> => {
+): Promise<{ data: number; error: PostgrestError | null }> => {
     const { count, error } = await supabase
         .from("weekly_insight_patterns")
         .select("id", { count: "exact", head: true })
         .eq("is_viewed", false);
 
-    return { count: count ?? 0, error };
+    return { data: count ?? 0, error };
 };
 
 /**
@@ -260,12 +263,12 @@ export const getNewPatternsCount = async (
  */
 export const getTotalPatternsCount = async (
     supabase: SupabaseClient,
-): Promise<{ count: number; error: PostgrestError | null }> => {
+): Promise<{ data: number; error: PostgrestError | null }> => {
     const { count, error } = await supabase
         .from("weekly_insight_patterns")
         .select("id", { count: "exact", head: true });
 
-    return { count: count ?? 0, error };
+    return { data: count ?? 0, error };
 };
 
 /**
@@ -277,7 +280,11 @@ export const getWeeklyInsightsPaginated = async (
     userId: string,
     page = 1,
     pageSize = 10,
-): Promise<{ data: WeeklyInsight[]; error: Error | null; count: number }> => {
+): Promise<{
+    data: WeeklyInsight[];
+    error: PostgrestError | null;
+    count: number;
+}> => {
     const offset = (page - 1) * pageSize;
 
     const {
@@ -310,12 +317,12 @@ export const getWeeklyInsightsPaginated = async (
  */
 export const getWeeklyInsightsCount = async (
     supabase: SupabaseClient,
-): Promise<{ count: number; error: Error | null }> => {
+): Promise<{ data: number; error: PostgrestError | null }> => {
     const { count, error } = await supabase
         .from("weekly_insights")
         .select("id", { count: "exact", head: true });
 
-    return { count: count ?? 0, error };
+    return { data: count ?? 0, error };
 };
 
 /**
@@ -326,7 +333,7 @@ export const getPatternsByType = async (
     supabase: SupabaseClient,
     userId: string,
     patternType: string,
-): Promise<{ data: WeeklyInsightPattern[]; error: Error | null }> => {
+): Promise<{ data: WeeklyInsightPattern[]; error: PostgrestError | null }> => {
     const { data: patternRows, error } = await supabase
         .from("weekly_insight_patterns")
         .select(
@@ -357,7 +364,7 @@ export const getWeeklyPatternsForDateRange = async (
     fromDate: string,
     toDate: string,
     limit = 3,
-): Promise<{ data: WeeklyInsightPattern[]; error: Error | null }> => {
+): Promise<{ data: WeeklyInsightPattern[]; error: PostgrestError | null }> => {
     const { data: weeklyRows, error: weeklyError } = await supabase
         .from("weekly_insights")
         .select("id")
@@ -397,8 +404,8 @@ export const searchWeeklyInsightsPatternsByEmbedding = async (
     limit = 10,
     threshold = 0.5,
 ): Promise<{
-    data: WeeklyInsightPatternWithSimilarity[] | null;
-    error: Error | null;
+    data: WeeklyInsightPatternWithSimilarity[];
+    error: PostgrestError | null;
 }> => {
     const { data: searchRows, error } = await supabase.rpc(
         "search_weekly_insight_patterns_by_embedding",
@@ -411,11 +418,13 @@ export const searchWeeklyInsightsPatternsByEmbedding = async (
     );
 
     if (error || !searchRows) {
-        return { data: null, error };
+        return { data: [], error };
     }
 
-    const weeklyInsightsPatterns = (
-        searchRows as SearchWeeklyInsightPatternRowResult[]
-    ).map(toWeeklyInsightPatternWithSimilarity);
-    return { data: weeklyInsightsPatterns, error: null };
+    return {
+        data: (searchRows as SearchWeeklyInsightPatternRowResult[]).map(
+            toWeeklyInsightPatternWithSimilarity,
+        ),
+        error: null,
+    };
 };

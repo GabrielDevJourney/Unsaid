@@ -20,7 +20,16 @@ export const GET = async (
                 { status: 401 },
             );
         }
-        const promptText = await loadPromptForEntry(supabase, entryId);
+        const { data: promptText, error } = await loadPromptForEntry(
+            supabase,
+            entryId,
+        );
+        if (error) {
+            return NextResponse.json(
+                { error: "Failed to load prompt" },
+                { status: 500 },
+            );
+        }
 
         return NextResponse.json({ data: { promptText } });
     } catch (error) {

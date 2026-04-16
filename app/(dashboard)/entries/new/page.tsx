@@ -33,7 +33,7 @@ const NewEntryPage = async ({
     const [
         canWrite,
         { data: progress },
-        { count: patternsCount },
+        { data: patternsCount },
         { count: insightsCount },
         { data: latestProgressInsight },
         { data: latestWeeklyInsights },

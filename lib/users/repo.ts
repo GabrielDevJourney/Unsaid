@@ -1,4 +1,4 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { PostgrestError, SupabaseClient } from "@supabase/supabase-js";
 
 export interface NotificationPreferences {
     notifyWeeklyPatterns: boolean;
@@ -14,27 +14,36 @@ export const insertUser = async (
         username: string;
         subscription_status: string;
     },
-) => {
-    return supabase.from("users").insert({
+): Promise<{ data: null; error: PostgrestError | null }> => {
+    const { error } = await supabase.from("users").insert({
         user_id: user.id,
         email: user.email,
         username: user.username,
         subscription_status: user.subscription_status,
     });
+    return { data: null, error };
 };
 
-export const deleteUser = async (supabase: SupabaseClient, userId: string) => {
-    return supabase.from("users").delete().eq("user_id", userId);
+export const deleteUser = async (
+    supabase: SupabaseClient,
+    userId: string,
+): Promise<{ data: null; error: PostgrestError | null }> => {
+    const { error } = await supabase
+        .from("users")
+        .delete()
+        .eq("user_id", userId);
+    return { data: null, error };
 };
 
 export const insertUserProgress = async (
     supabase: SupabaseClient,
     userId: string,
-) => {
-    return supabase.from("user_progress").insert({
+): Promise<{ data: null; error: PostgrestError | null }> => {
+    const { error } = await supabase.from("user_progress").insert({
         user_id: userId,
         total_entries: 0,
     });
+    return { data: null, error };
 };
 
 /**
@@ -43,7 +52,10 @@ export const insertUserProgress = async (
  */
 export const getUserProgress = async (
     supabase: SupabaseClient,
-): Promise<{ data: { totalEntries: number } | null; error: Error | null }> => {
+): Promise<{
+    data: { totalEntries: number } | null;
+    error: PostgrestError | null;
+}> => {
     const { data, error } = await supabase
         .from("user_progress")
         .select("total_entries")
@@ -62,7 +74,10 @@ export const getUserProgress = async (
  */
 export const getNotificationPreferences = async (
     supabase: SupabaseClient,
-): Promise<{ data: NotificationPreferences | null; error: Error | null }> => {
+): Promise<{
+    data: NotificationPreferences | null;
+    error: PostgrestError | null;
+}> => {
     const { data, error } = await supabase
         .from("users")
         .select(
@@ -133,7 +148,7 @@ export interface WritingReminderUser {
 export const getUsersOptedIntoWritingReminders = async (
     supabase: SupabaseClient,
     cooldownDays: number,
-): Promise<{ data: WritingReminderUser[] | null; error: Error | null }> => {
+): Promise<{ data: WritingReminderUser[]; error: PostgrestError | null }> => {
     const cooldownDate = new Date();
     cooldownDate.setDate(cooldownDate.getDate() - cooldownDays);
 
@@ -147,7 +162,7 @@ export const getUsersOptedIntoWritingReminders = async (
         );
 
     if (error || !data) {
-        return { data: null, error };
+        return { data: [], error };
     }
 
     return { data, error: null };
