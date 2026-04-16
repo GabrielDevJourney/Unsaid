@@ -3,7 +3,7 @@ import { Resend } from "resend";
 import type { PatternTypeCode } from "@/lib/constants/pattern-types";
 
 const FROM_EMAIL = "Unsaid <hello@emails.byunsaid.com>";
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://byunsaid.com";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.byunsaid.com";
 const NOTIFICATION_SETTINGS_URL = `${APP_URL}/settings#notifications`;
 
 interface SendEmailParams {
