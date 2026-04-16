@@ -31,8 +31,7 @@ export const listFeedbackForUser = async (
     const { data, error } = await getFeedbackItems(supabase);
     if (error) throw error;
 
-    const items = (data ?? []) as FeedbackItem[];
-    const feedbackIds = items.map((i) => i.id);
+    const feedbackIds = data.map((i) => i.id);
 
     const { data: votes } = await getUserUpvotedIds(
         supabase,
@@ -42,7 +41,7 @@ export const listFeedbackForUser = async (
     const votedSet = new Set((votes ?? []).map((v) => v.feedback_id));
 
     return {
-        data: items.map((item) => ({
+        data: data.map((item) => ({
             ...item,
             hasVoted: votedSet.has(item.id),
         })),
@@ -123,7 +122,7 @@ export const listPendingFeedback = async (
 ): Promise<ServiceResult<FeedbackItem[]>> => {
     const { data, error } = await getPendingFeedbackItems(supabase);
     if (error) throw error;
-    return { data: (data ?? []) as FeedbackItem[] };
+    return { data };
 };
 
 export const listApprovedFeedbackAdmin = async (
@@ -131,7 +130,7 @@ export const listApprovedFeedbackAdmin = async (
 ): Promise<ServiceResult<FeedbackItem[]>> => {
     const { data, error } = await getApprovedFeedbackItemsAdmin(supabase);
     if (error) throw error;
-    return { data: (data ?? []) as FeedbackItem[] };
+    return { data };
 };
 
 export const approveFeedback = async (
@@ -143,7 +142,8 @@ export const approveFeedback = async (
         if (error.code === "PGRST116") return { error: "Feedback not found" };
         throw error;
     }
-    return { data: data as FeedbackItem };
+    if (!data) throw new Error("approveFeedbackItem returned no data");
+    return { data };
 };
 
 export const rejectFeedback = async (
@@ -174,7 +174,8 @@ export const setFeedbackStatus = async (
         if (error.code === "PGRST116") return { error: "Feedback not found" };
         throw error;
     }
-    return { data: data as FeedbackItem };
+    if (!data) throw new Error("updateFeedbackStatus returned no data");
+    return { data };
 };
 
 export const setAdminReply = async (
@@ -187,5 +188,6 @@ export const setAdminReply = async (
         if (error.code === "PGRST116") return { error: "Feedback not found" };
         throw error;
     }
-    return { data: data as FeedbackItem };
+    if (!data) throw new Error("updateAdminReply returned no data");
+    return { data };
 };
