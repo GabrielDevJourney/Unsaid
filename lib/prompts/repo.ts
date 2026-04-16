@@ -1,28 +1,29 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { PostgrestError, SupabaseClient } from "@supabase/supabase-js";
 
 export const savePromptForEntry = async (
     supabase: SupabaseClient,
     userId: string,
     promptText: string,
     entryId: string,
-): Promise<void> => {
-    await supabase.from("prompts").insert({
+): Promise<{ data: null; error: PostgrestError | null }> => {
+    const { error } = await supabase.from("prompts").insert({
         user_id: userId,
         prompt_text: promptText,
         entry_id: entryId,
         is_used: true,
     });
+    return { data: null, error };
 };
 
 export const getPromptByEntryId = async (
     supabase: SupabaseClient,
     entryId: string,
-): Promise<string | null> => {
-    const { data } = await supabase
+): Promise<{ data: string | null; error: PostgrestError | null }> => {
+    const { data, error } = await supabase
         .from("prompts")
         .select("prompt_text")
         .eq("entry_id", entryId)
         .single();
 
-    return data?.prompt_text ?? null;
+    return { data: data?.prompt_text ?? null, error };
 };

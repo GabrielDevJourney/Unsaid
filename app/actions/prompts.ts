@@ -12,12 +12,6 @@ export const savePromptAction = async (
     const { userId } = await auth();
     if (!userId) return { error: "Unauthorized" };
 
-    try {
-        const supabase = await createSupabaseServer();
-        await persistPromptForEntry(supabase, userId, promptText, entryId);
-        return { data: null };
-    } catch (err) {
-        console.error("savePromptAction failed:", err);
-        return { error: "Failed to save prompt" };
-    }
+    const supabase = await createSupabaseServer();
+    return persistPromptForEntry(supabase, userId, promptText, entryId);
 };
