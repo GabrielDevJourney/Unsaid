@@ -55,7 +55,8 @@ export const createTrialSubscription = async (
         throw error;
     }
 
-    return { data: data as SubscriptionRow };
+    if (!data) throw new Error("insertSubscription returned no data");
+    return { data };
 };
 
 /**
@@ -76,7 +77,8 @@ export const getSubscription = async (
         throw error;
     }
 
-    return { data: data as SubscriptionRow };
+    if (!data) throw new Error("getSubscriptionByUserId returned no data");
+    return { data };
 };
 
 /**

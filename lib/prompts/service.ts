@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { generateEntryThemePrompt } from "@/lib/ai/generate-entry-theme";
 import { getEntriesPaginated } from "@/lib/entries/repo";
+import type { ServiceResult } from "@/types";
 import { getPromptByEntryId, savePromptForEntry } from "./repo";
 
 /**
@@ -31,8 +32,9 @@ interface EntryThemeResult {
 /**
  * Get or generate an entry theme prompt for the user.
  *
- * - If user has 0 entries: returns a random default prompt
- * - If user has entries: generates a contextual prompt based on recent entries
+ * Returns EntryThemeResult instead of ServiceResult intentionally — this function
+ * handles all its own fallbacks (empty entries → default, failed generation → default)
+ * and always succeeds from the caller's perspective.
  *
  * @param supabase - Supabase client with user context
  * @param userId - Optional user ID (required when using admin client without RLS)
@@ -85,13 +87,28 @@ export const persistPromptForEntry = async (
     userId: string,
     promptText: string,
     entryId: string,
-): Promise<void> => {
-    await savePromptForEntry(supabase, userId, promptText, entryId);
+): Promise<ServiceResult<null>> => {
+    const { error } = await savePromptForEntry(
+        supabase,
+        userId,
+        promptText,
+        entryId,
+    );
+    if (error) {
+        console.error("Failed to persist prompt:", error);
+        return { error: "Failed to save prompt" };
+    }
+    return { data: null };
 };
 
 export const loadPromptForEntry = async (
     supabase: SupabaseClient,
     entryId: string,
-): Promise<string | null> => {
-    return getPromptByEntryId(supabase, entryId);
+): Promise<ServiceResult<string | null>> => {
+    const { data, error } = await getPromptByEntryId(supabase, entryId);
+    if (error) {
+        console.error("Failed to load prompt:", error);
+        return { error: "Failed to load prompt" };
+    }
+    return { data };
 };

@@ -1,5 +1,6 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { PostgrestError, SupabaseClient } from "@supabase/supabase-js";
 import type { FeedbackStatusType } from "@/lib/schemas/feedback";
+import type { FeedbackItem } from "@/types";
 
 // submitted_by / rejected_by are intentionally excluded — never returned to the client
 const ITEM_COLS =
@@ -7,13 +8,17 @@ const ITEM_COLS =
 
 // ─── User-facing reads ───────────────────────────────────────────────────────
 
-export const getFeedbackItems = (supabase: SupabaseClient) =>
-    supabase
+export const getFeedbackItems = async (
+    supabase: SupabaseClient,
+): Promise<{ data: FeedbackItem[]; error: PostgrestError | null }> => {
+    const { data, error } = await supabase
         .from("feedback_items")
         .select(ITEM_COLS)
         .eq("is_approved", true)
         .order("upvote_count", { ascending: false })
         .order("created_at", { ascending: false });
+    return { data: (data ?? []) as FeedbackItem[], error };
+};
 
 export const getUserUpvotedIds = (
     supabase: SupabaseClient,
@@ -49,7 +54,7 @@ export const countUserSubmissionsLast24h = (
 
 // ─── Mutations ───────────────────────────────────────────────────────────────
 
-export const insertFeedbackItem = (
+export const insertFeedbackItem = async (
     supabase: SupabaseClient,
     userId: string,
     title: string,
@@ -57,8 +62,8 @@ export const insertFeedbackItem = (
     isAnonymous: boolean,
     authorName: string | null,
     imageUrl: string | null,
-) =>
-    supabase
+): Promise<{ data: FeedbackItem | null; error: PostgrestError | null }> => {
+    const { data, error } = await supabase
         .from("feedback_items")
         .insert({
             submitted_by: userId,
@@ -70,6 +75,8 @@ export const insertFeedbackItem = (
         })
         .select(ITEM_COLS)
         .single();
+    return { data: data as FeedbackItem | null, error };
+};
 
 export const insertUpvote = (
     supabase: SupabaseClient,
@@ -93,42 +100,52 @@ export const deleteUpvote = (
 
 // ─── Admin reads ─────────────────────────────────────────────────────────────
 
-export const getPendingFeedbackItems = (supabase: SupabaseClient) =>
-    supabase
+export const getPendingFeedbackItems = async (
+    supabase: SupabaseClient,
+): Promise<{ data: FeedbackItem[]; error: PostgrestError | null }> => {
+    const { data, error } = await supabase
         .from("feedback_items")
         .select(ITEM_COLS)
         .eq("is_approved", false)
         .is("rejected_at", null)
         .order("created_at", { ascending: true });
+    return { data: (data ?? []) as FeedbackItem[], error };
+};
 
-export const getApprovedFeedbackItemsAdmin = (supabase: SupabaseClient) =>
-    supabase
+export const getApprovedFeedbackItemsAdmin = async (
+    supabase: SupabaseClient,
+): Promise<{ data: FeedbackItem[]; error: PostgrestError | null }> => {
+    const { data, error } = await supabase
         .from("feedback_items")
         .select(ITEM_COLS)
         .eq("is_approved", true)
         .order("upvote_count", { ascending: false })
         .order("created_at", { ascending: false });
+    return { data: (data ?? []) as FeedbackItem[], error };
+};
 
 // ─── Admin mutations ─────────────────────────────────────────────────────────
 
-export const approveFeedbackItem = (
+export const approveFeedbackItem = async (
     supabase: SupabaseClient,
     feedbackId: string,
-) =>
-    supabase
+): Promise<{ data: FeedbackItem | null; error: PostgrestError | null }> => {
+    const { data, error } = await supabase
         .from("feedback_items")
         .update({ is_approved: true })
         .eq("id", feedbackId)
         .select(ITEM_COLS)
         .single();
+    return { data: data as FeedbackItem | null, error };
+};
 
 // Soft-delete: records who rejected and when; row is preserved for audit history
-export const softRejectFeedbackItem = (
+export const softRejectFeedbackItem = async (
     supabase: SupabaseClient,
     feedbackId: string,
     adminUserId: string,
-) =>
-    supabase
+): Promise<{ data: null; error: PostgrestError | null }> => {
+    const { error } = await supabase
         .from("feedback_items")
         .update({
             status: "rejected" as FeedbackStatusType,
@@ -136,28 +153,34 @@ export const softRejectFeedbackItem = (
             rejected_by: adminUserId,
         })
         .eq("id", feedbackId);
+    return { data: null, error };
+};
 
-export const updateFeedbackStatus = (
+export const updateFeedbackStatus = async (
     supabase: SupabaseClient,
     feedbackId: string,
     status: FeedbackStatusType,
-) =>
-    supabase
+): Promise<{ data: FeedbackItem | null; error: PostgrestError | null }> => {
+    const { data, error } = await supabase
         .from("feedback_items")
         .update({ status })
         .eq("id", feedbackId)
         .select(ITEM_COLS)
         .single();
+    return { data: data as FeedbackItem | null, error };
+};
 
 // admin_reply_at is set automatically by the DB trigger on feedback_items
-export const updateAdminReply = (
+export const updateAdminReply = async (
     supabase: SupabaseClient,
     feedbackId: string,
     reply: string,
-) =>
-    supabase
+): Promise<{ data: FeedbackItem | null; error: PostgrestError | null }> => {
+    const { data, error } = await supabase
         .from("feedback_items")
         .update({ admin_reply: reply })
         .eq("id", feedbackId)
         .select(ITEM_COLS)
         .single();
+    return { data: data as FeedbackItem | null, error };
+};

@@ -387,8 +387,8 @@ export const createWeeklyInsight = async (
         );
 
     if (patternsError) {
-        // Weekly insight created but patterns failed - log but return insight
         console.error("Failed to insert patterns:", patternsError);
+        throw patternsError;
     }
 
     return {
@@ -452,7 +452,7 @@ export const markPatternAsViewed = async (
 export const getNewPatternsCount = async (
     supabase: SupabaseClient,
 ): Promise<ServiceResult<number>> => {
-    const { count, error } = await getNewPatternsCountRepo(supabase);
+    const { data: count, error } = await getNewPatternsCountRepo(supabase);
 
     if (error) {
         console.error(`Failed to get new patterns count:`, error);

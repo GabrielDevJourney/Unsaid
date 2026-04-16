@@ -12,6 +12,18 @@ import type {
 } from "@/types";
 import { decrypt } from "../crypto";
 
+const _decryptRequired = (encrypted: string, iv: string, tag: string): string =>
+    decrypt({ encryptedContent: encrypted, iv, tag });
+
+const _decryptOptional = (
+    encrypted: string | null | undefined,
+    iv: string | null | undefined,
+    tag: string | null | undefined,
+): string | null =>
+    encrypted && iv && tag
+        ? decrypt({ encryptedContent: encrypted, iv, tag })
+        : null;
+
 /**
  * Transform weekly insight DB row to domain WeeklyInsight.
  * No encryption on this table - just camelCase conversion.
@@ -45,33 +57,21 @@ export const toWeeklyInsightWithPatterns = (
 export const toWeeklyInsightPattern = (
     patternRow: WeeklyInsightPatternRowEncrypted,
 ): WeeklyInsightPattern => {
-    const description = decrypt({
-        encryptedContent: patternRow.encrypted_description ?? "",
-        iv: patternRow.description_iv ?? "",
-        tag: patternRow.description_tag ?? "",
-    });
-
-    const question =
-        patternRow.encrypted_question &&
-        patternRow.question_iv &&
-        patternRow.question_tag
-            ? decrypt({
-                  encryptedContent: patternRow.encrypted_question,
-                  iv: patternRow.question_iv,
-                  tag: patternRow.question_tag,
-              })
-            : null;
-
-    const suggestedExperiment =
-        patternRow.encrypted_suggested_experiment &&
-        patternRow.suggested_experiment_iv &&
-        patternRow.suggested_experiment_tag
-            ? decrypt({
-                  encryptedContent: patternRow.encrypted_suggested_experiment,
-                  iv: patternRow.suggested_experiment_iv,
-                  tag: patternRow.suggested_experiment_tag,
-              })
-            : null;
+    const description = _decryptRequired(
+        patternRow.encrypted_description ?? "",
+        patternRow.description_iv ?? "",
+        patternRow.description_tag ?? "",
+    );
+    const question = _decryptOptional(
+        patternRow.encrypted_question,
+        patternRow.question_iv,
+        patternRow.question_tag,
+    );
+    const suggestedExperiment = _decryptOptional(
+        patternRow.encrypted_suggested_experiment,
+        patternRow.suggested_experiment_iv,
+        patternRow.suggested_experiment_tag,
+    );
 
     return {
         id: patternRow.id,
@@ -98,33 +98,21 @@ export const toWeeklyInsightPattern = (
 export const toWeeklyInsightPatternResolved = (
     patternRow: WeeklyInsightPatternRowResolved,
 ): WeeklyInsightPattern => {
-    const description = decrypt({
-        encryptedContent: patternRow.encrypted_description ?? "",
-        iv: patternRow.description_iv ?? "",
-        tag: patternRow.description_tag ?? "",
-    });
-
-    const question =
-        patternRow.encrypted_question &&
-        patternRow.question_iv &&
-        patternRow.question_tag
-            ? decrypt({
-                  encryptedContent: patternRow.encrypted_question,
-                  iv: patternRow.question_iv,
-                  tag: patternRow.question_tag,
-              })
-            : null;
-
-    const suggestedExperiment =
-        patternRow.encrypted_suggested_experiment &&
-        patternRow.suggested_experiment_iv &&
-        patternRow.suggested_experiment_tag
-            ? decrypt({
-                  encryptedContent: patternRow.encrypted_suggested_experiment,
-                  iv: patternRow.suggested_experiment_iv,
-                  tag: patternRow.suggested_experiment_tag,
-              })
-            : null;
+    const description = _decryptRequired(
+        patternRow.encrypted_description ?? "",
+        patternRow.description_iv ?? "",
+        patternRow.description_tag ?? "",
+    );
+    const question = _decryptOptional(
+        patternRow.encrypted_question,
+        patternRow.question_iv,
+        patternRow.question_tag,
+    );
+    const suggestedExperiment = _decryptOptional(
+        patternRow.encrypted_suggested_experiment,
+        patternRow.suggested_experiment_iv,
+        patternRow.suggested_experiment_tag,
+    );
 
     return {
         id: patternRow.id,

@@ -31,7 +31,7 @@ export const countProgressInsights = async (
 export const insertProgressInsight = async (
     supabase: SupabaseClient,
     data: InsertProgressInsightData,
-): Promise<{ data: ProgressInsight | null; error: Error | null }> => {
+): Promise<{ data: ProgressInsight | null; error: PostgrestError | null }> => {
     const { encryptedContent, iv, tag } = encrypt(data.content);
 
     const { data: insightRow, error } = await supabase
@@ -65,7 +65,7 @@ export const insertProgressInsight = async (
 export const getLatestProgressInsight = async (
     supabase: SupabaseClient,
     userId: string,
-): Promise<{ data: ProgressInsight | null; error: Error | null }> => {
+): Promise<{ data: ProgressInsight | null; error: PostgrestError | null }> => {
     const { data: insightRow, error } = await supabase
         .from("progress_insights")
         .select(
@@ -91,7 +91,7 @@ export const getLatestProgressInsight = async (
 export const getProgressInsightById = async (
     supabase: SupabaseClient,
     insightId: string,
-): Promise<{ data: ProgressInsight | null; error: Error | null }> => {
+): Promise<{ data: ProgressInsight | null; error: PostgrestError | null }> => {
     const { data: insightRow, error } = await supabase
         .from("progress_insights")
         .select(
@@ -116,7 +116,11 @@ export const getProgressInsightsPaginated = async (
     userId: string,
     page = 1,
     pageSize = 10,
-): Promise<{ data: ProgressInsight[]; error: Error | null; count: number }> => {
+): Promise<{
+    data: ProgressInsight[];
+    error: PostgrestError | null;
+    count: number;
+}> => {
     const offset = (page - 1) * pageSize;
 
     const {
@@ -216,7 +220,7 @@ export const getRecentEntries = async (
     supabase: SupabaseClient,
     userId: string,
     limit = 15,
-): Promise<{ data: Entry[]; error: Error | null }> => {
+): Promise<{ data: Entry[]; error: PostgrestError | null }> => {
     const { data: entryRows, error } = await supabase
         .from("entries")
         .select(
@@ -243,7 +247,7 @@ export const getEntriesBeforeDate = async (
     userId: string,
     beforeDate: string,
     limit = 50,
-): Promise<{ data: EntryMinimal[]; error: Error | null }> => {
+): Promise<{ data: EntryMinimal[]; error: PostgrestError | null }> => {
     const { data: entryRows, error } = await supabase
         .from("entries")
         .select("id, encrypted_content, content_iv, content_tag, created_at")

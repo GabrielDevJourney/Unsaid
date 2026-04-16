@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { savePromptAction } from "@/app/actions/prompts";
 import { useEntryEditorStore } from "@/lib/entry-editor/store";
 import { cn, formatEntryDate } from "@/lib/utils";
@@ -64,7 +64,7 @@ export const EntryEditorPage = ({
     const isDismissed = useRef(false);
     const _hasInitialSuggestion = useRef(!!initialSuggestion);
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         if (initialEntry) {
             loadExistingEntry(
                 initialEntry.id,

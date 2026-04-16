@@ -27,16 +27,21 @@ export const getHomePageData = async (
     supabase: SupabaseClient,
 ): Promise<HomePageData> => {
     const [
-        { data: entriesData, count: totalEntryCount },
-        { data: progressData },
-        { count: patternsCount },
-        { data: entryDates },
+        { data: entriesData, count: totalEntryCount, error: entriesError },
+        { data: progressData, error: progressError },
+        { data: patternsCount, error: patternsError },
+        { data: entryDates, error: datesError },
     ] = await Promise.all([
         getEntriesWithInsightsPaginated(supabase, 1, INITIAL_PAGE_SIZE),
         getUserProgress(supabase),
         getTotalPatternsCount(supabase),
         getEntryDates(supabase),
     ]);
+
+    if (entriesError) throw entriesError;
+    if (progressError) throw progressError;
+    if (patternsError) throw patternsError;
+    if (datesError) throw datesError;
 
     const entries = entriesData ?? [];
     const total = totalEntryCount ?? 0;

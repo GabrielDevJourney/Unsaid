@@ -1,4 +1,4 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { PostgrestError, SupabaseClient } from "@supabase/supabase-js";
 import type { EntryInsight, InsertEntryInsightData } from "@/types";
 import { encrypt } from "../crypto";
 import { toEntryInsight } from "./transformers";
@@ -14,7 +14,7 @@ const SELECT_FIELDS =
 export const insertEntryInsight = async (
     supabase: SupabaseClient,
     data: InsertEntryInsightData,
-): Promise<{ data: EntryInsight | null; error: Error | null }> => {
+): Promise<{ data: EntryInsight | null; error: PostgrestError | null }> => {
     const { encryptedContent, iv, tag } = encrypt(data.content);
 
     const { data: insightRow, error } = await supabase
@@ -46,7 +46,7 @@ export const insertEntryInsight = async (
 export const getEntryInsightsByEntryId = async (
     supabase: SupabaseClient,
     entryId: string,
-): Promise<{ data: EntryInsight[]; error: Error | null }> => {
+): Promise<{ data: EntryInsight[]; error: PostgrestError | null }> => {
     const { data: insightRows, error } = await supabase
         .from("entry_insights")
         .select(SELECT_FIELDS)
@@ -68,7 +68,7 @@ export const getEntryInsightsByEntryId = async (
 export const getEntryInsightByEntryId = async (
     supabase: SupabaseClient,
     entryId: string,
-): Promise<{ data: EntryInsight | null; error: Error | null }> => {
+): Promise<{ data: EntryInsight | null; error: PostgrestError | null }> => {
     const { data: insightRow, error } = await supabase
         .from("entry_insights")
         .select(SELECT_FIELDS)
@@ -93,7 +93,7 @@ export const getEntryInsightByEntryId = async (
 export const getEntryInsightsByEntryIds = async (
     supabase: SupabaseClient,
     entryIds: string[],
-): Promise<{ data: EntryInsight[]; error: Error | null }> => {
+): Promise<{ data: EntryInsight[]; error: PostgrestError | null }> => {
     if (entryIds.length === 0) return { data: [], error: null };
 
     const { data: insightRows, error } = await supabase
@@ -115,7 +115,7 @@ export const getEntryInsightsByEntryIds = async (
  */
 export const getTotalInsightsCount = async (
     supabase: SupabaseClient,
-): Promise<{ count: number; error: Error | null }> => {
+): Promise<{ count: number; error: PostgrestError | null }> => {
     const { count, error } = await supabase
         .from("entry_insights")
         .select("id", { count: "exact", head: true });

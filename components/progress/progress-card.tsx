@@ -43,11 +43,11 @@ const ProgressCard = ({
             {/* Top row: date + optional milestone badge */}
             <div className="flex items-center gap-4 px-2 relative z-10">
                 <span className="text-xs text-neutral-500">{date}</span>
-                {isMilestone && (
-                    <span className="inline-flex items-center rounded-full bg-muted-foreground px-4 py-1 text-xs font-medium text-white">
-                        Milestone reached
-                    </span>
-                )}
+                <span
+                    className={`inline-flex items-center rounded-full bg-muted-foreground px-4 py-1 text-xs font-medium text-white ${isMilestone ? "" : "invisible"}`}
+                >
+                    Milestone reached
+                </span>
             </div>
 
             {/* Inner white card */}
