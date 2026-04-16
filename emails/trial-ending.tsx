@@ -31,9 +31,9 @@ const TrialEndingEmail = ({
     entriesWritten = 15,
     patternsFound = 3,
     insightsReceived = 19,
-    upgradeUrl = "https://byunsaid.com/settings",
+    upgradeUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://app.byunsaid.com"}/settings`,
     recipientEmail = "you@example.com",
-    unsubscribeUrl = "https://byunsaid.com/settings#notifications",
+    unsubscribeUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://app.byunsaid.com"}/settings#notifications`,
 }: TrialEndingEmailProps) => {
     const previewText = `${daysRemaining} day${daysRemaining === 1 ? "" : "s"} left in your trial.`;
 

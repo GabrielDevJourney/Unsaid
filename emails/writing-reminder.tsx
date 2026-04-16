@@ -33,9 +33,9 @@ interface WritingReminderEmailProps {
 const WritingReminderEmail = ({
     userName = "there",
     daysSinceLastEntry = null,
-    writeUrl = "https://byunsaid.com",
+    writeUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.byunsaid.com",
     recipientEmail = "you@example.com",
-    unsubscribeUrl = "https://byunsaid.com/settings#notifications",
+    unsubscribeUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://app.byunsaid.com"}/settings#notifications`,
 }: WritingReminderEmailProps) => {
     const previewText =
         daysSinceLastEntry === null

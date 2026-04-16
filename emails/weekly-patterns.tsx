@@ -63,10 +63,10 @@ const WeeklyPatternsEmail = ({
     entryCount = 15,
     insightsCount = 19,
     patterns = defaultPatterns,
-    patternsIconUrl = "https://byunsaid.com/emails/patterns-header-dot-not.png",
-    viewUrl = "https://byunsaid.com/patterns",
+    patternsIconUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://app.byunsaid.com"}/emails/patterns-header-dot-not.png`,
+    viewUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://app.byunsaid.com"}/patterns`,
     recipientEmail = "you@example.com",
-    unsubscribeUrl = "https://byunsaid.com/settings#notifications",
+    unsubscribeUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://app.byunsaid.com"}/settings#notifications`,
 }: WeeklyPatternsEmailProps) => {
     const previewText = `${patternCount} pattern${patternCount === 1 ? "" : "s"} surfaced this week.`;
 

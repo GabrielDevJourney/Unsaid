@@ -15,11 +15,12 @@ import {
     type PatternTypeCode,
 } from "@/lib/constants/pattern-types";
 
-const SITE_URL = "https://byunsaid.com";
-const ASSETS_BASE_URL = process.env.EMAIL_ASSETS_BASE_URL ?? SITE_URL;
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.byunsaid.com";
+const MARKETING_URL = "https://byunsaid.com";
+const ASSETS_BASE_URL = process.env.EMAIL_ASSETS_BASE_URL ?? APP_URL;
 const INSTAGRAM_URL = `https://www.instagram.com/by.unsaid/`;
 const LINKEDIN_URL = `https://www.linkedin.com/company/byunsaid`;
-const SHARE_URL = SITE_URL;
+const SHARE_URL = MARKETING_URL;
 const LOGO_URL = `${ASSETS_BASE_URL}/emails/logo-emails.png`;
 const SHARE_ICON_URL = `${ASSETS_BASE_URL}/emails/share-04.png`;
 const INSTAGRAM_ICON_URL = `${ASSETS_BASE_URL}/emails/instagram-icon.png`;

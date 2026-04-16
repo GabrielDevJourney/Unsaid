@@ -34,7 +34,7 @@ const WaitlistConfirmationEmail = ({
     email = "you@example.com",
     waitlistPosition = 247,
     unsubscribeUrl = "mailto:hello@byunsaid.com?subject=Unsubscribe",
-    laptopImageUrl = `${process.env.EMAIL_ASSETS_BASE_URL ?? "https://byunsaid.com"}/emails/laptop-image.png`,
+    laptopImageUrl = `${process.env.EMAIL_ASSETS_BASE_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? "https://app.byunsaid.com"}/emails/laptop-image.png`,
 }: WaitlistConfirmationEmailProps) => {
     return (
         <Html>
