@@ -7,12 +7,13 @@ import type { DateRange } from "react-day-picker";
 import { HomeEmptyBanner } from "@/components/home/home-empty-banner";
 import { Toolbar } from "@/components/shared/toolbar";
 import { Button } from "@/components/ui/button";
-import { ALL_TAG_NAMES, TAG_STYLES, type TagName } from "./entry-tag";
+import { INSIGHT_TAG_STYLES } from "@/lib/constants/insight-tag-types";
+import { ALL_TAG_NAMES, type TagName } from "./entry-tag";
 
 const TAG_OPTIONS = ALL_TAG_NAMES.map((tag) => ({
     value: tag,
     label: tag,
-    color: TAG_STYLES[tag],
+    color: INSIGHT_TAG_STYLES[tag],
 }));
 
 interface HomeToolbarBase {
