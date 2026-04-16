@@ -1,4 +1,4 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { PostgrestError, SupabaseClient } from "@supabase/supabase-js";
 import type {
     Entry,
     EntrySourceRow,
@@ -24,7 +24,7 @@ import {
 export const insertEntry = async (
     supabase: SupabaseClient,
     data: InsertEntryData,
-): Promise<{ data: Entry | null; error: Error | null }> => {
+): Promise<{ data: Entry | null; error: PostgrestError | null }> => {
     const { encryptedContent, iv, tag } = encrypt(data.content);
 
     const { data: entryRow, error } = await supabase
@@ -58,7 +58,7 @@ export const insertEntry = async (
 export const getEntryById = async (
     supabase: SupabaseClient,
     entryId: string,
-): Promise<{ data: Entry | null; error: Error | null }> => {
+): Promise<{ data: Entry | null; error: PostgrestError | null }> => {
     const { data: entryRow, error } = await supabase
         .from("entries")
         .select(
@@ -82,7 +82,7 @@ export const getEntryById = async (
 export const getEntriesByIds = async (
     supabase: SupabaseClient,
     entryIds: string[],
-): Promise<{ data: Entry[]; error: Error | null }> => {
+): Promise<{ data: Entry[]; error: PostgrestError | null }> => {
     if (entryIds.length === 0) return { data: [], error: null };
 
     const { data: rows, error } = await supabase
@@ -106,7 +106,7 @@ export const getEntriesBySource = async (
     supabase: SupabaseClient,
     sourceType: string,
     sourceId: string,
-): Promise<{ data: EntrySourceRow[]; error: Error | null }> => {
+): Promise<{ data: EntrySourceRow[]; error: PostgrestError | null }> => {
     const { data: rows, error } = await supabase
         .from("entries")
         .select(
@@ -134,7 +134,7 @@ export const getEntriesPaginated = async (
     userId?: string,
 ): Promise<{
     data: Entry[];
-    error: Error | null;
+    error: PostgrestError | null;
     count: number;
 }> => {
     const offset = (page - 1) * pageSize;
@@ -176,7 +176,7 @@ export const getEntriesPaginated = async (
  */
 export const getEntryDates = async (
     supabase: SupabaseClient,
-): Promise<{ data: string[]; error: Error | null }> => {
+): Promise<{ data: string[]; error: PostgrestError | null }> => {
     const { data, error } = await supabase
         .from("entries")
         .select("created_at")
@@ -190,7 +190,7 @@ export const getEntriesWithInsights = async (
     supabase: SupabaseClient,
 ): Promise<{
     data: EntryWithInsight[];
-    error: Error | null;
+    error: PostgrestError | null;
 }> => {
     const query = supabase.from("entries").select(
         `
@@ -225,7 +225,7 @@ export const getEntriesWithInsightsPaginated = async (
     userId?: string,
 ): Promise<{
     data: EntryWithInsight[];
-    error: Error | null;
+    error: PostgrestError | null;
     count: number;
 }> => {
     const offset = (page - 1) * pageSize;
@@ -270,7 +270,7 @@ export const getEntriesWithInsightsPaginated = async (
 export const getEntryWithInsightById = async (
     supabase: SupabaseClient,
     entryId: string,
-): Promise<{ data: EntryWithInsight | null; error: Error | null }> => {
+): Promise<{ data: EntryWithInsight | null; error: PostgrestError | null }> => {
     const { data: entryRow, error } = await supabase
         .from("entries")
         .select(
@@ -298,7 +298,10 @@ export const getEntryWithInsightById = async (
 export const getEntryWithAllInsightsById = async (
     supabase: SupabaseClient,
     entryId: string,
-): Promise<{ data: EntryWithAllInsights | null; error: Error | null }> => {
+): Promise<{
+    data: EntryWithAllInsights | null;
+    error: PostgrestError | null;
+}> => {
     const { data: entryRow, error } = await supabase
         .from("entries")
         .select(
@@ -332,7 +335,7 @@ export const updateEntryContent = async (
     entryId: string,
     userId: string,
     data: { content: string; wordCount: number },
-): Promise<{ data: Entry | null; error: Error | null }> => {
+): Promise<{ data: Entry | null; error: PostgrestError | null }> => {
     const { encryptedContent, iv, tag } = encrypt(data.content);
 
     const { data: entryRow, error } = await supabase
@@ -364,7 +367,7 @@ export const updateEntryEmbedding = async (
     supabase: SupabaseClient,
     entryId: string,
     embedding: string,
-): Promise<{ data: Entry | null; error: Error | null }> => {
+): Promise<{ data: Entry | null; error: PostgrestError | null }> => {
     const { data: entryRow, error } = await supabase
         .from("entries")
         .update({ embedding })
@@ -390,14 +393,14 @@ export const deleteEntry = async (
     supabase: SupabaseClient,
     entryId: string,
     userId: string,
-): Promise<{ error: Error | null }> => {
+): Promise<{ error: PostgrestError | null }> => {
     const { error } = await supabase
         .from("entries")
         .delete()
         .eq("id", entryId)
         .eq("user_id", userId);
 
-    return { error: error as Error | null };
+    return { error };
 };
 
 /**
@@ -407,11 +410,11 @@ export const deleteEntry = async (
 export const decrementUserProgress = async (
     supabase: SupabaseClient,
     userId: string,
-): Promise<{ error: Error | null }> => {
+): Promise<{ error: PostgrestError | null }> => {
     const { error } = await supabase.rpc("decrement_entry_count", {
         uid: userId,
     });
-    return { error: error as Error | null };
+    return { error };
 };
 
 /**
@@ -421,11 +424,11 @@ export const decrementUserProgress = async (
 export const incrementUserProgress = async (
     supabase: SupabaseClient,
     userId: string,
-): Promise<{ error: Error | null }> => {
+): Promise<{ error: PostgrestError | null }> => {
     const { error } = await supabase.rpc("increment_entry_count", {
         uid: userId,
     });
-    return { error: error as Error | null };
+    return { error };
 };
 
 /**
@@ -439,7 +442,7 @@ export const searchEntriesByEmbedding = async (
     queryEmbedding: string,
     limit = 10,
     threshold = 0.5,
-): Promise<{ data: EntryWithSimilarity[] | null; error: Error | null }> => {
+): Promise<{ data: EntryWithSimilarity[]; error: PostgrestError | null }> => {
     const { data: searchRows, error } = await supabase.rpc(
         "search_entries_by_embedding",
         {
@@ -451,13 +454,13 @@ export const searchEntriesByEmbedding = async (
     );
 
     if (error || !searchRows) {
-        return { data: null, error };
+        return { data: [], error };
     }
 
-    const entries = (searchRows as SearchEntryRowResult[]).map(
-        toEntryWithSimilarity,
-    );
-    return { data: entries, error: null };
+    return {
+        data: (searchRows as SearchEntryRowResult[]).map(toEntryWithSimilarity),
+        error: null,
+    };
 };
 
 /**
@@ -476,7 +479,7 @@ export const getEntryDatesByIds = async (
     ids: string[],
 ): Promise<{
     data: { id: string; createdAt: string }[];
-    error: Error | null;
+    error: PostgrestError | null;
 }> => {
     if (ids.length === 0) return { data: [], error: null };
 
@@ -501,7 +504,7 @@ export const findRelatedEntries = async (
     entryId: string,
     limit = 5,
     threshold = 0.5,
-): Promise<{ data: EntryWithSimilarity[] | null; error: Error | null }> => {
+): Promise<{ data: EntryWithSimilarity[]; error: PostgrestError | null }> => {
     const { data: searchRows, error } = await supabase.rpc(
         "find_related_entries",
         {
@@ -513,11 +516,11 @@ export const findRelatedEntries = async (
     );
 
     if (error || !searchRows) {
-        return { data: null, error };
+        return { data: [], error };
     }
 
-    const entries = (searchRows as SearchEntryRowResult[]).map(
-        toEntryWithSimilarity,
-    );
-    return { data: entries, error: null };
+    return {
+        data: (searchRows as SearchEntryRowResult[]).map(toEntryWithSimilarity),
+        error: null,
+    };
 };
