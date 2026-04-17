@@ -1,11 +1,16 @@
+import { clerkClient } from "@clerk/nextjs/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { insertSubscription } from "@/lib/subscriptions/repo";
+import { cancelLemonSubscription } from "@/lib/subscriptions/service";
 import type { CreateWithProgressPayload, ServiceResult } from "@/types";
 import {
+    cancelAccountDeletion,
     deleteUser,
+    getUsersScheduledForDeletion,
     insertUser,
     insertUserProgress,
     type NotificationPreferences,
+    scheduleAccountDeletion,
     updateNotificationPreferences as updateNotificationPreferencesRepo,
 } from "./repo";
 
@@ -80,4 +85,101 @@ export const updateNotificationPreferences = async (
     }
 
     return { data: null };
+};
+
+/**
+ * Schedule an account for deletion by setting deleted_at = NOW().
+ * Also cancels the Lemon Squeezy subscription immediately (non-blocking —
+ * LS keeps access alive until end of billing period regardless).
+ */
+export const initiateAccountDeletion = async (
+    supabase: SupabaseClient,
+    userId: string,
+): Promise<ServiceResult<null>> => {
+    const { error } = await scheduleAccountDeletion(supabase, userId);
+    if (error) {
+        return { error: "Failed to schedule account deletion" };
+    }
+
+    const lsResult = await cancelLemonSubscription(supabase, userId);
+    if ("error" in lsResult) {
+        console.error(
+            "LS cancellation failed during account deletion initiation — continuing:",
+            lsResult.error,
+        );
+    }
+
+    return { data: null };
+};
+
+/**
+ * Cancel a pending account deletion by clearing deleted_at.
+ */
+export const cancelScheduledDeletion = async (
+    supabase: SupabaseClient,
+    userId: string,
+): Promise<ServiceResult<null>> => {
+    const { error } = await cancelAccountDeletion(supabase, userId);
+    if (error) {
+        return { error: "Failed to cancel account deletion" };
+    }
+    return { data: null };
+};
+
+type DeletionResult = {
+    processed: number;
+    deleted: number;
+    failed: number;
+    errors: string[];
+};
+
+/**
+ * Hard-delete all accounts whose 30-day grace period has expired.
+ * Order: Supabase CASCADE delete first, then Clerk (avoids orphaned Clerk accounts).
+ * Called exclusively by the account-deletion cron using the admin client.
+ */
+export const processExpiredDeletions = async (
+    supabaseAdmin: SupabaseClient,
+): Promise<ServiceResult<DeletionResult>> => {
+    const { data: users, error } =
+        await getUsersScheduledForDeletion(supabaseAdmin);
+    if (error) {
+        throw error;
+    }
+
+    const result: DeletionResult = {
+        processed: users.length,
+        deleted: 0,
+        failed: 0,
+        errors: [],
+    };
+
+    for (const user of users) {
+        const { error: deleteError } = await deleteUser(
+            supabaseAdmin,
+            user.user_id,
+        );
+        if (deleteError) {
+            result.failed++;
+            result.errors.push(
+                `${user.user_id}: DB delete failed — ${deleteError.message}`,
+            );
+            // Do not attempt Clerk deletion if Supabase failed — avoids orphaned Clerk account with live data
+            continue;
+        }
+
+        try {
+            await (await clerkClient()).users.deleteUser(user.user_id);
+        } catch (clerkError) {
+            // Supabase data is already gone — log for manual cleanup but treat as success
+            console.error(
+                `Clerk deletion failed for ${user.user_id} (data already deleted):`,
+                clerkError,
+            );
+        }
+
+        result.deleted++;
+    }
+
+    return { data: result };
 };
