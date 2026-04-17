@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/sidebar";
 import { adminNavItems, brainNavItems, footerNavItems } from "@/config/sidebar";
 import { useSidebarBadgeStore } from "@/lib/stores/sidebar-badge-store";
+import { AccountDeletionBanner } from "../shared/account-deletion-banner";
 import { SidebarNavGroup } from "./sidebar-nav-group";
 import { SidebarUser } from "./sidebar-user";
 
@@ -106,6 +107,7 @@ export const AppSidebar = ({
                         className="px-4 pb-1"
                     />
                 )}
+                <AccountDeletionBanner />
                 <SidebarUser
                     name={displayName}
                     email={userEmail}
