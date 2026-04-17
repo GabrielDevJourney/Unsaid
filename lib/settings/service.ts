@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { SubscriptionStatusType } from "@/lib/schemas/subscription";
 import { getSubscriptionByUserId } from "@/lib/subscriptions/repo";
 import {
+    getAccountDeletionStatus,
     getNotificationPreferences,
     type NotificationPreferences,
 } from "@/lib/users/repo";
@@ -28,6 +29,7 @@ export interface SettingsPageData {
     user: SettingsUser;
     subscription: SettingsSubscription;
     notifications: NotificationPreferences;
+    deletedAt: string | null;
 }
 
 /**
@@ -40,10 +42,12 @@ export const getSettingsPageData = async (
     const user = await currentUser();
     if (!user) return null;
 
-    const [{ data: sub }, { data: notifPrefs }] = await Promise.all([
-        getSubscriptionByUserId(supabase, user.id),
-        getNotificationPreferences(supabase),
-    ]);
+    const [{ data: sub }, { data: notifPrefs }, { data: deletionStatus }] =
+        await Promise.all([
+            getSubscriptionByUserId(supabase, user.id),
+            getNotificationPreferences(supabase),
+            getAccountDeletionStatus(supabase),
+        ]);
 
     const status = sub?.status ?? "trial";
     const trialEndsAt = sub?.trial_ends_at ?? null;
@@ -74,5 +78,6 @@ export const getSettingsPageData = async (
             notifyWeeklyPatterns: true,
             notifyProgressChecks: true,
         },
+        deletedAt: deletionStatus?.deletedAt ?? null,
     };
 };
