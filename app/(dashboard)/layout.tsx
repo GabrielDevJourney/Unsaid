@@ -5,7 +5,7 @@ import { EntitlementProvider } from "@/lib/context/entitlement-context";
 import { getUnviewedProgressInsightsCount } from "@/lib/progress-insights/service";
 import { canUserWriteEntry } from "@/lib/subscriptions/entitlements";
 import { createSupabaseServer } from "@/lib/supabase/server";
-import { getUserProgress } from "@/lib/users/repo";
+import { getAccountDeletionStatus, getUserProgress } from "@/lib/users/repo";
 import { getNewPatternsCount } from "@/lib/weekly-insights/service";
 
 const Layout = async ({
@@ -19,19 +19,30 @@ const Layout = async ({
         { data: newProgressCount },
         canWrite,
         { data: progressData },
+        { data: deletionStatus },
     ] = await Promise.all([
         getNewPatternsCount(supabase),
         getUnviewedProgressInsightsCount(supabase),
         canUserWriteEntry(supabase),
         getUserProgress(supabase),
+        getAccountDeletionStatus(supabase),
     ]);
 
     const isAtFreeLimit = (progressData?.totalEntries ?? 0) >= 15 && !canWrite;
+    const isPendingDeletion = deletionStatus?.deletedAt != null;
+    const deletionScheduledAt = deletionStatus?.deletedAt
+        ? new Date(deletionStatus.deletedAt)
+        : null;
     // Role is forwarded by middleware — avoids a redundant DB round-trip
     const isAdmin = (await headers()).get("x-user-role") === "admin";
+
     return (
         <div className="flex h-svh">
-            <EntitlementProvider isAtFreeLimit={isAtFreeLimit}>
+            <EntitlementProvider
+                isAtFreeLimit={isAtFreeLimit}
+                isPendingDeletion={isPendingDeletion}
+                deletionScheduledAt={deletionScheduledAt}
+            >
                 <SidebarProvider>
                     <AppSidebar
                         newPatternsCount={newPatternsCount ?? 0}
@@ -44,4 +55,5 @@ const Layout = async ({
         </div>
     );
 };
+
 export default Layout;

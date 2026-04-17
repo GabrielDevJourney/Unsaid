@@ -15,12 +15,14 @@ interface SettingsViewProps {
     user: SettingsUser;
     subscription: SettingsSubscription;
     notifications: NotificationPreferences;
+    deletedAt: string | null;
 }
 
 const SettingsView = ({
     user,
     subscription,
     notifications,
+    deletedAt,
 }: SettingsViewProps) => {
     return (
         <div className="flex h-full flex-col overflow-hidden">
@@ -37,7 +39,7 @@ const SettingsView = ({
                     <SubscriptionSection subscription={subscription} />
                     <NotificationsSection preferences={notifications} />
                     <ExportSection />
-                    <DangerZoneSection />
+                    <DangerZoneSection deletedAt={deletedAt} />
                 </div>
             </div>
         </div>

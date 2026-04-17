@@ -35,6 +35,87 @@ export const deleteUser = async (
     return { data: null, error };
 };
 
+/**
+ * Mark the user's account for deletion by setting deleted_at = NOW().
+ */
+export const scheduleAccountDeletion = async (
+    supabase: SupabaseClient,
+    userId: string,
+): Promise<{ data: null; error: PostgrestError | null }> => {
+    const { error } = await supabase
+        .from("users")
+        .update({ deleted_at: new Date().toISOString() })
+        .eq("user_id", userId);
+    return { data: null, error };
+};
+
+/**
+ * Cancel a pending account deletion by clearing deleted_at.
+ */
+export const cancelAccountDeletion = async (
+    supabase: SupabaseClient,
+    userId: string,
+): Promise<{ data: null; error: PostgrestError | null }> => {
+    const { error } = await supabase
+        .from("users")
+        .update({ deleted_at: null })
+        .eq("user_id", userId);
+    return { data: null, error };
+};
+
+/**
+ * Get the deletion status for the authenticated user.
+ * Returns deletedAt (ISO string) if deletion is scheduled, null otherwise.
+ */
+export const getAccountDeletionStatus = async (
+    supabase: SupabaseClient,
+): Promise<{
+    data: { deletedAt: string | null } | null;
+    error: PostgrestError | null;
+}> => {
+    const { data, error } = await supabase
+        .from("users")
+        .select("deleted_at")
+        .single();
+
+    if (error || !data) {
+        return { data: null, error };
+    }
+
+    return { data: { deletedAt: data.deleted_at }, error: null };
+};
+
+export interface UserScheduledForDeletion {
+    user_id: string;
+}
+
+/**
+ * Find users whose 30-day grace period has expired.
+ * Admin-only — used exclusively by the account-deletion cron.
+ */
+export const getUsersScheduledForDeletion = async (
+    supabase: SupabaseClient,
+): Promise<{
+    data: UserScheduledForDeletion[];
+    error: PostgrestError | null;
+}> => {
+    const cutoff = new Date(
+        Date.now() - 30 * 24 * 60 * 60 * 1000,
+    ).toISOString();
+
+    const { data, error } = await supabase
+        .from("users")
+        .select("user_id")
+        .not("deleted_at", "is", null)
+        .lt("deleted_at", cutoff);
+
+    if (error || !data) {
+        return { data: [], error };
+    }
+
+    return { data, error: null };
+};
+
 export const insertUserProgress = async (
     supabase: SupabaseClient,
     userId: string,

@@ -13,6 +13,7 @@ const SettingsPage = async () => {
             user={pageData.user}
             subscription={pageData.subscription}
             notifications={pageData.notifications}
+            deletedAt={pageData.deletedAt}
         />
     );
 };
