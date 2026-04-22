@@ -44,9 +44,7 @@ next-env.d.ts
 
 # claude
 CLAUDE_USAGE.md
-CLAUDE.md
 claude-backup.md
-.claude
 
 /prompts/sandbox
 # Sentry Config File

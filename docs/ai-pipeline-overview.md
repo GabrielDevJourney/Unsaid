@@ -1,3 +1,18 @@
+## Code Reference
+
+| Tier | AI Function | Schema | Trigger |
+|------|------------|--------|---------|
+| 1 | `lib/ai/stream-entry-insight.ts` → `streamEntryInsight()` | `lib/schemas/entry-insight.ts` | `app/api/entry-insights/` |
+| 2 | `lib/ai/generate-weekly-insight.ts` → `generateWeeklyInsight()` | `lib/schemas/weekly-insight.ts` | `app/api/cron/weekly-insights/` |
+| 3 | `lib/ai/generate-progress-insight.ts` → `generateProgressInsight()` | `lib/schemas/progress-insight.ts` | `lib/triggers/check-progress-trigger.ts` |
+
+Models: Tier 1 = `claude-haiku-4-5` (sonnet if reflectionContext). Tier 2 & 3 = `claude-sonnet-4-6`.  
+Embeddings: `lib/ai/embeddings.ts` → OpenAI `text-embedding-3-small`.  
+Prompts: `prompts/system.md` (shared) + `prompts/tasks/{entry,entry-theme,weekly,progress,onboarding-preview}.md`.  
+Pattern types: single source of truth in `lib/constants/pattern-types.ts` → injected via `generatePatternTypesPromptSection()`.
+
+---
+
 ## Pipeline Architecture Overview
 
 - Pipeline Flow
@@ -32,7 +47,7 @@
     ┌──────────────────────────────────────┐
     │      TIER 2: WEEKLY PATTERNS         │
     │  Trigger: Sunday 9pm (auto)          │
-    │  Model: Claude Sonnet 4.5            │
+    │  Model: Claude Sonnet 4.6            │
     │  Input: Mon-Sun entries              │
     │  Output: JSON (1-3 pattern cards)    │
     │  Cost: ~$0.084/analysis             │
@@ -51,7 +66,7 @@
     ┌──────────────────────────────────────┐
     │     TIER 3: PROGRESS CHECK           │
     │  Trigger: Every 15 entries           │
-    │  Model: Claude Sonnet 4.5            │
+    │  Model: Claude Sonnet 4.6            │
     │  Input: Last 15 + related past       │
     │  Output: Structured text report      │
     │  Cost: ~$0.10/analysis              │
@@ -199,7 +214,7 @@
 
 | Parameter | Value |
 | --- | --- |
-| **Model** | `claude-sonnet-4-5` |
+| **Model** | `claude-sonnet-4-6` |
 | **Trigger** | Sunday 9pm (cron), if user wrote 2+ entries |
 | **Output Format** | JSON array |
 | **Input tokens** | ~18,000 (7 entries × 2,500 + system prompt 500) |
@@ -298,7 +313,7 @@
 
 | Parameter | Value |
 | --- | --- |
-| **Model** | `claude-sonnet-4-5` |
+| **Model** | `claude-sonnet-4-6` |
 | **Trigger** | After 15th, 30th, 45th entry |
 | **Output Format** | Structured text (specific format) |
 | **Input tokens** | ~63,000 (15 recent × 2,500 + 10 past × 2,500 + system prompt 500) |
