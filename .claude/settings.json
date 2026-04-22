@@ -9,6 +9,35 @@
                         "command": "filepath=$(cat | jq -r '.tool_input.file_path // empty') && if [ -n \"$filepath\" ] && [[ \"$filepath\" =~ \\.(ts|tsx|js|jsx|json|jsonc)$ ]]; then npx @biomejs/biome check --write --unsafe \"$filepath\" 2>/dev/null; fi"
                     }
                 ]
+            },
+            {
+                "matcher": "Write",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "filepath=$(cat | jq -r '.tool_input.file_path // empty') && if [[ \"$filepath\" =~ supabase/migrations/.*\\.sql$ ]]; then echo '⚠️  Migration written. Run: npx supabase migration up && npx supabase gen types typescript --local > types/database.ts'; fi"
+                    }
+                ]
+            },
+            {
+                "matcher": "EnterWorktree",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "result=$(cat) && worktree_path=$(echo \"$result\" | jq -r '.tool_result.path // empty') && if [ -n \"$worktree_path\" ] && [ -d \"$worktree_path\" ]; then main_root=$(git -C \"$worktree_path\" rev-parse --path-format=absolute --git-common-dir 2>/dev/null | sed 's|/\\.git$||') && if [ -n \"$main_root\" ] && [ -f \"${main_root}/.env.local\" ]; then cp \"${main_root}/.env.local\" \"${worktree_path}/.env.local\" && (cd \"${worktree_path}\" && npm install --silent) && echo \"✅ Worktree ready: .env.local copied + npm install done\"; fi; fi"
+                    }
+                ]
+            }
+        ],
+        "PreToolUse": [
+            {
+                "matcher": "Edit|Write",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "filepath=$(cat | jq -r '.tool_input.file_path // empty') && if [[ \"$filepath\" =~ lib/crypto\\.ts$ ]] || [[ \"$filepath\" =~ lib/supabase/admin\\.ts$ ]] || [[ \"$filepath\" =~ lib/auth/admin\\.ts$ ]]; then echo \"BLOCKED: Sensitive file '$filepath' — state your reason for this change before proceeding.\"; exit 2; fi"
+                    }
+                ]
             }
         ]
     }
