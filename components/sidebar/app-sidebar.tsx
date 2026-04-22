@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/sidebar";
 import { adminNavItems, brainNavItems, footerNavItems } from "@/config/sidebar";
 import { useSidebarBadgeStore } from "@/lib/stores/sidebar-badge-store";
-import { AccountDeletionBanner } from "../shared/account-deletion-banner";
+import { AccountDeletionBanner } from "../shared/account-deletion-card";
 import { SidebarNavGroup } from "./sidebar-nav-group";
 import { SidebarUser } from "./sidebar-user";
 

@@ -3,7 +3,6 @@
 import { useClerk } from "@clerk/nextjs";
 import { Cancel01Icon, Logout01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { de } from "date-fns/locale";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
@@ -40,6 +39,8 @@ const DangerZoneSection = ({ deletedAt }: DangerZoneSectionProps) => {
                 setIsDeletePopoverOpen(false);
                 return;
             }
+            setIsDeleting(false);
+            setIsDeletePopoverOpen(false);
             router.refresh();
         } catch {
             setIsDeleting(false);
@@ -55,6 +56,7 @@ const DangerZoneSection = ({ deletedAt }: DangerZoneSectionProps) => {
                 setIsCancelling(false);
                 return;
             }
+            setIsCancelling(false);
             router.refresh();
         } catch {
             setIsCancelling(false);
