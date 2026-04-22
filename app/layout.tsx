@@ -2,6 +2,8 @@ import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
 import { Libre_Baskerville } from "next/font/google";
 import localFont from "next/font/local";
+import { CheckoutOverlayTest } from "@/components/dev/checkout-overlay-test";
+import { LemonSqueezyProvider } from "@/components/lemon-squeezy-provider";
 import "./globals.css";
 
 const satoshi = localFont({
@@ -53,6 +55,10 @@ const RootLayout = ({
                     className={`${satoshi.variable} ${libreBaskerville.variable} antialiased`}
                 >
                     {children}
+                    <LemonSqueezyProvider />
+                    {process.env.NODE_ENV === "development" && (
+                        <CheckoutOverlayTest />
+                    )}
                 </body>
             </html>
         </ClerkProvider>

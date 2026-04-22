@@ -4,7 +4,6 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
 import { UpgradeFeatureGrid } from "@/components/upgrade/upgrade-feature-grid";
 import { UpgradePricingSection } from "@/components/upgrade/upgrade-pricing-section";
-import { CHECKOUT_URL } from "@/lib/constants/upgrade";
 import { getEntriesWithInsightsPaginated } from "@/lib/entries/repo";
 import { getTotalInsightsCount } from "@/lib/entry-insights/repo";
 import {
@@ -85,7 +84,7 @@ const UpgradePage = async () => {
                     upgradeProgressInsight={upgradeProgressInsight}
                 />
 
-                <UpgradePricingSection checkoutUrl={CHECKOUT_URL} />
+                <UpgradePricingSection />
             </div>
         </div>
     );
