@@ -16,7 +16,11 @@ const UpgradePlanButton = () => {
             });
             const json = await res.json();
             if (json.data?.url) {
-                window.location.href = json.data.url;
+                if (window.LemonSqueezy?.Url?.Open) {
+                    window.LemonSqueezy.Url.Open(json.data.url);
+                } else {
+                    window.location.href = json.data.url;
+                }
             }
         } finally {
             setLoading(false);

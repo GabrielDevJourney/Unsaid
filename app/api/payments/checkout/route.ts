@@ -34,6 +34,13 @@ export const POST = async () => {
         );
         checkoutUrl.searchParams.set("checkout[custom][user_id]", userId);
 
+        if (process.env.NODE_ENV === "development") {
+            checkoutUrl.searchParams.set(
+                "checkout[redirect_url]",
+                "http://localhost:3000",
+            );
+        }
+
         return NextResponse.json({ data: { url: checkoutUrl.toString() } });
     } catch (error) {
         console.error("Checkout URL generation failed:", error);
