@@ -31,11 +31,11 @@ export const SidebarNavGroup = ({
 
     const badgeStyles = {
         slate: {
-            dot: "bg-slate-400 border-white",
+            dot: "bg-slate-400 border-slate-200",
             pill: "bg-slate-100 border-slate-400 text-slate-800",
         },
         orange: {
-            dot: "bg-orange-400 border-white",
+            dot: "bg-orange-400 border-orange-200",
             pill: "bg-orange-100 border-orange-400 text-orange-500",
         },
     } as const;
@@ -53,7 +53,7 @@ export const SidebarNavGroup = ({
                             {/* Dot — only visible in collapsed state */}
                             {hasBadge && (
                                 <span
-                                    className={`absolute top-1 right-1 border-2 w-3 h-3 rounded-full transition-opacity duration-150 ${state === "collapsed" ? "opacity-100" : "opacity-0"} ${colors.dot}`}
+                                    className={`absolute top-1 right-2.5 border-2 w-3 h-3 rounded-full transition-opacity duration-400 ease-in-out ${state === "collapsed" ? "opacity-100" : "opacity-0"} ${colors.dot}`}
                                 />
                             )}
                             <SidebarMenuButton

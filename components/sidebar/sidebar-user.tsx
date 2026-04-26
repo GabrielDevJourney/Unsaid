@@ -43,7 +43,7 @@ export const SidebarUser = ({
                 <SidebarMenuItem>
                     <PopoverTrigger asChild>
                         <SidebarMenuButton
-                            size="lg"
+                            size="default"
                             className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground transition-[width,height,gap]"
                         >
                             <Avatar className="size-10 shrink-0 flex!">
