@@ -6,6 +6,8 @@ import type { CreateWithProgressPayload, ServiceResult } from "@/types";
 import {
     cancelAccountDeletion,
     deleteUser,
+    getAccountDeletionStatus as getAccountDeletionStatusRepo,
+    getUserProgress as getUserProgressRepo,
     getUsersScheduledForDeletion,
     insertUser,
     insertUserProgress,
@@ -110,6 +112,26 @@ export const initiateAccountDeletion = async (
     }
 
     return { data: null };
+};
+
+export const getAccountDeletionStatus = async (
+    supabase: SupabaseClient,
+): Promise<ServiceResult<{ deletedAt: string | null }>> => {
+    const { data, error } = await getAccountDeletionStatusRepo(supabase);
+    if (error || !data) {
+        return { error: "Failed to fetch deletion status" };
+    }
+    return { data };
+};
+
+export const getUserProgress = async (
+    supabase: SupabaseClient,
+): Promise<ServiceResult<{ totalEntries: number }>> => {
+    const { data, error } = await getUserProgressRepo(supabase);
+    if (error || !data) {
+        return { error: "Failed to fetch user progress" };
+    }
+    return { data };
 };
 
 /**

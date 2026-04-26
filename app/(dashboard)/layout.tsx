@@ -5,7 +5,7 @@ import { EntitlementProvider } from "@/lib/context/entitlement-context";
 import { getUnviewedProgressInsightsCount } from "@/lib/progress-insights/service";
 import { canUserWriteEntry } from "@/lib/subscriptions/entitlements";
 import { createSupabaseServer } from "@/lib/supabase/server";
-import { getAccountDeletionStatus, getUserProgress } from "@/lib/users/repo";
+import { getAccountDeletionStatus, getUserProgress } from "@/lib/users/service";
 import { getNewPatternsCount } from "@/lib/weekly-insights/service";
 
 const Layout = async ({
