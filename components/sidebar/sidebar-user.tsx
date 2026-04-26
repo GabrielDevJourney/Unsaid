@@ -39,14 +39,17 @@ export const SidebarUser = ({
 
     return (
         <Popover open={open} onOpenChange={setOpen}>
-            <SidebarMenu className="p-6 border-t border-border">
+            <SidebarMenu className="border-t border-border p-6 transition-[padding] duration-400 ease-in-out group-data-[collapsible=icon]:px-5 group-data-[collapsible=icon]:py-6">
                 <SidebarMenuItem>
                     <PopoverTrigger asChild>
                         <SidebarMenuButton
                             size="default"
-                            className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground transition-[width,height,gap]"
+                            className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground transition-[width,height,padding,gap] group-data-[collapsible=icon]:p-0!"
                         >
-                            <Avatar className="size-10 shrink-0 flex!">
+                            <Avatar
+                                size="lg"
+                                className="shrink-0 flex! duration-400 ease-in-out"
+                            >
                                 <AvatarImage
                                     src={avatarUrl}
                                     alt={`${name} avatar`}
