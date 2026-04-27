@@ -6,9 +6,9 @@ import {
 } from "@/lib/rate-limits/service";
 import type { ServiceResult, WaitlistSignupResult } from "@/types";
 import {
-    getWaitlistCount,
-    getWaitlistEntryByEmail,
-    insertWaitlistEntry,
+    countWaitlistEntries,
+    createWaitlistEntry,
+    findWaitlistEntryByEmail,
 } from "./repo";
 
 const WAITLIST_RATE_LIMIT_MS = 60 * 60 * 1000;
@@ -35,7 +35,7 @@ export const addToWaitlist = async (
         return { error: "Failed to check waitlist rate limit" };
     }
 
-    const { error } = await insertWaitlistEntry(supabase, email, source);
+    const { error } = await createWaitlistEntry(supabase, email, source);
 
     if (error?.code === "23505") {
         return {
@@ -52,7 +52,7 @@ export const addToWaitlist = async (
         return { error: "Failed to add to waitlist" };
     }
 
-    const { count, error: countError } = await getWaitlistCount(supabase);
+    const { count, error: countError } = await countWaitlistEntries(supabase);
 
     if (countError) {
         console.error("Failed to count waitlist entries:", countError);
@@ -72,6 +72,6 @@ export const isOnWaitlist = async (
     supabase: SupabaseClient,
     email: string,
 ): Promise<boolean> => {
-    const { data } = await getWaitlistEntryByEmail(supabase, email);
+    const { data } = await findWaitlistEntryByEmail(supabase, email);
     return data !== null;
 };

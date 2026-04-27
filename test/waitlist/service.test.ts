@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { consumeRateLimit } from "@/lib/rate-limits/service";
-import { getWaitlistCount, insertWaitlistEntry } from "@/lib/waitlist/repo";
+import { countWaitlistEntries, createWaitlistEntry } from "@/lib/waitlist/repo";
 import { addToWaitlist } from "@/lib/waitlist/service";
 
 vi.mock("@/lib/rate-limits/service", () => ({
@@ -10,9 +10,9 @@ vi.mock("@/lib/rate-limits/service", () => ({
 }));
 
 vi.mock("@/lib/waitlist/repo", () => ({
-    insertWaitlistEntry: vi.fn(),
-    getWaitlistCount: vi.fn(),
-    getWaitlistEntryByEmail: vi.fn(),
+    createWaitlistEntry: vi.fn(),
+    countWaitlistEntries: vi.fn(),
+    findWaitlistEntryByEmail: vi.fn(),
 }));
 
 const supabase = {} as SupabaseClient;
@@ -21,11 +21,11 @@ describe("addToWaitlist", () => {
     beforeEach(() => {
         vi.clearAllMocks();
         vi.mocked(consumeRateLimit).mockResolvedValue({ data: null });
-        vi.mocked(insertWaitlistEntry).mockResolvedValue({
+        vi.mocked(createWaitlistEntry).mockResolvedValue({
             data: null,
             error: null,
         } as never);
-        vi.mocked(getWaitlistCount).mockResolvedValue({
+        vi.mocked(countWaitlistEntries).mockResolvedValue({
             count: 7,
             error: null,
         } as never);
@@ -46,7 +46,7 @@ describe("addToWaitlist", () => {
                 position: 7,
             },
         });
-        expect(insertWaitlistEntry).toHaveBeenCalledWith(
+        expect(createWaitlistEntry).toHaveBeenCalledWith(
             supabase,
             "a@example.com",
             "landing_page",
@@ -64,6 +64,6 @@ describe("addToWaitlist", () => {
         );
 
         expect(result).toEqual({ error: "rate_limit" });
-        expect(insertWaitlistEntry).not.toHaveBeenCalled();
+        expect(createWaitlistEntry).not.toHaveBeenCalled();
     });
 });

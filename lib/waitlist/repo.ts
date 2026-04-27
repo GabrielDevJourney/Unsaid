@@ -1,9 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-/**
- * Insert a new waitlist entry.
- */
-export const insertWaitlistEntry = async (
+export const createWaitlistEntry = async (
     supabase: SupabaseClient,
     email: string,
     source: string,
@@ -18,16 +15,13 @@ export const insertWaitlistEntry = async (
         .single();
 };
 
-export const getWaitlistCount = async (supabase: SupabaseClient) => {
+export const countWaitlistEntries = async (supabase: SupabaseClient) => {
     return supabase
         .from("waitlist")
         .select("id", { count: "exact", head: true });
 };
 
-/**
- * Get waitlist entry by email.
- */
-export const getWaitlistEntryByEmail = async (
+export const findWaitlistEntryByEmail = async (
     supabase: SupabaseClient,
     email: string,
 ) => {
