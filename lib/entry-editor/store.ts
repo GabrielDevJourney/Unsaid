@@ -1,7 +1,5 @@
 import { create } from "zustand";
-import { createEntryAction } from "@/app/actions/entries";
 import type { EntryInsightSummary } from "@/types";
-import { isServiceError } from "@/types";
 
 interface EntryEditorState {
     entryId: string | null;
@@ -107,16 +105,23 @@ export const useEntryEditorStore = create<
 
         try {
             if (!entryId) {
-                const result = await createEntryAction(
-                    content,
-                    sourceType,
-                    sourceId,
-                );
-                if (isServiceError(result)) {
-                    set({ isSaving: false, saveError: result.error });
+                const res = await fetch("/api/entries", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ content, sourceType, sourceId }),
+                });
+                const json = (await res.json()) as {
+                    data?: { id?: unknown };
+                    error?: string;
+                };
+                if (!res.ok || typeof json.data?.id !== "string") {
+                    set({
+                        isSaving: false,
+                        saveError: json.error ?? "Failed to save",
+                    });
                     return { entryId: null, isNew: false };
                 }
-                const newId = result.data.id;
+                const newId = json.data.id;
                 set({
                     entryId: newId,
                     savedContent: content,
