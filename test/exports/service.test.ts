@@ -8,7 +8,7 @@ import {
     formatProgressInsight,
     formatWeeklyInsight,
 } from "@/lib/exports/service";
-import { getProgressInsightsPaginated } from "@/lib/progress-insights/repo";
+import { findProgressInsightsPaginated } from "@/lib/progress-insights/repo";
 import { getWeeklyInsightWithPatternsPaginated } from "@/lib/weekly-insights/repo";
 import type { EntryWithInsight } from "@/types/domain/entries";
 import type {
@@ -31,7 +31,7 @@ vi.mock("@/lib/weekly-insights/repo", () => ({
 }));
 
 vi.mock("@/lib/progress-insights/repo", () => ({
-    getProgressInsightsPaginated: vi.fn(),
+    findProgressInsightsPaginated: vi.fn(),
 }));
 
 // ---------------------------------------------------------------------------
@@ -273,7 +273,7 @@ describe("exportUserData — happy path", () => {
             nextCursor: null,
             error: null,
         });
-        vi.mocked(getProgressInsightsPaginated).mockResolvedValue(progressOk());
+        vi.mocked(findProgressInsightsPaginated).mockResolvedValue(progressOk());
     });
 
     it("returns skippedBatchCount of 0", async () => {
@@ -332,7 +332,7 @@ describe("exportUserData — empty user", () => {
             nextCursor: null,
             error: null,
         });
-        vi.mocked(getProgressInsightsPaginated).mockResolvedValue(
+        vi.mocked(findProgressInsightsPaginated).mockResolvedValue(
             progressOk([]),
         );
     });
@@ -376,7 +376,7 @@ describe("exportUserData — pagination", () => {
             nextCursor: null,
             error: null,
         });
-        vi.mocked(getProgressInsightsPaginated).mockResolvedValue(
+        vi.mocked(findProgressInsightsPaginated).mockResolvedValue(
             progressOk([]),
         );
 
@@ -408,7 +408,7 @@ describe("exportUserData — pagination", () => {
                 nextCursor: null,
                 error: null,
             });
-        vi.mocked(getProgressInsightsPaginated).mockResolvedValue(
+        vi.mocked(findProgressInsightsPaginated).mockResolvedValue(
             progressOk([]),
         );
 
@@ -434,7 +434,7 @@ describe("exportUserData — pagination", () => {
             nextCursor: null,
             error: null,
         });
-        vi.mocked(getProgressInsightsPaginated).mockResolvedValue(
+        vi.mocked(findProgressInsightsPaginated).mockResolvedValue(
             progressOk([]),
         );
 
@@ -462,7 +462,7 @@ describe("exportUserData — error handling", () => {
             nextCursor: null,
             error: null,
         });
-        vi.mocked(getProgressInsightsPaginated).mockResolvedValue(progressOk());
+        vi.mocked(findProgressInsightsPaginated).mockResolvedValue(progressOk());
     });
 
     it("entries query error increments skippedBatchCount", async () => {
@@ -486,7 +486,7 @@ describe("exportUserData — error handling", () => {
     });
 
     it("progress query error increments skippedBatchCount", async () => {
-        vi.mocked(getProgressInsightsPaginated).mockResolvedValue({
+        vi.mocked(findProgressInsightsPaginated).mockResolvedValue({
             data: [],
             count: 0,
             error: supabaseError,
@@ -506,7 +506,7 @@ describe("exportUserData — error handling", () => {
             nextCursor: null,
             error: supabaseError,
         });
-        vi.mocked(getProgressInsightsPaginated).mockResolvedValue({
+        vi.mocked(findProgressInsightsPaginated).mockResolvedValue({
             data: [],
             count: 0,
             error: supabaseError,
@@ -547,7 +547,7 @@ describe("exportUserData — error handling", () => {
     });
 
     it("progress throw increments skippedBatchCount", async () => {
-        vi.mocked(getProgressInsightsPaginated).mockRejectedValue(
+        vi.mocked(findProgressInsightsPaginated).mockRejectedValue(
             new Error("network failure"),
         );
         const { skippedBatchCount } = await exportUserData(supabase, userId);
@@ -592,7 +592,7 @@ describe("exportUserData — Sentry error tracking", () => {
             nextCursor: null,
             error: null,
         });
-        vi.mocked(getProgressInsightsPaginated).mockResolvedValue(
+        vi.mocked(findProgressInsightsPaginated).mockResolvedValue(
             progressOk([]),
         );
     });
@@ -656,7 +656,7 @@ describe("exportUserData — Sentry error tracking", () => {
     });
 
     it("sets correct domain tag for progress error", async () => {
-        vi.mocked(getProgressInsightsPaginated).mockRejectedValue(
+        vi.mocked(findProgressInsightsPaginated).mockRejectedValue(
             new Error("fail"),
         );
 

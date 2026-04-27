@@ -2,7 +2,7 @@ import * as Sentry from "@sentry/nextjs";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { DATE_DISPLAY_LONG, formatDate } from "@/lib/date-utils";
 import { getEntriesWithInsightsPaginated } from "@/lib/entries/repo";
-import { getProgressInsightsPaginated } from "@/lib/progress-insights/repo";
+import { findProgressInsightsPaginated } from "@/lib/progress-insights/repo";
 import { getWeeklyInsightWithPatternsPaginated } from "@/lib/weekly-insights/repo";
 import type { EntryWithInsight } from "@/types/domain/entries";
 import type {
@@ -266,7 +266,7 @@ export const exportUserData = async (
 
     while (hasMoreProgress) {
         try {
-            const { data, error } = await getProgressInsightsPaginated(
+            const { data, error } = await findProgressInsightsPaginated(
                 supabase,
                 userId,
                 progressPage,

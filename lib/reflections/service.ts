@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getEntriesByIds } from "@/lib/entries/repo";
 import { findEntryInsightsByEntryIds } from "@/lib/entry-insights/repo";
-import { getProgressInsightById } from "@/lib/progress-insights/repo";
+import { findProgressInsightById } from "@/lib/progress-insights/repo";
 import { searchPatterns } from "@/lib/semantic-search/service";
 import { getPatternById } from "@/lib/weekly-insights/service";
 
@@ -97,7 +97,7 @@ export const getProgressReflectionContext = async (
     progressId: string,
 ): Promise<string> => {
     try {
-        const { data: insight, error } = await getProgressInsightById(
+        const { data: insight, error } = await findProgressInsightById(
             supabase,
             progressId,
         );

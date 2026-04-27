@@ -57,12 +57,7 @@ export const insertProgressInsight = async (
     return { data: toProgressInsight(insightRow), error: null };
 };
 
-/**
- * Get the latest progress insight for a user.
- * Returns null if no progress insight exists.
- * Decrypts content before returning.
- */
-export const getLatestProgressInsight = async (
+export const findLatestProgressInsight = async (
     supabase: SupabaseClient,
     userId: string,
 ): Promise<{ data: ProgressInsight | null; error: PostgrestError | null }> => {
@@ -83,12 +78,7 @@ export const getLatestProgressInsight = async (
     return { data: toProgressInsight(insightRow), error: null };
 };
 
-/**
- * Get a progress insight by ID.
- * RLS ensures user can only fetch their own insights.
- * Decrypts content before returning.
- */
-export const getProgressInsightById = async (
+export const findProgressInsightById = async (
     supabase: SupabaseClient,
     insightId: string,
 ): Promise<{ data: ProgressInsight | null; error: PostgrestError | null }> => {
@@ -107,11 +97,7 @@ export const getProgressInsightById = async (
     return { data: toProgressInsight(insightRow), error: null };
 };
 
-/**
- * Get all progress insights for a user (paginated).
- * Decrypts content for each result.
- */
-export const getProgressInsightsPaginated = async (
+export const findProgressInsightsPaginated = async (
     supabase: SupabaseClient,
     userId: string,
     page = 1,
@@ -163,11 +149,7 @@ export const countUnviewedProgressInsights = async (
     return { count: count ?? 0, error };
 };
 
-/**
- * Mark a progress insight as viewed.
- * RLS ensures users can only update their own rows.
- */
-export const markProgressInsightAsViewed = async (
+export const updateProgressInsightViewStatus = async (
     supabase: SupabaseClient,
     insightId: string,
 ): Promise<void> => {
@@ -177,11 +159,7 @@ export const markProgressInsightAsViewed = async (
         .eq("id", insightId);
 };
 
-/**
- * Get user progress tracking data.
- * Returns total entries and entry count at last progress insight.
- */
-export const getUserProgress = async (
+export const findUserProgress = async (
     supabase: SupabaseClient,
     userId: string,
 ) => {
@@ -211,12 +189,7 @@ export const updateUserProgressAfterInsight = async (
         .single();
 };
 
-/**
- * Get recent entries for a user (for progress insight generation).
- * Returns the most recent N entries ordered by creation date.
- * Decrypts content for each entry.
- */
-export const getRecentEntries = async (
+export const findRecentEntries = async (
     supabase: SupabaseClient,
     userId: string,
     limit = 15,
@@ -237,12 +210,7 @@ export const getRecentEntries = async (
     return { data: entryRows.map(toEntry), error: null };
 };
 
-/**
- * Get entries older than a specific date (for finding related past entries).
- * Used to exclude recent entries when searching for related content.
- * Decrypts content for each entry.
- */
-export const getEntriesBeforeDate = async (
+export const findEntriesBeforeDate = async (
     supabase: SupabaseClient,
     userId: string,
     beforeDate: string,

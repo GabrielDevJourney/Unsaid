@@ -26,13 +26,13 @@ const INITIAL_PAGE_SIZE = 20; // must match PAGE_SIZE in progress-view.tsx
 
 import {
     countUnviewedProgressInsights,
-    getLatestProgressInsight as getLatestProgressInsightRepo,
-    getProgressInsightById,
-    getProgressInsightsPaginated as getProgressInsightsPaginatedRepo,
-    getRecentEntries,
-    getUserProgress,
+    findLatestProgressInsight,
+    findProgressInsightById,
+    findProgressInsightsPaginated,
+    findRecentEntries,
+    findUserProgress,
     insertProgressInsight,
-    markProgressInsightAsViewed,
+    updateProgressInsightViewStatus,
     updateUserProgressAfterInsight,
 } from "./repo";
 
@@ -53,7 +53,7 @@ export const markProgressInsightViewed = async (
     supabase: DbClient,
     insightId: string,
 ): Promise<void> => {
-    await markProgressInsightAsViewed(supabase, insightId);
+    await updateProgressInsightViewStatus(supabase, insightId);
 };
 
 /** Number of related past entries to include for context */
@@ -80,7 +80,7 @@ export const shouldTriggerProgressInsight = async (
 > => {
     const supabase = createSupabaseAdmin();
 
-    const { data: progress, error: progressError } = await getUserProgress(
+    const { data: progress, error: progressError } = await findUserProgress(
         supabase,
         userId,
     );
@@ -154,7 +154,7 @@ export const createProgressInsight = async (
     if (payload?.recentEntries && payload.recentEntries.length > 0) {
         recentEntries = payload.recentEntries;
     } else {
-        const { data: entries, error: entriesError } = await getRecentEntries(
+        const { data: entries, error: entriesError } = await findRecentEntries(
             supabase,
             userId,
             PROGRESS_TRIGGER_INTERVAL,
@@ -254,7 +254,7 @@ export const createProgressInsight = async (
     }
 
     // Update user progress tracking
-    const { data: progress } = await getUserProgress(supabase, userId);
+    const { data: progress } = await findUserProgress(supabase, userId);
     if (progress) {
         await updateUserProgressAfterInsight(
             supabase,
@@ -281,13 +281,8 @@ export const getProgressInsightsPage = async (
     hasMore: boolean;
 }> => {
     const [insightsResult, progressResult] = await Promise.all([
-        getProgressInsightsPaginatedRepo(
-            supabase,
-            userId,
-            1,
-            INITIAL_PAGE_SIZE,
-        ),
-        getUserProgress(supabase, userId),
+        findProgressInsightsPaginated(supabase, userId, 1, INITIAL_PAGE_SIZE),
+        findUserProgress(supabase, userId),
     ]);
 
     const progress = progressResult.data;
@@ -313,7 +308,10 @@ export const getProgressInsightDetail = async (
     insight: ProgressInsight;
     keyEntryData: { id: string; entryNumber: number; createdAt: string }[];
 } | null> => {
-    const { data: insight } = await getProgressInsightById(supabase, insightId);
+    const { data: insight } = await findProgressInsightById(
+        supabase,
+        insightId,
+    );
     if (!insight) return null;
 
     // Determine key entry IDs: use stored key_entry_ids, or fall back to first/middle/last
@@ -504,7 +502,7 @@ export const getProgressInsightsPaginated = async (
     page: number,
     pageSize: number,
 ): Promise<ServiceResult<{ insights: ProgressInsight[]; count: number }>> => {
-    const { data, error, count } = await getProgressInsightsPaginatedRepo(
+    const { data, error, count } = await findProgressInsightsPaginated(
         supabase,
         userId,
         page,
@@ -523,10 +521,7 @@ export const getLatestProgressInsight = async (
     supabase: DbClient,
     userId: string,
 ): Promise<ServiceResult<ProgressInsight | null>> => {
-    const { data, error } = await getLatestProgressInsightRepo(
-        supabase,
-        userId,
-    );
+    const { data, error } = await findLatestProgressInsight(supabase, userId);
 
     if (error?.code === "PGRST116") return { data: null };
     if (error) {
