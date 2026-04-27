@@ -1,4 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import {
+    consumeRateLimit,
+    RATE_LIMIT_ERROR,
+    RATE_LIMIT_SCOPES,
+} from "@/lib/rate-limits/service";
 import type { ServiceResult, WaitlistSignupResult } from "@/types";
 import {
     getWaitlistCount,
@@ -6,18 +11,32 @@ import {
     insertWaitlistEntry,
 } from "./repo";
 
-/**
- * Add email to the waitlist.
- * Returns success with message indicating new signup or existing entry.
- */
+const WAITLIST_RATE_LIMIT_MS = 60 * 60 * 1000;
+
 export const addToWaitlist = async (
     supabase: SupabaseClient,
     email: string,
     source: string,
+    ipAddress: string,
 ): Promise<ServiceResult<WaitlistSignupResult>> => {
+    const rateLimit = await consumeRateLimit(
+        supabase,
+        RATE_LIMIT_SCOPES.waitlistSignup,
+        ipAddress,
+        WAITLIST_RATE_LIMIT_MS,
+        1,
+    );
+
+    if (rateLimit.error === RATE_LIMIT_ERROR) {
+        return { error: RATE_LIMIT_ERROR };
+    }
+
+    if (rateLimit.error) {
+        return { error: "Failed to check waitlist rate limit" };
+    }
+
     const { error } = await insertWaitlistEntry(supabase, email, source);
 
-    // Handle duplicate email (unique constraint violation)
     if (error?.code === "23505") {
         return {
             data: {
@@ -30,14 +49,14 @@ export const addToWaitlist = async (
 
     if (error) {
         console.error("Failed to add to waitlist:", error);
-        throw error;
+        return { error: "Failed to add to waitlist" };
     }
 
     const { count, error: countError } = await getWaitlistCount(supabase);
 
     if (countError) {
         console.error("Failed to count waitlist entries:", countError);
-        throw countError;
+        return { error: "Failed to get waitlist position" };
     }
 
     return {
@@ -49,10 +68,6 @@ export const addToWaitlist = async (
     };
 };
 
-/**
- * Check if email is already on waitlist.
- * Note: email should be pre-normalized via schema validation.
- */
 export const isOnWaitlist = async (
     supabase: SupabaseClient,
     email: string,
