@@ -10,6 +10,7 @@ import type { ServiceResult } from "@/types";
 import type { Json } from "@/types/database";
 import type { SubscriptionRow } from "@/types/domain/subscriptions";
 import {
+    getExpiringTrials as getExpiringTrialsRepo,
     getPaymentEventByLemonId,
     getSubscriptionByUserId,
     getUserByEmail,
@@ -255,6 +256,25 @@ export const cancelLemonSubscription = async (
  * Mark expired trials as expired status.
  * Called by cron job.
  */
+export const getExpiringTrials = async (
+    supabase: SupabaseClient,
+    daysUntilExpiry: number,
+): Promise<
+    ServiceResult<{ user_id: string; trial_ends_at: string | null }[]>
+> => {
+    const { data, error } = await getExpiringTrialsRepo(
+        supabase,
+        daysUntilExpiry,
+    );
+
+    if (error) {
+        console.error("Failed to fetch expiring trials:", error);
+        return { error: "Failed to fetch expiring trials" };
+    }
+
+    return { data: data ?? [] };
+};
+
 export const expireTrials = async (
     supabase: SupabaseClient,
 ): Promise<ServiceResult<{ count: number }>> => {
