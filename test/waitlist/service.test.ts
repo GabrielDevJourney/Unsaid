@@ -6,6 +6,7 @@ import { addToWaitlist } from "@/lib/waitlist/service";
 
 vi.mock("@/lib/rate-limits/service", () => ({
     consumeRateLimit: vi.fn(),
+    RATE_LIMIT_ERROR: "rate_limit",
     RATE_LIMIT_SCOPES: { waitlistSignup: "waitlist_signup" },
 }));
 
