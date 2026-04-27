@@ -14,14 +14,14 @@ import type {
 import { generateEmbedding } from "../ai/embeddings";
 import { decrypt } from "../crypto";
 import {
-    getNewPatternsCount as getNewPatternsCountRepo,
-    getPatternById as getPatternByIdRepo,
-    getTotalPatternsCount as getTotalPatternsCountRepo,
-    getWeeklyInsightWithPatternsByWeekStart as getWeeklyInsightWithPatternsByWeekStartRepo,
-    getWeeklyInsightWithPatternsPaginated as getWeeklyInsightWithPatternsPaginatedRepo,
+    countNewPatterns,
+    countPatterns,
+    createWeeklyInsightPatterns,
+    findPatternById,
+    findWeeklyInsightWithPatternsByWeekStart,
+    findWeeklyInsightWithPatternsPaginated,
     insertWeeklyInsight,
-    insertWeeklyInsightPatterns,
-    markPatternAsViewed as markPatternAsViewedRepo,
+    updatePatternViewStatus,
 } from "./repo";
 
 export { getWeekRange, getWeekStart };
@@ -374,7 +374,7 @@ export const createWeeklyInsight = async (
 
     // Insert patterns
     const { data: insertedPatterns, error: patternsError } =
-        await insertWeeklyInsightPatterns(
+        await createWeeklyInsightPatterns(
             supabase,
             weeklyInsight.id,
             patternsWithEmbeddings.map((p) => ({
@@ -412,11 +412,7 @@ export const getWeeklyInsightWithPatternsPaginated = async (
     }>
 > => {
     const { data, nextCursor, error } =
-        await getWeeklyInsightWithPatternsPaginatedRepo(
-            supabase,
-            cursor,
-            limit,
-        );
+        await findWeeklyInsightWithPatternsPaginated(supabase, cursor, limit);
 
     if (error) {
         console.error("Failed to fetch weekly insights:", error);
@@ -430,7 +426,7 @@ export const getPatternById = async (
     supabase: SupabaseClient,
     patternId: string,
 ): Promise<ServiceResult<WeeklyInsightPattern>> => {
-    const { data, error } = await getPatternByIdRepo(supabase, patternId);
+    const { data, error } = await findPatternById(supabase, patternId);
 
     if (error || !data) {
         return { error: "Pattern not found" };
@@ -443,7 +439,7 @@ export const markPatternAsViewed = async (
     supabase: SupabaseClient,
     patternId: string,
 ): Promise<ServiceResult<null>> => {
-    const { error } = await markPatternAsViewedRepo(supabase, patternId);
+    const { error } = await updatePatternViewStatus(supabase, patternId);
 
     if (error) {
         console.error(`Failed to mark pattern ${patternId} as viewed:`, error);
@@ -456,7 +452,7 @@ export const markPatternAsViewed = async (
 export const getNewPatternsCount = async (
     supabase: SupabaseClient,
 ): Promise<ServiceResult<number>> => {
-    const { data: count, error } = await getNewPatternsCountRepo(supabase);
+    const { data: count, error } = await countNewPatterns(supabase);
 
     if (error) {
         console.error(`Failed to get new patterns count:`, error);
@@ -470,7 +466,7 @@ export const getWeeklyInsightWithPatternsByWeekStart = async (
     userId: string,
     weekStart: string,
 ): Promise<ServiceResult<WeeklyInsightWithPatterns | null>> => {
-    const { data, error } = await getWeeklyInsightWithPatternsByWeekStartRepo(
+    const { data, error } = await findWeeklyInsightWithPatternsByWeekStart(
         supabase,
         userId,
         weekStart,
@@ -488,7 +484,7 @@ export const getWeeklyInsightWithPatternsByWeekStart = async (
 export const getTotalPatternsCount = async (
     supabase: SupabaseClient,
 ): Promise<ServiceResult<number>> => {
-    const { data, error } = await getTotalPatternsCountRepo(supabase);
+    const { data, error } = await countPatterns(supabase);
 
     if (error) {
         console.error("Failed to get total patterns count:", error);

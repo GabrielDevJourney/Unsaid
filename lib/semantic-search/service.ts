@@ -11,7 +11,7 @@ import type {
     RelatedEntriesResult,
     ServiceResult,
 } from "@/types";
-import { searchWeeklyInsightsPatternsByEmbedding } from "../weekly-insights/repo";
+import { findWeeklyInsightPatternsByEmbedding } from "../weekly-insights/repo";
 
 /**
  * Search journal entries by semantic similarity to a text query.
@@ -153,7 +153,7 @@ export const searchPatterns = async (
 
     // Search for similar patterns
     const { data: patterns, error: searchError } =
-        await searchWeeklyInsightsPatternsByEmbedding(
+        await findWeeklyInsightPatternsByEmbedding(
             supabase,
             userId,
             queryEmbedding,

@@ -9,7 +9,7 @@ import {
     formatWeeklyInsight,
 } from "@/lib/exports/service";
 import { findProgressInsightsPaginated } from "@/lib/progress-insights/repo";
-import { getWeeklyInsightWithPatternsPaginated } from "@/lib/weekly-insights/repo";
+import { findWeeklyInsightWithPatternsPaginated } from "@/lib/weekly-insights/repo";
 import type { EntryWithInsight } from "@/types/domain/entries";
 import type {
     ProgressInsight,
@@ -27,7 +27,7 @@ vi.mock("@/lib/entries/repo", () => ({
 }));
 
 vi.mock("@/lib/weekly-insights/repo", () => ({
-    getWeeklyInsightWithPatternsPaginated: vi.fn(),
+    findWeeklyInsightWithPatternsPaginated: vi.fn(),
 }));
 
 vi.mock("@/lib/progress-insights/repo", () => ({
@@ -268,12 +268,14 @@ describe("exportUserData — happy path", () => {
             count: 1,
             error: null,
         });
-        vi.mocked(getWeeklyInsightWithPatternsPaginated).mockResolvedValue({
+        vi.mocked(findWeeklyInsightWithPatternsPaginated).mockResolvedValue({
             data: [baseWeekly()],
             nextCursor: null,
             error: null,
         });
-        vi.mocked(findProgressInsightsPaginated).mockResolvedValue(progressOk());
+        vi.mocked(findProgressInsightsPaginated).mockResolvedValue(
+            progressOk(),
+        );
     });
 
     it("returns skippedBatchCount of 0", async () => {
@@ -327,7 +329,7 @@ describe("exportUserData — empty user", () => {
             count: 0,
             error: null,
         });
-        vi.mocked(getWeeklyInsightWithPatternsPaginated).mockResolvedValue({
+        vi.mocked(findWeeklyInsightWithPatternsPaginated).mockResolvedValue({
             data: [],
             nextCursor: null,
             error: null,
@@ -371,7 +373,7 @@ describe("exportUserData — pagination", () => {
                 count: 110,
                 error: null,
             });
-        vi.mocked(getWeeklyInsightWithPatternsPaginated).mockResolvedValue({
+        vi.mocked(findWeeklyInsightWithPatternsPaginated).mockResolvedValue({
             data: [],
             nextCursor: null,
             error: null,
@@ -397,7 +399,7 @@ describe("exportUserData — pagination", () => {
             count: 0,
             error: null,
         });
-        vi.mocked(getWeeklyInsightWithPatternsPaginated)
+        vi.mocked(findWeeklyInsightWithPatternsPaginated)
             .mockResolvedValueOnce({
                 data: [baseWeekly()],
                 nextCursor: "cursor-abc",
@@ -414,8 +416,8 @@ describe("exportUserData — pagination", () => {
 
         await exportUserData(supabase, userId);
 
-        expect(getWeeklyInsightWithPatternsPaginated).toHaveBeenCalledTimes(2);
-        expect(getWeeklyInsightWithPatternsPaginated).toHaveBeenNthCalledWith(
+        expect(findWeeklyInsightWithPatternsPaginated).toHaveBeenCalledTimes(2);
+        expect(findWeeklyInsightWithPatternsPaginated).toHaveBeenNthCalledWith(
             2,
             supabase,
             "cursor-abc",
@@ -429,7 +431,7 @@ describe("exportUserData — pagination", () => {
             count: 1,
             error: null,
         });
-        vi.mocked(getWeeklyInsightWithPatternsPaginated).mockResolvedValue({
+        vi.mocked(findWeeklyInsightWithPatternsPaginated).mockResolvedValue({
             data: [],
             nextCursor: null,
             error: null,
@@ -457,12 +459,14 @@ describe("exportUserData — error handling", () => {
             count: 1,
             error: null,
         });
-        vi.mocked(getWeeklyInsightWithPatternsPaginated).mockResolvedValue({
+        vi.mocked(findWeeklyInsightWithPatternsPaginated).mockResolvedValue({
             data: [baseWeekly()],
             nextCursor: null,
             error: null,
         });
-        vi.mocked(findProgressInsightsPaginated).mockResolvedValue(progressOk());
+        vi.mocked(findProgressInsightsPaginated).mockResolvedValue(
+            progressOk(),
+        );
     });
 
     it("entries query error increments skippedBatchCount", async () => {
@@ -476,7 +480,7 @@ describe("exportUserData — error handling", () => {
     });
 
     it("weekly query error increments skippedBatchCount", async () => {
-        vi.mocked(getWeeklyInsightWithPatternsPaginated).mockResolvedValue({
+        vi.mocked(findWeeklyInsightWithPatternsPaginated).mockResolvedValue({
             data: [],
             nextCursor: null,
             error: supabaseError,
@@ -501,7 +505,7 @@ describe("exportUserData — error handling", () => {
             count: 0,
             error: supabaseError,
         });
-        vi.mocked(getWeeklyInsightWithPatternsPaginated).mockResolvedValue({
+        vi.mocked(findWeeklyInsightWithPatternsPaginated).mockResolvedValue({
             data: [],
             nextCursor: null,
             error: supabaseError,
@@ -539,7 +543,7 @@ describe("exportUserData — error handling", () => {
     });
 
     it("weekly throw increments skippedBatchCount", async () => {
-        vi.mocked(getWeeklyInsightWithPatternsPaginated).mockRejectedValue(
+        vi.mocked(findWeeklyInsightWithPatternsPaginated).mockRejectedValue(
             new Error("network failure"),
         );
         const { skippedBatchCount } = await exportUserData(supabase, userId);
@@ -587,7 +591,7 @@ describe("exportUserData — Sentry error tracking", () => {
             count: 0,
             error: null,
         });
-        vi.mocked(getWeeklyInsightWithPatternsPaginated).mockResolvedValue({
+        vi.mocked(findWeeklyInsightWithPatternsPaginated).mockResolvedValue({
             data: [],
             nextCursor: null,
             error: null,
@@ -643,7 +647,7 @@ describe("exportUserData — Sentry error tracking", () => {
     });
 
     it("sets correct domain tag for weekly error", async () => {
-        vi.mocked(getWeeklyInsightWithPatternsPaginated).mockRejectedValue(
+        vi.mocked(findWeeklyInsightWithPatternsPaginated).mockRejectedValue(
             new Error("fail"),
         );
 

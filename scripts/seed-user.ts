@@ -750,7 +750,7 @@ const seedWeeklyInsights = async (
     }
 
     // Mock mode
-    const { insertWeeklyInsight, insertWeeklyInsightPatterns } = await import(
+    const { insertWeeklyInsight, createWeeklyInsightPatterns } = await import(
         "../lib/weekly-insights/repo"
     );
 
@@ -800,7 +800,7 @@ const seedWeeklyInsights = async (
             suggestedExperiment: p.suggestedExperiment,
         }));
 
-        const { error: patternsError } = await insertWeeklyInsightPatterns(
+        const { error: patternsError } = await createWeeklyInsightPatterns(
             supabase,
             weekly.id,
             patternData,

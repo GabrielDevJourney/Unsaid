@@ -11,7 +11,7 @@ import {
 } from "@/lib/entries/repo";
 import { findEntryInsightsByEntryIds } from "@/lib/entry-insights/repo";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
-import { getWeeklyPatternsForDateRange } from "@/lib/weekly-insights/repo";
+import { findWeeklyPatternsForDateRange } from "@/lib/weekly-insights/repo";
 import type {
     CreateProgressInsightPayload,
     EntryMinimal,
@@ -416,7 +416,7 @@ const fetchWeeklyPatternsContext = async (
         const newestDate = recentEntries[0].createdAt;
         const oldestDate = recentEntries[recentEntries.length - 1].createdAt;
 
-        const { data: patterns } = await getWeeklyPatternsForDateRange(
+        const { data: patterns } = await findWeeklyPatternsForDateRange(
             supabase,
             userId,
             oldestDate,
