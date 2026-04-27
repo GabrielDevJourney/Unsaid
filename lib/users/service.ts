@@ -4,16 +4,16 @@ import { createSubscription } from "@/lib/subscriptions/repo";
 import { cancelLemonSubscription } from "@/lib/subscriptions/service";
 import type { CreateWithProgressPayload, ServiceResult } from "@/types";
 import {
-    cancelAccountDeletion,
+    createUser,
+    createUserProgress,
     deleteUser as deleteUserRepo,
-    getAccountDeletionStatus as getAccountDeletionStatusRepo,
-    getUserProgress as getUserProgressRepo,
-    getUsersOptedIntoWritingReminders as getUsersOptedIntoWritingRemindersRepo,
-    getUsersScheduledForDeletion,
-    insertUser,
-    insertUserProgress,
+    findAccountDeletionStatus,
+    findUserProgress,
+    findUsersOptedIntoWritingReminders,
+    findUsersScheduledForDeletion,
     type NotificationPreferences,
-    scheduleAccountDeletion,
+    updateAccountDeletionCancel,
+    updateAccountDeletionSchedule,
     updateLastWritingReminderSent as updateLastWritingReminderSentRepo,
     updateNotificationPreferences as updateNotificationPreferencesRepo,
     updateUserProfile as updateUserProfileRepo,
@@ -33,7 +33,7 @@ export const createUserWithProgress = async (
     supabase: SupabaseClient,
     user: CreateWithProgressPayload,
 ): Promise<ServiceResult<CreateUserResult>> => {
-    const { error: userError } = await insertUser(supabase, {
+    const { error: userError } = await createUser(supabase, {
         id: user.id,
         email: user.email,
         username: user.username,
@@ -45,7 +45,7 @@ export const createUserWithProgress = async (
         throw userError;
     }
 
-    const { error: progressError } = await insertUserProgress(
+    const { error: progressError } = await createUserProgress(
         supabase,
         user.id,
     );
@@ -98,7 +98,7 @@ export const initiateAccountDeletion = async (
     supabase: SupabaseClient,
     userId: string,
 ): Promise<ServiceResult<null>> => {
-    const { error } = await scheduleAccountDeletion(supabase, userId);
+    const { error } = await updateAccountDeletionSchedule(supabase, userId);
     if (error) {
         return { error: "Failed to schedule account deletion" };
     }
@@ -118,7 +118,7 @@ export const cancelScheduledDeletion = async (
     supabase: SupabaseClient,
     userId: string,
 ): Promise<ServiceResult<null>> => {
-    const { error } = await cancelAccountDeletion(supabase, userId);
+    const { error } = await updateAccountDeletionCancel(supabase, userId);
     if (error) {
         return { error: "Failed to cancel account deletion" };
     }
@@ -141,7 +141,7 @@ export const processExpiredDeletions = async (
     supabaseAdmin: SupabaseClient,
 ): Promise<ServiceResult<DeletionResult>> => {
     const { data: users, error } =
-        await getUsersScheduledForDeletion(supabaseAdmin);
+        await findUsersScheduledForDeletion(supabaseAdmin);
     if (error) {
         throw error;
     }
@@ -211,7 +211,7 @@ export const updateUserProfile = async (
 export const getUserProgress = async (
     supabase: SupabaseClient,
 ): Promise<ServiceResult<{ totalEntries: number }>> => {
-    const { data, error } = await getUserProgressRepo(supabase);
+    const { data, error } = await findUserProgress(supabase);
     if (error || !data) {
         return { error: "Failed to fetch user progress" };
     }
@@ -221,7 +221,7 @@ export const getUserProgress = async (
 export const getAccountDeletionStatus = async (
     supabase: SupabaseClient,
 ): Promise<ServiceResult<{ deletedAt: string | null }>> => {
-    const { data, error } = await getAccountDeletionStatusRepo(supabase);
+    const { data, error } = await findAccountDeletionStatus(supabase);
     if (error) {
         console.error("Failed to fetch account deletion status:", error);
         return { error: "Failed to fetch account deletion status" };
@@ -235,7 +235,7 @@ export const getAccountDeletionStatus = async (
 export const getUsersOptedIntoWritingReminders = async (
     supabase: SupabaseClient,
     cooldownDays: number,
-) => getUsersOptedIntoWritingRemindersRepo(supabase, cooldownDays);
+) => findUsersOptedIntoWritingReminders(supabase, cooldownDays);
 
 export const updateLastWritingReminderSent = async (
     supabase: SupabaseClient,

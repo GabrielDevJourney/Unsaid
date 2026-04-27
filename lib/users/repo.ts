@@ -6,7 +6,7 @@ export interface NotificationPreferences {
     notifyWritingReminders: boolean;
 }
 
-export const insertUser = async (
+export const createUser = async (
     supabase: SupabaseClient,
     user: {
         id: string;
@@ -38,7 +38,7 @@ export const deleteUser = async (
 /**
  * Mark the user's account for deletion by setting deleted_at = NOW().
  */
-export const scheduleAccountDeletion = async (
+export const updateAccountDeletionSchedule = async (
     supabase: SupabaseClient,
     userId: string,
 ): Promise<{ data: null; error: PostgrestError | null }> => {
@@ -52,7 +52,7 @@ export const scheduleAccountDeletion = async (
 /**
  * Cancel a pending account deletion by clearing deleted_at.
  */
-export const cancelAccountDeletion = async (
+export const updateAccountDeletionCancel = async (
     supabase: SupabaseClient,
     userId: string,
 ): Promise<{ data: null; error: PostgrestError | null }> => {
@@ -67,7 +67,7 @@ export const cancelAccountDeletion = async (
  * Get the deletion status for the authenticated user.
  * Returns deletedAt (ISO string) if deletion is scheduled, null otherwise.
  */
-export const getAccountDeletionStatus = async (
+export const findAccountDeletionStatus = async (
     supabase: SupabaseClient,
 ): Promise<{
     data: { deletedAt: string | null } | null;
@@ -93,7 +93,7 @@ export interface UserScheduledForDeletion {
  * Find users whose 30-day grace period has expired.
  * Admin-only — used exclusively by the account-deletion cron.
  */
-export const getUsersScheduledForDeletion = async (
+export const findUsersScheduledForDeletion = async (
     supabase: SupabaseClient,
 ): Promise<{
     data: UserScheduledForDeletion[];
@@ -116,7 +116,7 @@ export const getUsersScheduledForDeletion = async (
     return { data, error: null };
 };
 
-export const insertUserProgress = async (
+export const createUserProgress = async (
     supabase: SupabaseClient,
     userId: string,
 ): Promise<{ data: null; error: PostgrestError | null }> => {
@@ -131,7 +131,7 @@ export const insertUserProgress = async (
  * Get user progress stats.
  * RLS ensures only the authenticated user's row is returned.
  */
-export const getUserProgress = async (
+export const findUserProgress = async (
     supabase: SupabaseClient,
 ): Promise<{
     data: { totalEntries: number } | null;
@@ -153,7 +153,7 @@ export const getUserProgress = async (
  * Get notification preferences for the authenticated user.
  * RLS ensures only the current user's row is returned.
  */
-export const getNotificationPreferences = async (
+export const findNotificationPreferences = async (
     supabase: SupabaseClient,
 ): Promise<{
     data: NotificationPreferences | null;
@@ -226,7 +226,7 @@ export interface WritingReminderUser {
  * Filters: opted in, active/trial subscription, cooldown cleared.
  * Used exclusively by the writing-reminders cron (admin client).
  */
-export const getUsersOptedIntoWritingReminders = async (
+export const findUsersOptedIntoWritingReminders = async (
     supabase: SupabaseClient,
     cooldownDays: number,
 ): Promise<{ data: WritingReminderUser[]; error: PostgrestError | null }> => {

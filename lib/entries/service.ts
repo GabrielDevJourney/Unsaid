@@ -4,7 +4,7 @@ import { generateEmbedding } from "@/lib/ai/embeddings";
 import { checkEntryRateLimit } from "@/lib/rate-limit";
 import { canUserWriteEntry } from "@/lib/subscriptions/entitlements";
 import { checkAndTriggerProgress } from "@/lib/triggers/check-progress-trigger";
-import { getUserProgress } from "@/lib/users/repo";
+import { findUserProgress } from "@/lib/users/repo";
 import type {
     CreateEntryPayload,
     Entry,
@@ -81,7 +81,7 @@ export const createEntry = async (
     }
 
     if (!canWrite) {
-        const { data: progress } = await getUserProgress(supabase);
+        const { data: progress } = await findUserProgress(supabase);
         // Fail closed: if progress is unavailable (DB error), deny rather than allow.
         if (!progress || progress.totalEntries >= 15) {
             return { error: "FREE_LIMIT_REACHED" };

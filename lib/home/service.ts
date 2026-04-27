@@ -3,7 +3,7 @@ import {
     getEntriesWithInsightsPaginated,
     getEntryDates,
 } from "@/lib/entries/repo";
-import { getUserProgress } from "@/lib/users/repo";
+import { findUserProgress } from "@/lib/users/repo";
 import { countPatterns } from "@/lib/weekly-insights/repo";
 import type { EntryWithInsight } from "@/types";
 
@@ -33,7 +33,7 @@ export const getHomePageData = async (
         { data: entryDates, error: datesError },
     ] = await Promise.all([
         getEntriesWithInsightsPaginated(supabase, 1, INITIAL_PAGE_SIZE),
-        getUserProgress(supabase),
+        findUserProgress(supabase),
         countPatterns(supabase),
         getEntryDates(supabase),
     ]);
