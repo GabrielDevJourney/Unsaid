@@ -87,18 +87,17 @@ The encryption key is stored in `ENCRYPTION_KEY` environment variable. Never log
 
 ## Cron Job Auth
 
-All cron routes use `CRON_SECRET` with timing-safe comparison to prevent timing attacks:
+All cron routes call `validateCronRequest()` from `lib/cron/auth.ts`.
+The helper uses `CRON_SECRET` with timing-safe comparison to prevent timing
+attacks:
 
 ```typescript
-const authHeader = req.headers.get("authorization");
-const expectedHeader = `Bearer ${process.env.CRON_SECRET}`;
-const isValid =
-  authHeader !== null &&
-  authHeader.length === expectedHeader.length &&
-  crypto.timingSafeEqual(Buffer.from(authHeader), Buffer.from(expectedHeader));
+const authError = validateCronRequest(req, "weekly-insights");
+if (authError) return authError;
 ```
 
-- Missing `CRON_SECRET` returns 500 (server misconfiguration), not 401
+- Missing `CRON_SECRET` returns 500 (server misconfiguration), not 401, and is reported to Sentry
+- Invalid or missing bearer auth returns 401 and logs a warning without creating a Sentry issue
 - Cron routes are called by Vercel's cron scheduler using the secret from environment variables
 
 ---

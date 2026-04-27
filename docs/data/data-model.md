@@ -209,6 +209,11 @@ Idempotent log of Lemon Squeezy webhook events.
 ### `waitlist`
 Pre-launch email capture. `email`, `source` only.
 
+### `rate_limit_events`
+Durable rate-limit audit records for public/user-facing write guards.
+Stores `scope`, hashed key, and timestamp only; raw IP addresses and user IDs
+are never stored.
+
 ---
 
 ## Key RPCs (Postgres Functions)
