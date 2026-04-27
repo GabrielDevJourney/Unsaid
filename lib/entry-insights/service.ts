@@ -1,9 +1,15 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { streamEntryInsight } from "@/lib/ai/stream-entry-insight";
 import { MAX_INSIGHT_COUNT } from "@/lib/constants";
 import { decrypt } from "@/lib/crypto";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
 import { createSupabaseServer } from "@/lib/supabase/server";
-import { getEntryInsightsByEntryId, insertEntryInsight } from "./repo";
+import type { ServiceResult } from "@/types";
+import {
+    getEntryInsightsByEntryId,
+    getTotalInsightsCount as getTotalInsightsCountRepo,
+    insertEntryInsight,
+} from "./repo";
 
 /**
  * Generate and stream a structured entry insight.
@@ -104,4 +110,17 @@ export const generateEntryInsight = async (
     });
 
     return result;
+};
+
+export const getTotalInsightsCount = async (
+    supabase: SupabaseClient,
+): Promise<ServiceResult<number>> => {
+    const { count, error } = await getTotalInsightsCountRepo(supabase);
+
+    if (error) {
+        console.error("Failed to get total insights count:", error);
+        return { error: "Failed to get total insights count" };
+    }
+
+    return { data: count };
 };
