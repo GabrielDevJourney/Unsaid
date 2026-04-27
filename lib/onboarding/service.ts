@@ -12,10 +12,7 @@ import type {
 } from "@/lib/schemas/onboarding-preview";
 import { onboardingPreviewSchema } from "@/lib/schemas/onboarding-preview";
 import type { ServiceResult } from "@/types";
-import {
-    getOnboardingPreview,
-    saveOnboardingPreview as saveOnboardingPreviewRepo,
-} from "./repo";
+import { createOnboardingPreview, findOnboardingPreview } from "./repo";
 
 export interface OnboardingEntrySnapshot {
     entryId: string;
@@ -37,7 +34,7 @@ export interface OnboardingEntrySnapshot {
 export const getOnboardingEntrySnapshot = async (
     supabase: SupabaseClient,
 ): Promise<ServiceResult<OnboardingEntrySnapshot | null>> => {
-    const previewResult = await getOnboardingPreview(supabase);
+    const previewResult = await findOnboardingPreview(supabase);
 
     if (!previewResult.data) return { data: null };
 
@@ -73,7 +70,7 @@ export const saveOnboardingPreview = async (
     pattern: OnboardingPreviewPattern,
     progress: OnboardingPreviewProgress,
 ): Promise<ServiceResult<null>> => {
-    const { error } = await saveOnboardingPreviewRepo(
+    const { error } = await createOnboardingPreview(
         supabase,
         userId,
         entryId,

@@ -10,7 +10,7 @@ export interface OnboardingPreviewRow {
     entryId: string;
 }
 
-export const saveOnboardingPreview = async (
+export const createOnboardingPreview = async (
     supabase: SupabaseClient,
     userId: string,
     entryId: string,
@@ -27,7 +27,7 @@ export const saveOnboardingPreview = async (
     return { error: error as Error | null };
 };
 
-export const getOnboardingPreview = async (
+export const findOnboardingPreview = async (
     supabase: SupabaseClient,
 ): Promise<{ data: OnboardingPreviewRow | null; error: Error | null }> => {
     const { data, error } = await supabase
