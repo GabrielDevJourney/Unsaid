@@ -10,12 +10,12 @@ import type { ServiceResult } from "@/types";
 import type { Json } from "@/types/database";
 import type { SubscriptionRow } from "@/types/domain/subscriptions";
 import {
-    getExpiringTrials as getExpiringTrialsRepo,
-    getPaymentEventByLemonId,
-    getSubscriptionByUserId,
-    getUserByEmail,
-    insertPaymentEvent,
-    insertSubscription,
+    createPaymentEvent,
+    createSubscription,
+    findExpiringTrials,
+    findPaymentEventByLemonId,
+    findSubscriptionByUserId,
+    findUserByEmail,
     updateSubscriptionFromWebhook,
     updateSubscriptionStatus,
 } from "./repo";
@@ -26,15 +26,12 @@ const PLAN_PRICE_MAP: Record<string, number> = {
     Yearly: 9900,
 };
 
-/**
- * Create a trial subscription for a new user.
- */
 export const createTrialSubscription = async (
     supabase: SupabaseClient,
     userId: string,
     trialDays: number = TRIAL_DAYS,
 ): Promise<ServiceResult<SubscriptionRow>> => {
-    const { data, error } = await insertSubscription(
+    const { data, error } = await createSubscription(
         supabase,
         userId,
         trialDays,
@@ -42,7 +39,7 @@ export const createTrialSubscription = async (
 
     // Handle duplicate (idempotent for webhook retries)
     if (error?.code === "23505") {
-        const { data: existing } = await getSubscriptionByUserId(
+        const { data: existing } = await findSubscriptionByUserId(
             supabase,
             userId,
         );
@@ -56,18 +53,15 @@ export const createTrialSubscription = async (
         throw error;
     }
 
-    if (!data) throw new Error("insertSubscription returned no data");
+    if (!data) throw new Error("createSubscription returned no data");
     return { data };
 };
 
-/**
- * Get subscription for a user.
- */
 export const getSubscription = async (
     supabase: SupabaseClient,
     userId: string,
 ): Promise<ServiceResult<SubscriptionRow>> => {
-    const { data, error } = await getSubscriptionByUserId(supabase, userId);
+    const { data, error } = await findSubscriptionByUserId(supabase, userId);
 
     if (error?.code === "PGRST116") {
         return { error: "Subscription not found" };
@@ -78,14 +72,10 @@ export const getSubscription = async (
         throw error;
     }
 
-    if (!data) throw new Error("getSubscriptionByUserId returned no data");
+    if (!data) throw new Error("findSubscriptionByUserId returned no data");
     return { data };
 };
 
-/**
- * Process a Lemon Squeezy webhook event.
- * Returns true if processed successfully, false if already processed.
- */
 export const processWebhookEvent = async (
     supabase: SupabaseClient,
     webhookId: string,
@@ -93,8 +83,7 @@ export const processWebhookEvent = async (
 ): Promise<ServiceResult<{ processed: boolean }>> => {
     const eventType = payload.meta.event_name;
 
-    // Check idempotency - already processed?
-    const { data: existingEvent } = await getPaymentEventByLemonId(
+    const { data: existingEvent } = await findPaymentEventByLemonId(
         supabase,
         webhookId,
     );
@@ -103,10 +92,8 @@ export const processWebhookEvent = async (
         return { data: { processed: false } };
     }
 
-    // Only handle subscription events (not payment invoices)
     if (!isSubscriptionEvent(eventType)) {
-        // Store but don't process unknown events
-        await insertPaymentEvent(supabase, {
+        await createPaymentEvent(supabase, {
             eventType,
             lemonEventId: webhookId,
             payload: payload as unknown as Json,
@@ -114,21 +101,18 @@ export const processWebhookEvent = async (
         return { data: { processed: true } };
     }
 
-    // Find user by email from webhook
     const userEmail = payload.data.attributes.user_email;
-    const { data: user, error: userError } = await getUserByEmail(
+    const { data: user, error: userError } = await findUserByEmail(
         supabase,
         userEmail,
     );
 
     if (userError || !user) {
-        // Try custom_data user_id if email not found
         const customUserId = payload.meta.custom_data?.user_id;
         if (!customUserId) {
             console.error("User not found for webhook:", userEmail);
             return { error: `User not found: ${userEmail}` };
         }
-        // Use custom_data user_id
         return processSubscriptionUpdate(
             supabase,
             customUserId,
@@ -147,9 +131,6 @@ export const processWebhookEvent = async (
     );
 };
 
-/**
- * Process subscription update from webhook.
- */
 const processSubscriptionUpdate = async (
     supabase: SupabaseClient,
     userId: string,
@@ -160,7 +141,6 @@ const processSubscriptionUpdate = async (
     const attrs = payload.data.attributes;
     const lemonSubscriptionId = payload.data.id;
 
-    // Map Lemon status to our internal status
     const internalStatus = mapLemonToInternalStatus(
         attrs.status,
         attrs.cancelled,
@@ -169,7 +149,6 @@ const processSubscriptionUpdate = async (
     const planName = attrs.variant_name;
     const priceInCents = planName ? PLAN_PRICE_MAP[planName] : undefined;
 
-    // Update subscription
     const { error: updateError } = await updateSubscriptionFromWebhook(
         supabase,
         userId,
@@ -191,11 +170,9 @@ const processSubscriptionUpdate = async (
         throw updateError;
     }
 
-    // Keep users.subscription_status in sync
     await updateUserSubscriptionStatus(supabase, userId, internalStatus);
 
-    // Record event for audit/idempotency
-    await insertPaymentEvent(supabase, {
+    await createPaymentEvent(supabase, {
         userId,
         eventType,
         lemonEventId: webhookId,
@@ -205,20 +182,13 @@ const processSubscriptionUpdate = async (
     return { data: { processed: true } };
 };
 
-/**
- * Cancel a Lemon Squeezy subscription via API.
- * Used as a safety net when a user deletes their account.
- * Returns { data: null } if already cancelled or no LS subscription exists.
- * Returns { error } if the LS API call fails (caller decides whether to block).
- */
 export const cancelLemonSubscription = async (
     supabase: SupabaseClient,
     userId: string,
 ): Promise<ServiceResult<null>> => {
-    const { data: sub } = await getSubscriptionByUserId(supabase, userId);
+    const { data: sub } = await findSubscriptionByUserId(supabase, userId);
 
     if (!sub?.lemon_subscription_id) {
-        // Trial or no LS subscription — nothing to cancel
         return { data: null };
     }
 
@@ -238,9 +208,7 @@ export const cancelLemonSubscription = async (
         },
     );
 
-    // 200: cancelled successfully
-    // 404: already gone — treat as success
-    // 422: already cancelled in LS — treat as success
+    // 200: cancelled successfully; 404/422: already gone — treat as success
     if (!response.ok && response.status !== 404 && response.status !== 422) {
         const body = await response.text();
         console.error(
@@ -252,20 +220,13 @@ export const cancelLemonSubscription = async (
     return { data: null };
 };
 
-/**
- * Mark expired trials as expired status.
- * Called by cron job.
- */
 export const getExpiringTrials = async (
     supabase: SupabaseClient,
     daysUntilExpiry: number,
 ): Promise<
     ServiceResult<{ user_id: string; trial_ends_at: string | null }[]>
 > => {
-    const { data, error } = await getExpiringTrialsRepo(
-        supabase,
-        daysUntilExpiry,
-    );
+    const { data, error } = await findExpiringTrials(supabase, daysUntilExpiry);
 
     if (error) {
         console.error("Failed to fetch expiring trials:", error);
@@ -297,7 +258,6 @@ export const expireTrials = async (
         return { data: { count: 0 } };
     }
 
-    // Update all expired trials
     for (const userId of userIds) {
         await updateSubscriptionStatus(supabase, userId, "expired");
         await updateUserSubscriptionStatus(supabase, userId, "expired");

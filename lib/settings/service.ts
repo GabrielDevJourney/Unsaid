@@ -1,7 +1,7 @@
 import { currentUser } from "@clerk/nextjs/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { SubscriptionStatusType } from "@/lib/schemas/subscription";
-import { getSubscriptionByUserId } from "@/lib/subscriptions/repo";
+import { findSubscriptionByUserId } from "@/lib/subscriptions/repo";
 import {
     getAccountDeletionStatus,
     getNotificationPreferences,
@@ -44,7 +44,7 @@ export const getSettingsPageData = async (
 
     const [{ data: sub }, { data: notifPrefs }, { data: deletionStatus }] =
         await Promise.all([
-            getSubscriptionByUserId(supabase, user.id),
+            findSubscriptionByUserId(supabase, user.id),
             getNotificationPreferences(supabase),
             getAccountDeletionStatus(supabase),
         ]);

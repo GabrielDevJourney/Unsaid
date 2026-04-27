@@ -1,6 +1,6 @@
 import { clerkClient } from "@clerk/nextjs/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { insertSubscription } from "@/lib/subscriptions/repo";
+import { createSubscription } from "@/lib/subscriptions/repo";
 import { cancelLemonSubscription } from "@/lib/subscriptions/service";
 import type { CreateWithProgressPayload, ServiceResult } from "@/types";
 import {
@@ -56,7 +56,7 @@ export const createUserWithProgress = async (
     }
 
     // Create trial subscription
-    const { error: subscriptionError } = await insertSubscription(
+    const { error: subscriptionError } = await createSubscription(
         supabase,
         user.id,
     );
@@ -70,9 +70,6 @@ export const createUserWithProgress = async (
     return { data: { userId: user.id } };
 };
 
-/**
- * Update notification preferences for a user.
- */
 export const updateNotificationPreferences = async (
     supabase: SupabaseClient,
     userId: string,
@@ -117,9 +114,6 @@ export const initiateAccountDeletion = async (
     return { data: null };
 };
 
-/**
- * Cancel a pending account deletion by clearing deleted_at.
- */
 export const cancelScheduledDeletion = async (
     supabase: SupabaseClient,
     userId: string,

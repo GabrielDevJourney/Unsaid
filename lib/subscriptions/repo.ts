@@ -3,10 +3,7 @@ import { TRIAL_DAYS } from "@/lib/constants";
 import type { SubscriptionStatusType } from "@/lib/schemas/subscription";
 import type { Json } from "@/types/database";
 
-/**
- * Insert a new subscription (trial by default).
- */
-export const insertSubscription = async (
+export const createSubscription = async (
     supabase: SupabaseClient,
     userId: string,
     trialDays: number = TRIAL_DAYS,
@@ -25,10 +22,7 @@ export const insertSubscription = async (
         .single();
 };
 
-/**
- * Get subscription by user ID.
- */
-export const getSubscriptionByUserId = async (
+export const findSubscriptionByUserId = async (
     supabase: SupabaseClient,
     userId: string,
 ) => {
@@ -39,10 +33,7 @@ export const getSubscriptionByUserId = async (
         .single();
 };
 
-/**
- * Get subscription by Lemon Squeezy subscription ID.
- */
-export const getSubscriptionByLemonId = async (
+export const findSubscriptionByLemonId = async (
     supabase: SupabaseClient,
     lemonSubscriptionId: string,
 ) => {
@@ -53,19 +44,13 @@ export const getSubscriptionByLemonId = async (
         .single();
 };
 
-/**
- * Get user by email (for webhook processing).
- */
-export const getUserByEmail = async (
+export const findUserByEmail = async (
     supabase: SupabaseClient,
     email: string,
 ) => {
     return supabase.from("users").select("user_id").eq("email", email).single();
 };
 
-/**
- * Update subscription status.
- */
 export const updateSubscriptionStatus = async (
     supabase: SupabaseClient,
     userId: string,
@@ -79,9 +64,6 @@ export const updateSubscriptionStatus = async (
         .single();
 };
 
-/**
- * Update subscription with Lemon Squeezy data.
- */
 export const updateSubscriptionFromWebhook = async (
     supabase: SupabaseClient,
     userId: string,
@@ -115,10 +97,7 @@ export const updateSubscriptionFromWebhook = async (
         .single();
 };
 
-/**
- * Insert a payment event for idempotency tracking.
- */
-export const insertPaymentEvent = async (
+export const createPaymentEvent = async (
     supabase: SupabaseClient,
     data: {
         userId?: string;
@@ -140,10 +119,7 @@ export const insertPaymentEvent = async (
         .single();
 };
 
-/**
- * Check if payment event was already processed (idempotency).
- */
-export const getPaymentEventByLemonId = async (
+export const findPaymentEventByLemonId = async (
     supabase: SupabaseClient,
     lemonEventId: string,
 ) => {
@@ -154,17 +130,13 @@ export const getPaymentEventByLemonId = async (
         .maybeSingle();
 };
 
-/**
- * Get trial subscriptions expiring within N days (for reminder emails).
- */
-export const getExpiringTrials = async (
+export const findExpiringTrials = async (
     supabase: SupabaseClient,
     daysUntilExpiry: number,
 ) => {
     const targetDate = new Date();
     targetDate.setDate(targetDate.getDate() + daysUntilExpiry);
 
-    // Get subscriptions expiring on that day (within 24h window)
     const startOfDay = new Date(targetDate);
     startOfDay.setHours(0, 0, 0, 0);
 
@@ -179,10 +151,7 @@ export const getExpiringTrials = async (
         .lte("trial_ends_at", endOfDay.toISOString());
 };
 
-/**
- * Get expired trial subscriptions (for status update cron).
- */
-export const getExpiredTrials = async (supabase: SupabaseClient) => {
+export const findExpiredTrials = async (supabase: SupabaseClient) => {
     return supabase
         .from("subscriptions")
         .select("user_id")
