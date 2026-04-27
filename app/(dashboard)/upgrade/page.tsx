@@ -4,40 +4,60 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
 import { UpgradeFeatureGrid } from "@/components/upgrade/upgrade-feature-grid";
 import { UpgradePricingSection } from "@/components/upgrade/upgrade-pricing-section";
-import { getEntriesWithInsightsPaginated } from "@/lib/entries/repo";
-import { getTotalInsightsCount } from "@/lib/entry-insights/repo";
+import { getEntriesWithInsightsPaginated } from "@/lib/entries/service";
+import { getTotalInsightsCount } from "@/lib/entry-insights/service";
 import {
     getLatestProgressInsight,
     getProgressInsightsPaginated,
-} from "@/lib/progress-insights/repo";
+} from "@/lib/progress-insights/service";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { deriveUpgradePreviewData } from "@/lib/upgrade/utils";
-import { getUserProgress } from "@/lib/users/repo";
-import { getWeeklyInsightWithPatternsPaginated } from "@/lib/weekly-insights/repo";
+import { getUserProgress } from "@/lib/users/service";
+import { getWeeklyInsightWithPatternsPaginated } from "@/lib/weekly-insights/service";
+import { isServiceError } from "@/types";
 
 const UpgradePage = async () => {
     const { userId } = await auth();
     const supabase = await createSupabaseServer();
 
     const [
-        { data: progress },
-        { count: insightsCount },
-        { data: latestProgressInsight },
-        { data: weeklyInsights },
-        { data: recentEntries },
-        { data: olderProgressInsights },
+        progressResult,
+        insightsCountResult,
+        latestProgressInsightResult,
+        weeklyInsightsResult,
+        recentEntriesResult,
+        olderProgressInsightsResult,
     ] = await Promise.all([
         getUserProgress(supabase),
         getTotalInsightsCount(supabase),
         userId
             ? getLatestProgressInsight(supabase, userId)
-            : Promise.resolve({ data: null, error: null }),
+            : Promise.resolve({ data: null }),
         getWeeklyInsightWithPatternsPaginated(supabase, null, 2),
         getEntriesWithInsightsPaginated(supabase, 1, 4),
         userId
             ? getProgressInsightsPaginated(supabase, userId, 2, 1)
-            : Promise.resolve({ data: [], error: null, count: 0 }),
+            : Promise.resolve({ data: { insights: [], count: 0 } }),
     ]);
+
+    const progress = isServiceError(progressResult)
+        ? null
+        : progressResult.data;
+    const insightsCount = isServiceError(insightsCountResult)
+        ? 0
+        : insightsCountResult.data;
+    const latestProgressInsight = isServiceError(latestProgressInsightResult)
+        ? null
+        : latestProgressInsightResult.data;
+    const weeklyInsights = isServiceError(weeklyInsightsResult)
+        ? []
+        : weeklyInsightsResult.data.insights;
+    const recentEntries = isServiceError(recentEntriesResult)
+        ? []
+        : recentEntriesResult.data.entries;
+    const olderProgressInsights = isServiceError(olderProgressInsightsResult)
+        ? { insights: [], count: 0 }
+        : olderProgressInsightsResult.data;
 
     const totalEntries = progress?.totalEntries ?? 0;
 
@@ -48,7 +68,7 @@ const UpgradePage = async () => {
         latestEntryInsight,
     } = deriveUpgradePreviewData({
         weeklyInsights,
-        olderProgressInsights,
+        olderProgressInsights: olderProgressInsights.insights,
         latestProgressInsight,
         recentEntries,
     });
