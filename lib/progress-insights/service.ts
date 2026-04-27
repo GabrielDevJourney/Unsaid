@@ -6,8 +6,8 @@ import {
 } from "@/lib/ai/generate-progress-insight";
 import { PROGRESS_TRIGGER_INTERVAL } from "@/lib/constants";
 import {
-    getEntryDatesByIds,
-    searchEntriesByEmbedding,
+    findEntriesByEmbedding,
+    findEntryDatesByIds,
 } from "@/lib/entries/repo";
 import { findEntryInsightsByEntryIds } from "@/lib/entry-insights/repo";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
@@ -317,7 +317,7 @@ export const getProgressInsightDetail = async (
     // Determine key entry IDs: use stored key_entry_ids, or fall back to first/middle/last
     const keyIds = resolveKeyEntryIds(insight);
 
-    const { data: entryDates } = await getEntryDatesByIds(supabase, keyIds);
+    const { data: entryDates } = await findEntryDatesByIds(supabase, keyIds);
 
     const dateMap = new Map(entryDates.map((e) => [e.id, e.createdAt]));
 
@@ -465,7 +465,7 @@ const findRelatedPastEntries = async (
     try {
         const themeEmbedding = await generateEmbedding(themeSummary);
 
-        const { data: relatedEntries, error } = await searchEntriesByEmbedding(
+        const { data: relatedEntries, error } = await findEntriesByEmbedding(
             supabase,
             userId,
             themeEmbedding,

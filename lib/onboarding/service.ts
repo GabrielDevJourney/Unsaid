@@ -4,7 +4,7 @@ import { generateObject } from "ai";
 import { z } from "zod";
 import { loadPrompt, loadSystemPrompt } from "@/lib/ai/prompts";
 import type { InsightTagType } from "@/lib/constants/insight-tag-types";
-import { getEntryWithInsightById } from "@/lib/entries/repo";
+import { findEntryWithInsightById } from "@/lib/entries/repo";
 import type {
     OnboardingPreview,
     OnboardingPreviewPattern,
@@ -39,7 +39,7 @@ export const getOnboardingEntrySnapshot = async (
     if (!previewResult.data) return { data: null };
 
     const { entryId, pattern, progress } = previewResult.data;
-    const entryResult = await getEntryWithInsightById(supabase, entryId);
+    const entryResult = await findEntryWithInsightById(supabase, entryId);
 
     if (
         entryResult.error ||

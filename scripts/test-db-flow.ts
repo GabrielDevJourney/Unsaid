@@ -342,18 +342,18 @@ const testSemanticSearch = async (
 ) => {
     logSection("TEST 6: Semantic Search (Vector Functions)");
 
-    const { searchEntriesByEmbedding, findRelatedEntries } = await import(
+    const { findEntriesByEmbedding, findRelatedEntries } = await import(
         "../lib/entries/repo"
     );
 
-    log("🔍", "Testing searchEntriesByEmbedding...");
+    log("🔍", "Testing findEntriesByEmbedding...");
 
     // Generate embedding for a search query
     const searchQuery = "feeling overwhelmed at work";
     const queryEmbedding = await generateEmbedding(searchQuery);
 
     const { data: searchResults, error: searchError } =
-        await searchEntriesByEmbedding(
+        await findEntriesByEmbedding(
             supabase,
             userId,
             JSON.stringify(queryEmbedding),

@@ -14,17 +14,17 @@ import type {
     ServiceResult,
 } from "@/types";
 import {
-    decrementUserProgress,
     deleteEntry,
-    getEntriesBySource,
-    getEntriesWithInsights,
-    getEntriesWithInsightsPaginated as getEntriesWithInsightsPaginatedRepo,
-    getEntryWithAllInsightsById,
-    getEntryWithInsightById,
-    incrementUserProgress,
+    findEntriesBySource,
+    findEntriesWithInsights,
+    findEntriesWithInsightsPaginated,
+    findEntryWithAllInsightsById,
+    findEntryWithInsightById,
     insertEntry,
     updateEntryContent,
     updateEntryEmbedding,
+    updateUserProgressDecrement,
+    updateUserProgressIncrement,
 } from "./repo";
 import { toEntryReflectionPreview } from "./transformers";
 
@@ -54,7 +54,7 @@ const updateProgress = async (
     supabase: SupabaseClient,
     userId: string,
 ): Promise<void> => {
-    const { error } = await incrementUserProgress(supabase, userId);
+    const { error } = await updateUserProgressIncrement(supabase, userId);
     if (error) console.error("Failed to increment user progress:", error);
 
     void checkAndTriggerProgress(userId).then((result) => {
@@ -143,7 +143,7 @@ export const deleteEntryById = async (
 ): Promise<ServiceResult<null>> => {
     const [deleteResult, progressResult] = await Promise.all([
         deleteEntry(supabase, entryId, userId),
-        decrementUserProgress(supabase, userId),
+        updateUserProgressDecrement(supabase, userId),
     ]);
 
     if (deleteResult.error) return { error: "Failed to delete entry" };
@@ -160,7 +160,7 @@ export const deleteEntryById = async (
 export const getUserEntriesWithInsights = async (
     supabase: SupabaseClient,
 ): Promise<ServiceResult<EntryWithInsight[]>> => {
-    const { data, error } = await getEntriesWithInsights(supabase);
+    const { data, error } = await findEntriesWithInsights(supabase);
 
     if (error) {
         return { error: "Failed to fetch entries" };
@@ -173,7 +173,7 @@ export const getEntryWithInsight = async (
     supabase: SupabaseClient,
     entryId: string,
 ): Promise<ServiceResult<EntryWithInsight>> => {
-    const { data, error } = await getEntryWithInsightById(supabase, entryId);
+    const { data, error } = await findEntryWithInsightById(supabase, entryId);
 
     if (error) {
         if (error.code === "PGRST116") return { error: "entry_not_found" };
@@ -194,7 +194,7 @@ export const getEntryWithAllInsights = async (
     supabase: SupabaseClient,
     entryId: string,
 ): Promise<ServiceResult<EntryWithAllInsights>> => {
-    const { data, error } = await getEntryWithAllInsightsById(
+    const { data, error } = await findEntryWithAllInsightsById(
         supabase,
         entryId,
     );
@@ -228,7 +228,7 @@ export const getEntryReflectionPreviews = async (
         return { error: "Invalid source" };
     }
 
-    const { data: rows, error } = await getEntriesBySource(
+    const { data: rows, error } = await findEntriesBySource(
         supabase,
         sourceType,
         sourceId,
@@ -249,7 +249,7 @@ export const getEntriesWithInsightsPaginated = async (
     pageSize: number,
     userId?: string,
 ): Promise<ServiceResult<{ entries: EntryWithInsight[]; count: number }>> => {
-    const { data, error, count } = await getEntriesWithInsightsPaginatedRepo(
+    const { data, error, count } = await findEntriesWithInsightsPaginated(
         supabase,
         page,
         pageSize,

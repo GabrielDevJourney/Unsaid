@@ -1,7 +1,7 @@
 import * as Sentry from "@sentry/nextjs";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getEntriesWithInsightsPaginated } from "@/lib/entries/repo";
+import { findEntriesWithInsightsPaginated } from "@/lib/entries/repo";
 import {
     exportUserData,
     formatEntry,
@@ -23,7 +23,7 @@ vi.mock("@sentry/nextjs", () => ({
 }));
 
 vi.mock("@/lib/entries/repo", () => ({
-    getEntriesWithInsightsPaginated: vi.fn(),
+    findEntriesWithInsightsPaginated: vi.fn(),
 }));
 
 vi.mock("@/lib/weekly-insights/repo", () => ({
@@ -263,7 +263,7 @@ describe("formatProgressInsight", () => {
 
 describe("exportUserData — happy path", () => {
     beforeEach(() => {
-        vi.mocked(getEntriesWithInsightsPaginated).mockResolvedValue({
+        vi.mocked(findEntriesWithInsightsPaginated).mockResolvedValue({
             data: [baseEntry()],
             count: 1,
             error: null,
@@ -296,7 +296,7 @@ describe("exportUserData — happy path", () => {
     });
 
     it("uses plural 'entries' for count > 1", async () => {
-        vi.mocked(getEntriesWithInsightsPaginated).mockResolvedValue({
+        vi.mocked(findEntriesWithInsightsPaginated).mockResolvedValue({
             data: [baseEntry(), { ...baseEntry(), id: "entry-2" }],
             count: 2,
             error: null,
@@ -324,7 +324,7 @@ describe("exportUserData — happy path", () => {
 
 describe("exportUserData — empty user", () => {
     beforeEach(() => {
-        vi.mocked(getEntriesWithInsightsPaginated).mockResolvedValue({
+        vi.mocked(findEntriesWithInsightsPaginated).mockResolvedValue({
             data: [],
             count: 0,
             error: null,
@@ -366,7 +366,7 @@ describe("exportUserData — pagination", () => {
             ...baseEntry(),
             id: `entry-${i}`,
         }));
-        vi.mocked(getEntriesWithInsightsPaginated)
+        vi.mocked(findEntriesWithInsightsPaginated)
             .mockResolvedValueOnce({ data: fullBatch, count: 110, error: null })
             .mockResolvedValueOnce({
                 data: [{ ...baseEntry(), id: "entry-100" }],
@@ -384,8 +384,8 @@ describe("exportUserData — pagination", () => {
 
         await exportUserData(supabase, userId);
 
-        expect(getEntriesWithInsightsPaginated).toHaveBeenCalledTimes(2);
-        expect(getEntriesWithInsightsPaginated).toHaveBeenNthCalledWith(
+        expect(findEntriesWithInsightsPaginated).toHaveBeenCalledTimes(2);
+        expect(findEntriesWithInsightsPaginated).toHaveBeenNthCalledWith(
             2,
             supabase,
             2,
@@ -394,7 +394,7 @@ describe("exportUserData — pagination", () => {
     });
 
     it("passes cursor from first weekly batch to second", async () => {
-        vi.mocked(getEntriesWithInsightsPaginated).mockResolvedValue({
+        vi.mocked(findEntriesWithInsightsPaginated).mockResolvedValue({
             data: [],
             count: 0,
             error: null,
@@ -426,7 +426,7 @@ describe("exportUserData — pagination", () => {
     });
 
     it("stops fetching when batch is smaller than batch size", async () => {
-        vi.mocked(getEntriesWithInsightsPaginated).mockResolvedValue({
+        vi.mocked(findEntriesWithInsightsPaginated).mockResolvedValue({
             data: [baseEntry()],
             count: 1,
             error: null,
@@ -442,7 +442,7 @@ describe("exportUserData — pagination", () => {
 
         await exportUserData(supabase, userId);
 
-        expect(getEntriesWithInsightsPaginated).toHaveBeenCalledTimes(1);
+        expect(findEntriesWithInsightsPaginated).toHaveBeenCalledTimes(1);
     });
 });
 
@@ -454,7 +454,7 @@ describe("exportUserData — error handling", () => {
     const supabaseError = { message: "DB timeout", code: "500" } as never;
 
     beforeEach(() => {
-        vi.mocked(getEntriesWithInsightsPaginated).mockResolvedValue({
+        vi.mocked(findEntriesWithInsightsPaginated).mockResolvedValue({
             data: [baseEntry()],
             count: 1,
             error: null,
@@ -470,7 +470,7 @@ describe("exportUserData — error handling", () => {
     });
 
     it("entries query error increments skippedBatchCount", async () => {
-        vi.mocked(getEntriesWithInsightsPaginated).mockResolvedValue({
+        vi.mocked(findEntriesWithInsightsPaginated).mockResolvedValue({
             data: [],
             count: 0,
             error: supabaseError,
@@ -500,7 +500,7 @@ describe("exportUserData — error handling", () => {
     });
 
     it("all three domains erroring gives skippedBatchCount of 3", async () => {
-        vi.mocked(getEntriesWithInsightsPaginated).mockResolvedValue({
+        vi.mocked(findEntriesWithInsightsPaginated).mockResolvedValue({
             data: [],
             count: 0,
             error: supabaseError,
@@ -520,7 +520,7 @@ describe("exportUserData — error handling", () => {
     });
 
     it("warning block appears in content when skippedBatchCount > 0", async () => {
-        vi.mocked(getEntriesWithInsightsPaginated).mockResolvedValue({
+        vi.mocked(findEntriesWithInsightsPaginated).mockResolvedValue({
             data: [],
             count: 0,
             error: supabaseError,
@@ -535,7 +535,7 @@ describe("exportUserData — error handling", () => {
     });
 
     it("entries throw increments skippedBatchCount", async () => {
-        vi.mocked(getEntriesWithInsightsPaginated).mockRejectedValue(
+        vi.mocked(findEntriesWithInsightsPaginated).mockRejectedValue(
             new Error("network failure"),
         );
         const { skippedBatchCount } = await exportUserData(supabase, userId);
@@ -559,7 +559,7 @@ describe("exportUserData — error handling", () => {
     });
 
     it("entries error still exports weekly and progress", async () => {
-        vi.mocked(getEntriesWithInsightsPaginated).mockResolvedValue({
+        vi.mocked(findEntriesWithInsightsPaginated).mockResolvedValue({
             data: [],
             count: 0,
             error: supabaseError,
@@ -586,7 +586,7 @@ describe("exportUserData — Sentry error tracking", () => {
         vi.mocked(Sentry.withScope).mockImplementation(((
             cb: (scope: typeof mockScope) => void,
         ) => cb(mockScope)) as never);
-        vi.mocked(getEntriesWithInsightsPaginated).mockResolvedValue({
+        vi.mocked(findEntriesWithInsightsPaginated).mockResolvedValue({
             data: [],
             count: 0,
             error: null,
@@ -603,7 +603,7 @@ describe("exportUserData — Sentry error tracking", () => {
 
     it("calls captureException when an Error is thrown", async () => {
         const err = new Error("transformer crash");
-        vi.mocked(getEntriesWithInsightsPaginated).mockRejectedValue(err);
+        vi.mocked(findEntriesWithInsightsPaginated).mockRejectedValue(err);
 
         await exportUserData(supabase, userId);
 
@@ -611,7 +611,7 @@ describe("exportUserData — Sentry error tracking", () => {
     });
 
     it("calls captureMessage when a non-Error is thrown", async () => {
-        vi.mocked(getEntriesWithInsightsPaginated).mockRejectedValue(
+        vi.mocked(findEntriesWithInsightsPaginated).mockRejectedValue(
             "string error",
         );
 
@@ -624,7 +624,7 @@ describe("exportUserData — Sentry error tracking", () => {
     });
 
     it("sets feature=export tag on every error", async () => {
-        vi.mocked(getEntriesWithInsightsPaginated).mockRejectedValue(
+        vi.mocked(findEntriesWithInsightsPaginated).mockRejectedValue(
             new Error("fail"),
         );
 
@@ -634,7 +634,7 @@ describe("exportUserData — Sentry error tracking", () => {
     });
 
     it("sets correct domain tag for entries error", async () => {
-        vi.mocked(getEntriesWithInsightsPaginated).mockRejectedValue(
+        vi.mocked(findEntriesWithInsightsPaginated).mockRejectedValue(
             new Error("fail"),
         );
 
@@ -673,7 +673,7 @@ describe("exportUserData — Sentry error tracking", () => {
     });
 
     it("sets fingerprint to [export-failure, domain]", async () => {
-        vi.mocked(getEntriesWithInsightsPaginated).mockRejectedValue(
+        vi.mocked(findEntriesWithInsightsPaginated).mockRejectedValue(
             new Error("fail"),
         );
 
@@ -686,7 +686,7 @@ describe("exportUserData — Sentry error tracking", () => {
     });
 
     it("includes userId in Sentry context", async () => {
-        vi.mocked(getEntriesWithInsightsPaginated).mockRejectedValue(
+        vi.mocked(findEntriesWithInsightsPaginated).mockRejectedValue(
             new Error("fail"),
         );
 
@@ -699,7 +699,7 @@ describe("exportUserData — Sentry error tracking", () => {
     });
 
     it("sets error_type=transformer_error on throws", async () => {
-        vi.mocked(getEntriesWithInsightsPaginated).mockRejectedValue(
+        vi.mocked(findEntriesWithInsightsPaginated).mockRejectedValue(
             new Error("fail"),
         );
 
@@ -712,7 +712,7 @@ describe("exportUserData — Sentry error tracking", () => {
     });
 
     it("sets error_type=query_error on Supabase error response", async () => {
-        vi.mocked(getEntriesWithInsightsPaginated).mockResolvedValue({
+        vi.mocked(findEntriesWithInsightsPaginated).mockResolvedValue({
             data: [],
             count: 0,
             error: { message: "query failed", code: "500" } as never,

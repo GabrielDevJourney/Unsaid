@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { generateEntryThemePrompt } from "@/lib/ai/generate-entry-theme";
-import { getEntriesPaginated } from "@/lib/entries/repo";
+import { findEntriesPaginated } from "@/lib/entries/repo";
 import type { ServiceResult } from "@/types";
 import { createPromptForEntry, findPromptByEntryId } from "./repo";
 
@@ -47,7 +47,7 @@ export const getEntryThemePrompt = async (
     const FIRST_PAGE = 1;
     const RECENT_ENTRIES_FOR_CONTEXT = 5;
 
-    const { data: entries, count } = await getEntriesPaginated(
+    const { data: entries, count } = await findEntriesPaginated(
         supabase,
         FIRST_PAGE,
         RECENT_ENTRIES_FOR_CONTEXT,

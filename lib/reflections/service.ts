@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getEntriesByIds } from "@/lib/entries/repo";
+import { findEntriesByIds } from "@/lib/entries/repo";
 import { findEntryInsightsByEntryIds } from "@/lib/entry-insights/repo";
 import { findProgressInsightById } from "@/lib/progress-insights/repo";
 import { searchPatterns } from "@/lib/semantic-search/service";
@@ -38,7 +38,7 @@ export const getPatternReflectionContext = async (
                     0.4,
                 ).catch(() => ({ error: "search failed" }) as const),
                 findEntryInsightsByEntryIds(supabase, evidenceIds),
-                getEntriesByIds(supabase, evidenceIds),
+                findEntriesByIds(supabase, evidenceIds),
             ]);
 
         const lines: string[] = ["**Reflection context:**"];
@@ -114,7 +114,7 @@ export const getProgressReflectionContext = async (
                           () => ({ error: "search failed" }) as const,
                       )
                     : Promise.resolve({ data: { patterns: [] } }),
-                getEntriesByIds(supabase, keyEntryIds),
+                findEntriesByIds(supabase, keyEntryIds),
             ]);
 
         const lines: string[] = ["**Reflection context:**"];

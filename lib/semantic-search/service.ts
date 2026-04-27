@@ -1,9 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { generateEmbedding } from "@/lib/ai/embeddings";
 import {
+    findEntriesByEmbedding,
+    findEntryById,
     findRelatedEntries,
-    getEntryById,
-    searchEntriesByEmbedding,
 } from "@/lib/entries/repo";
 import type {
     EntriesSemanticSearchResult,
@@ -41,14 +41,13 @@ export const searchEntries = async (
     }
 
     // Search for similar entries
-    const { data: entries, error: searchError } =
-        await searchEntriesByEmbedding(
-            supabase,
-            userId,
-            queryEmbedding,
-            limit,
-            threshold,
-        );
+    const { data: entries, error: searchError } = await findEntriesByEmbedding(
+        supabase,
+        userId,
+        queryEmbedding,
+        limit,
+        threshold,
+    );
 
     if (searchError) {
         console.error("Semantic search failed:", searchError);
@@ -85,7 +84,7 @@ export const getRelatedEntries = async (
     threshold = 0.5,
 ): Promise<ServiceResult<RelatedEntriesResult>> => {
     // Verify source entry exists and belongs to user
-    const { data: sourceEntry, error: entryError } = await getEntryById(
+    const { data: sourceEntry, error: entryError } = await findEntryById(
         supabase,
         entryId,
     );
