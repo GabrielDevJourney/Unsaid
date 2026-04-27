@@ -1,8 +1,10 @@
 import { auth } from "@clerk/nextjs/server";
+import * as Sentry from "@sentry/nextjs";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { getWeeklyInsightWithPatternsPaginated } from "@/lib/weekly-insights/service";
+import { isServiceError } from "@/types";
 
 const DEFAULT_LIMIT = 5;
 
@@ -41,23 +43,22 @@ export const GET = async (req: NextRequest) => {
         }
 
         const supabase = await createSupabaseServer();
-        const { data, nextCursor, error } =
-            await getWeeklyInsightWithPatternsPaginated(
-                supabase,
-                cursor,
-                limit,
-            );
+        const result = await getWeeklyInsightWithPatternsPaginated(
+            supabase,
+            cursor,
+            limit,
+        );
 
-        if (error) {
-            console.error("Failed to fetch weekly insights:", error);
-            return NextResponse.json(
-                { error: "Failed to fetch weekly insights" },
-                { status: 500 },
-            );
+        if (isServiceError(result)) {
+            return NextResponse.json({ error: result.error }, { status: 500 });
         }
 
-        return NextResponse.json({ data, nextCursor });
+        return NextResponse.json({
+            data: result.data.insights,
+            nextCursor: result.data.nextCursor,
+        });
     } catch (error) {
+        Sentry.captureException(error);
         console.error("Failed to fetch weekly insights:", error);
         return NextResponse.json(
             { error: "Failed to fetch weekly insights" },
