@@ -1,4 +1,4 @@
-import type { PostgrestError, SupabaseClient } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { generateWeeklyInsight } from "@/lib/ai/generate-weekly-insight";
 import { MIN_ENTRIES_FOR_WEEKLY_INSIGHT } from "@/lib/constants";
 import type { PatternTypeCode } from "@/lib/constants/pattern-types";
@@ -16,6 +16,8 @@ import { decrypt } from "../crypto";
 import {
     getNewPatternsCount as getNewPatternsCountRepo,
     getPatternById as getPatternByIdRepo,
+    getTotalPatternsCount as getTotalPatternsCountRepo,
+    getWeeklyInsightWithPatternsByWeekStart as getWeeklyInsightWithPatternsByWeekStartRepo,
     getWeeklyInsightWithPatternsPaginated as getWeeklyInsightWithPatternsPaginatedRepo,
     insertWeeklyInsight,
     insertWeeklyInsightPatterns,
@@ -403,11 +405,12 @@ export const getWeeklyInsightWithPatternsPaginated = async (
     supabase: SupabaseClient,
     cursor: string | null,
     limit: number,
-): Promise<{
-    data: WeeklyInsightWithPatterns[];
-    nextCursor: string | null;
-    error: PostgrestError | null;
-}> => {
+): Promise<
+    ServiceResult<{
+        insights: WeeklyInsightWithPatterns[];
+        nextCursor: string | null;
+    }>
+> => {
     const { data, nextCursor, error } =
         await getWeeklyInsightWithPatternsPaginatedRepo(
             supabase,
@@ -416,10 +419,11 @@ export const getWeeklyInsightWithPatternsPaginated = async (
         );
 
     if (error) {
-        return { error, data: [], nextCursor: null };
+        console.error("Failed to fetch weekly insights:", error);
+        return { error: "Failed to fetch weekly insights" };
     }
 
-    return { data, nextCursor, error: null };
+    return { data: { insights: data, nextCursor } };
 };
 
 export const getPatternById = async (
@@ -459,4 +463,37 @@ export const getNewPatternsCount = async (
         return { error: "Failed to get new patterns count" };
     }
     return { data: count ?? 0 };
+};
+
+export const getWeeklyInsightWithPatternsByWeekStart = async (
+    supabase: SupabaseClient,
+    userId: string,
+    weekStart: string,
+): Promise<ServiceResult<WeeklyInsightWithPatterns | null>> => {
+    const { data, error } = await getWeeklyInsightWithPatternsByWeekStartRepo(
+        supabase,
+        userId,
+        weekStart,
+    );
+
+    if (error?.code === "PGRST116") return { data: null };
+    if (error) {
+        console.error("Failed to fetch weekly insight:", error);
+        return { error: "Failed to fetch weekly insight" };
+    }
+
+    return { data };
+};
+
+export const getTotalPatternsCount = async (
+    supabase: SupabaseClient,
+): Promise<ServiceResult<number>> => {
+    const { data, error } = await getTotalPatternsCountRepo(supabase);
+
+    if (error) {
+        console.error("Failed to get total patterns count:", error);
+        return { error: "Failed to get total patterns count" };
+    }
+
+    return { data };
 };

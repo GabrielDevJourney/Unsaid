@@ -26,8 +26,9 @@ const INITIAL_PAGE_SIZE = 20; // must match PAGE_SIZE in progress-view.tsx
 
 import {
     countUnviewedProgressInsights,
+    getLatestProgressInsight as getLatestProgressInsightRepo,
     getProgressInsightById,
-    getProgressInsightsPaginated,
+    getProgressInsightsPaginated as getProgressInsightsPaginatedRepo,
     getRecentEntries,
     getUserProgress,
     insertProgressInsight,
@@ -280,7 +281,12 @@ export const getProgressInsightsPage = async (
     hasMore: boolean;
 }> => {
     const [insightsResult, progressResult] = await Promise.all([
-        getProgressInsightsPaginated(supabase, userId, 1, INITIAL_PAGE_SIZE),
+        getProgressInsightsPaginatedRepo(
+            supabase,
+            userId,
+            1,
+            INITIAL_PAGE_SIZE,
+        ),
         getUserProgress(supabase, userId),
     ]);
 
@@ -490,4 +496,43 @@ const findRelatedPastEntries = async (
         console.error("Failed to generate theme embedding:", embeddingError);
         return [];
     }
+};
+
+export const getProgressInsightsPaginated = async (
+    supabase: DbClient,
+    userId: string,
+    page: number,
+    pageSize: number,
+): Promise<ServiceResult<{ insights: ProgressInsight[]; count: number }>> => {
+    const { data, error, count } = await getProgressInsightsPaginatedRepo(
+        supabase,
+        userId,
+        page,
+        pageSize,
+    );
+
+    if (error) {
+        console.error("Failed to fetch progress insights:", error);
+        return { error: "Failed to fetch progress insights" };
+    }
+
+    return { data: { insights: data, count } };
+};
+
+export const getLatestProgressInsight = async (
+    supabase: DbClient,
+    userId: string,
+): Promise<ServiceResult<ProgressInsight | null>> => {
+    const { data, error } = await getLatestProgressInsightRepo(
+        supabase,
+        userId,
+    );
+
+    if (error?.code === "PGRST116") return { data: null };
+    if (error) {
+        console.error("Failed to fetch latest progress insight:", error);
+        return { error: "Failed to fetch latest progress insight" };
+    }
+
+    return { data };
 };

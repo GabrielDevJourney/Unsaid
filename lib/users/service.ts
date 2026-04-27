@@ -5,13 +5,18 @@ import { cancelLemonSubscription } from "@/lib/subscriptions/service";
 import type { CreateWithProgressPayload, ServiceResult } from "@/types";
 import {
     cancelAccountDeletion,
-    deleteUser,
+    deleteUser as deleteUserRepo,
+    getAccountDeletionStatus as getAccountDeletionStatusRepo,
+    getUserProgress as getUserProgressRepo,
+    getUsersOptedIntoWritingReminders as getUsersOptedIntoWritingRemindersRepo,
     getUsersScheduledForDeletion,
     insertUser,
     insertUserProgress,
     type NotificationPreferences,
     scheduleAccountDeletion,
+    updateLastWritingReminderSent as updateLastWritingReminderSentRepo,
     updateNotificationPreferences as updateNotificationPreferencesRepo,
+    updateUserProfile as updateUserProfileRepo,
 } from "./repo";
 
 type CreateUserResult = {
@@ -46,7 +51,7 @@ export const createUserWithProgress = async (
     );
 
     if (progressError) {
-        await deleteUser(supabase, user.id);
+        await deleteUserRepo(supabase, user.id);
         throw progressError;
     }
 
@@ -58,7 +63,7 @@ export const createUserWithProgress = async (
 
     // Ignore duplicate constraint (idempotent for webhook retries)
     if (subscriptionError && subscriptionError.code !== "23505") {
-        await deleteUser(supabase, user.id);
+        await deleteUserRepo(supabase, user.id);
         throw subscriptionError;
     }
 
@@ -155,7 +160,7 @@ export const processExpiredDeletions = async (
     };
 
     for (const user of users) {
-        const { error: deleteError } = await deleteUser(
+        const { error: deleteError } = await deleteUserRepo(
             supabaseAdmin,
             user.user_id,
         );
@@ -183,3 +188,62 @@ export const processExpiredDeletions = async (
 
     return { data: result };
 };
+
+export const deleteUser = async (
+    supabase: SupabaseClient,
+    userId: string,
+): Promise<ServiceResult<null>> => {
+    const { error } = await deleteUserRepo(supabase, userId);
+    if (error) {
+        console.error("Failed to delete user:", error);
+        return { error: "Failed to delete user" };
+    }
+    return { data: null };
+};
+
+export const updateUserProfile = async (
+    supabase: SupabaseClient,
+    userId: string,
+    data: { email?: string; username?: string },
+): Promise<ServiceResult<null>> => {
+    const { error } = await updateUserProfileRepo(supabase, userId, data);
+    if (error) {
+        console.error("Failed to update user profile:", error);
+        return { error: "Failed to update profile" };
+    }
+    return { data: null };
+};
+
+export const getUserProgress = async (
+    supabase: SupabaseClient,
+): Promise<ServiceResult<{ totalEntries: number }>> => {
+    const { data, error } = await getUserProgressRepo(supabase);
+    if (error || !data) {
+        return { error: "Failed to fetch user progress" };
+    }
+    return { data };
+};
+
+export const getAccountDeletionStatus = async (
+    supabase: SupabaseClient,
+): Promise<ServiceResult<{ deletedAt: string | null }>> => {
+    const { data, error } = await getAccountDeletionStatusRepo(supabase);
+    if (error) {
+        console.error("Failed to fetch account deletion status:", error);
+        return { error: "Failed to fetch account deletion status" };
+    }
+    if (!data) {
+        return { error: "Failed to fetch account deletion status" };
+    }
+    return { data };
+};
+
+export const getUsersOptedIntoWritingReminders = async (
+    supabase: SupabaseClient,
+    cooldownDays: number,
+) => getUsersOptedIntoWritingRemindersRepo(supabase, cooldownDays);
+
+export const updateLastWritingReminderSent = async (
+    supabase: SupabaseClient,
+    userId: string,
+) => updateLastWritingReminderSentRepo(supabase, userId);
