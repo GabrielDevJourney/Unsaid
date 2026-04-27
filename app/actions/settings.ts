@@ -7,7 +7,7 @@ import { createSupabaseServer } from "@/lib/supabase/server";
 import {
     updateNotificationPreferences,
     updateUserProfile,
-} from "@/lib/users/repo";
+} from "@/lib/users/service";
 import type { ServiceResult } from "@/types";
 
 const ALLOWED_IMAGE_TYPES = [
@@ -51,7 +51,10 @@ export const updateUsernameAction = async (
         await client.users.updateUser(userId, { username: parsed.data });
 
         const supabase = createSupabaseAdmin();
-        await updateUserProfile(supabase, userId, { username: parsed.data });
+        const result = await updateUserProfile(supabase, userId, {
+            username: parsed.data,
+        });
+        if (result.error) return { error: result.error };
 
         return { data: null };
     } catch (err) {
