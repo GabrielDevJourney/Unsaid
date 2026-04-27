@@ -1,8 +1,9 @@
-import crypto from "node:crypto";
 import { type NextRequest, NextResponse } from "next/server";
+import { validateCronRequest } from "@/lib/cron/auth";
 import { sendTrialEndingEmail } from "@/lib/email/service";
-import { getExpiringTrials } from "@/lib/subscriptions/repo";
+import { getExpiringTrials } from "@/lib/subscriptions/service";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
+import { isServiceError } from "@/types";
 
 const DAYS_BEFORE_EXPIRY = 3;
 
@@ -14,42 +15,21 @@ const DAYS_BEFORE_EXPIRY = 3;
  * Protected by CRON_SECRET.
  */
 export const GET = async (req: NextRequest) => {
-    const authHeader = req.headers.get("authorization");
-    const cronSecret = process.env.CRON_SECRET;
-
-    if (!cronSecret) {
-        console.error("CRON_SECRET not configured");
-        return NextResponse.json(
-            { error: "Server configuration error" },
-            { status: 500 },
-        );
-    }
-
-    const expectedHeader = `Bearer ${cronSecret}`;
-    const isValid =
-        authHeader !== null &&
-        authHeader.length === expectedHeader.length &&
-        crypto.timingSafeEqual(
-            Buffer.from(authHeader, "utf8"),
-            Buffer.from(expectedHeader, "utf8"),
-        );
-
-    if (!isValid) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authError = validateCronRequest(req, "trial-reminder");
+    if (authError) return authError;
 
     const supabase = createSupabaseAdmin();
 
-    const { data: expiringTrials, error: trialsError } =
-        await getExpiringTrials(supabase, DAYS_BEFORE_EXPIRY);
+    const trialsResult = await getExpiringTrials(supabase, DAYS_BEFORE_EXPIRY);
 
-    if (trialsError) {
-        console.error("Failed to fetch expiring trials:", trialsError);
+    if (isServiceError(trialsResult)) {
         return NextResponse.json(
-            { error: "Failed to fetch expiring trials" },
+            { error: trialsResult.error },
             { status: 500 },
         );
     }
+
+    const expiringTrials = trialsResult.data;
 
     if (!expiringTrials || expiringTrials.length === 0) {
         return NextResponse.json({

@@ -1,5 +1,6 @@
-import crypto from "node:crypto";
+import * as Sentry from "@sentry/nextjs";
 import { type NextRequest, NextResponse } from "next/server";
+import { validateCronRequest } from "@/lib/cron/auth";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
 import { processExpiredDeletions } from "@/lib/users/service";
 
@@ -11,29 +12,8 @@ import { processExpiredDeletions } from "@/lib/users/service";
  * Protected by CRON_SECRET.
  */
 export const GET = async (req: NextRequest) => {
-    const authHeader = req.headers.get("authorization");
-    const cronSecret = process.env.CRON_SECRET;
-
-    if (!cronSecret) {
-        console.error("CRON_SECRET not configured");
-        return NextResponse.json(
-            { error: "Server configuration error" },
-            { status: 500 },
-        );
-    }
-
-    const expectedHeader = `Bearer ${cronSecret}`;
-    const isValid =
-        authHeader !== null &&
-        authHeader.length === expectedHeader.length &&
-        crypto.timingSafeEqual(
-            Buffer.from(authHeader, "utf8"),
-            Buffer.from(expectedHeader, "utf8"),
-        );
-
-    if (!isValid) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authError = validateCronRequest(req, "account-deletion");
+    if (authError) return authError;
 
     const supabase = createSupabaseAdmin();
 
@@ -47,6 +27,7 @@ export const GET = async (req: NextRequest) => {
             data: { message: "Complete", ...result.data },
         });
     } catch (err) {
+        Sentry.captureException(err);
         console.error("Account deletion cron failed:", err);
         return NextResponse.json({ error: "Internal error" }, { status: 500 });
     }
