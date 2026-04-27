@@ -13,7 +13,7 @@ export const countRateLimitEventsSince = (
         .eq("key_hash", keyHash)
         .gte("created_at", since);
 
-export const insertRateLimitEvent = (
+export const createRateLimitEvent = (
     supabase: SupabaseClient,
     scope: string,
     keyHash: string,

@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ServiceResult } from "@/types";
-import { countRateLimitEventsSince, insertRateLimitEvent } from "./repo";
+import { countRateLimitEventsSince, createRateLimitEvent } from "./repo";
 
 export const RATE_LIMIT_ERROR = "rate_limit" as const;
 
@@ -38,7 +38,7 @@ export const consumeRateLimit = async (
         return { error: RATE_LIMIT_ERROR };
     }
 
-    const { error: insertError } = await insertRateLimitEvent(
+    const { error: insertError } = await createRateLimitEvent(
         supabase,
         scope,
         keyHash,
