@@ -1,8 +1,8 @@
 import { auth } from "@clerk/nextjs/server";
+import * as Sentry from "@sentry/nextjs";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { getEntryWithInsightById } from "@/lib/entries/repo";
-import { saveEntry } from "@/lib/entries/service";
+import { getEntryWithInsight, saveEntry } from "@/lib/entries/service";
 import { EntryCreateSchema } from "@/lib/schemas/entry";
 import { createSupabaseServer } from "@/lib/supabase/server";
 
@@ -32,29 +32,24 @@ export const GET = async (_req: NextRequest, { params }: RouteParams) => {
         }
 
         const supabase = await createSupabaseServer();
-        const { data: entry, error } = await getEntryWithInsightById(
-            supabase,
-            id,
-        );
+        const result = await getEntryWithInsight(supabase, id);
 
-        if (error) {
-            // PGRST116 = no rows returned (not found or RLS blocked)
-            if ("code" in error && error.code === "PGRST116") {
+        if (result.error) {
+            if (result.error === "entry_not_found") {
                 return NextResponse.json(
                     { error: "Entry not found" },
                     { status: 404 },
                 );
             }
-
-            console.error("Failed to fetch entry:", error);
             return NextResponse.json(
                 { error: "Failed to fetch entry" },
                 { status: 500 },
             );
         }
 
-        return NextResponse.json({ data: entry });
+        return NextResponse.json({ data: result.data });
     } catch (error) {
+        Sentry.captureException(error);
         console.error("Failed to fetch entry:", error);
         return NextResponse.json(
             { error: "Failed to fetch entry" },
@@ -110,6 +105,7 @@ export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
 
         return NextResponse.json({ data: result.data });
     } catch (error) {
+        Sentry.captureException(error);
         console.error("Failed to save entry:", error);
         return NextResponse.json(
             { error: "Failed to save entry" },

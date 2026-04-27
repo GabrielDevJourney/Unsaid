@@ -18,6 +18,7 @@ import {
     deleteEntry,
     getEntriesBySource,
     getEntriesWithInsights,
+    getEntriesWithInsightsPaginated as getEntriesWithInsightsPaginatedRepo,
     getEntryWithAllInsightsById,
     getEntryWithInsightById,
     incrementUserProgress,
@@ -174,9 +175,13 @@ export const getEntryWithInsight = async (
 ): Promise<ServiceResult<EntryWithInsight>> => {
     const { data, error } = await getEntryWithInsightById(supabase, entryId);
 
-    if (error || !data) {
-        return { error: "Entry not found" };
+    if (error) {
+        if (error.code === "PGRST116") return { error: "entry_not_found" };
+        console.error("Failed to fetch entry:", error);
+        return { error: "Failed to fetch entry" };
     }
+
+    if (!data) return { error: "entry_not_found" };
 
     return { data };
 };
@@ -194,9 +199,13 @@ export const getEntryWithAllInsights = async (
         entryId,
     );
 
-    if (error || !data) {
-        return { error: "Entry not found" };
+    if (error) {
+        if (error.code === "PGRST116") return { error: "entry_not_found" };
+        console.error("Failed to fetch entry:", error);
+        return { error: "Failed to fetch entry" };
     }
+
+    if (!data) return { error: "entry_not_found" };
 
     return { data };
 };
@@ -232,4 +241,25 @@ export const getEntryReflectionPreviews = async (
     } catch {
         return { error: "Failed to decrypt reflections" };
     }
+};
+
+export const getEntriesWithInsightsPaginated = async (
+    supabase: SupabaseClient,
+    page: number,
+    pageSize: number,
+    userId?: string,
+): Promise<ServiceResult<{ entries: EntryWithInsight[]; count: number }>> => {
+    const { data, error, count } = await getEntriesWithInsightsPaginatedRepo(
+        supabase,
+        page,
+        pageSize,
+        userId,
+    );
+
+    if (error) {
+        console.error("Failed to fetch paginated entries:", error);
+        return { error: "Failed to fetch entries" };
+    }
+
+    return { data: { entries: data, count } };
 };
