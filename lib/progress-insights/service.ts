@@ -9,7 +9,7 @@ import {
     getEntryDatesByIds,
     searchEntriesByEmbedding,
 } from "@/lib/entries/repo";
-import { getEntryInsightsByEntryIds } from "@/lib/entry-insights/repo";
+import { findEntryInsightsByEntryIds } from "@/lib/entry-insights/repo";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
 import { getWeeklyPatternsForDateRange } from "@/lib/weekly-insights/repo";
 import type {
@@ -366,7 +366,7 @@ const fetchEntryInsightsContext = async (
 ): Promise<{ entryIndex: number; summary: string; tags: string[] }[]> => {
     try {
         const entryIds = recentEntries.map((e) => e.id);
-        const { data: insights } = await getEntryInsightsByEntryIds(
+        const { data: insights } = await findEntryInsightsByEntryIds(
             supabase,
             entryIds,
         );

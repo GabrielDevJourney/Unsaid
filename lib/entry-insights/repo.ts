@@ -11,7 +11,7 @@ const SELECT_FIELDS =
  * Each generation creates a new row (1:N per entry).
  * Encrypts content before storing.
  */
-export const insertEntryInsight = async (
+export const createEntryInsight = async (
     supabase: SupabaseClient,
     data: InsertEntryInsightData,
 ): Promise<{ data: EntryInsight | null; error: PostgrestError | null }> => {
@@ -43,7 +43,7 @@ export const insertEntryInsight = async (
  * Get all insight generations for a single entry, ordered by generation_order ASC.
  * Used by the editor to reconstruct segment layout on reload.
  */
-export const getEntryInsightsByEntryId = async (
+export const findEntryInsightsByEntryId = async (
     supabase: SupabaseClient,
     entryId: string,
 ): Promise<{ data: EntryInsight[]; error: PostgrestError | null }> => {
@@ -65,7 +65,7 @@ export const getEntryInsightsByEntryId = async (
  * Used by the AI service to provide context for the next generation.
  * RLS ensures user can only fetch their own entry insights.
  */
-export const getEntryInsightByEntryId = async (
+export const findEntryInsightByEntryId = async (
     supabase: SupabaseClient,
     entryId: string,
 ): Promise<{ data: EntryInsight | null; error: PostgrestError | null }> => {
@@ -90,7 +90,7 @@ export const getEntryInsightByEntryId = async (
  * Returns all rows — callers pick latest per entry as needed.
  * Decrypts content for each result.
  */
-export const getEntryInsightsByEntryIds = async (
+export const findEntryInsightsByEntryIds = async (
     supabase: SupabaseClient,
     entryIds: string[],
 ): Promise<{ data: EntryInsight[]; error: PostgrestError | null }> => {
@@ -113,7 +113,7 @@ export const getEntryInsightsByEntryIds = async (
  * Get total count of entry insight rows for the authenticated user.
  * RLS ensures only the user's own rows are counted.
  */
-export const getTotalInsightsCount = async (
+export const countEntryInsights = async (
     supabase: SupabaseClient,
 ): Promise<{ count: number; error: PostgrestError | null }> => {
     const { count, error } = await supabase

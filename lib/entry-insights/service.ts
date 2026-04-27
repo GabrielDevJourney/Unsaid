@@ -6,9 +6,9 @@ import { createSupabaseAdmin } from "@/lib/supabase/admin";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import type { ServiceResult } from "@/types";
 import {
-    getEntryInsightsByEntryId,
-    getTotalInsightsCount as getTotalInsightsCountRepo,
-    insertEntryInsight,
+    countEntryInsights,
+    createEntryInsight,
+    findEntryInsightsByEntryId,
 } from "./repo";
 
 /**
@@ -60,7 +60,7 @@ export const generateEntryInsight = async (
 
     const supabase = createSupabaseAdmin();
 
-    const { data: existingInsights } = await getEntryInsightsByEntryId(
+    const { data: existingInsights } = await findEntryInsightsByEntryId(
         supabase,
         entryId,
     );
@@ -94,7 +94,7 @@ export const generateEntryInsight = async (
                 return;
             }
 
-            const { error } = await insertEntryInsight(supabase, {
+            const { error } = await createEntryInsight(supabase, {
                 userId,
                 entryId,
                 content: parsed.insight,
@@ -115,7 +115,7 @@ export const generateEntryInsight = async (
 export const getTotalInsightsCount = async (
     supabase: SupabaseClient,
 ): Promise<ServiceResult<number>> => {
-    const { count, error } = await getTotalInsightsCountRepo(supabase);
+    const { count, error } = await countEntryInsights(supabase);
 
     if (error) {
         console.error("Failed to get total insights count:", error);

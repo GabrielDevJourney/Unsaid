@@ -643,7 +643,7 @@ const seedEntryInsights = async (
         return;
     }
 
-    const { insertEntryInsight } = await import("../lib/entry-insights/repo");
+    const { createEntryInsight } = await import("../lib/entry-insights/repo");
 
     if (withAi) {
         const { streamEntryInsight } = await import(
@@ -658,7 +658,7 @@ const seedEntryInsights = async (
                     insight: string;
                     tags: string[];
                 };
-                await insertEntryInsight(supabase, {
+                await createEntryInsight(supabase, {
                     userId,
                     entryId: entries[i].id,
                     content: parsed.insight,
@@ -678,7 +678,7 @@ const seedEntryInsights = async (
     for (let i = 0; i < entries.length; i++) {
         const template = MOCK_ENTRIES[i % MOCK_ENTRIES.length];
         process.stdout.write(`\r  Insight ${i + 1}/${entries.length}`);
-        await insertEntryInsight(supabase, {
+        await createEntryInsight(supabase, {
             userId,
             entryId: entries[i].id,
             content: template.insight,
