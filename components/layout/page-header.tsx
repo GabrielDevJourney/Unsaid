@@ -14,8 +14,10 @@ interface PageHeaderProps {
 
 const PageHeader = ({ children, className, backHref }: PageHeaderProps) => {
     return (
-        <header className={cn("flex shrink-0 flex-col border-b", className)}>
-            <div className="flex h-24 items-center px-10">
+        <header
+            className={cn("flex shrink-0 flex-col border-b h-24", className)}
+        >
+            <div className="flex items-center px-10 h-full">
                 {backHref && (
                     <Link
                         href={backHref}
