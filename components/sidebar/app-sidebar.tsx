@@ -45,25 +45,24 @@ export const AppSidebar = ({
 
     return (
         <Sidebar collapsible="icon">
-            <SidebarHeader className="h-24 flex-row items-center justify-between border-b py-8 px-4 group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:items-center group-data-[state=collapsed]:relative group-data-[state=collapsed]:h-24">
-                <Link
-                    href="/home"
-                    className="font-serif text-2xl font-medium group-data-[state=open]:flex-2 text-center"
-                >
+            <SidebarHeader className="relative h-24 flex-row items-center justify-between border-b py-8 px-4">
+                <Link href="/home" className="font-serif text-2xl font-medium">
                     <div className="h-full flex gap-2 items-center">
                         <Image
                             src="/logo-white-bg.svg"
                             alt="Unsaid logo with white background"
                             width={36}
                             height={36}
+                            className="shrink-0"
                         />
-                        <Image
-                            src="/logo-text.svg"
-                            alt="Unsaid text logo with white background"
-                            width={76}
-                            height={36}
-                            className="transition-opacity duration-400 ease-in-out group-data-[state=collapsed]:opacity-0"
-                        />
+                        <div className="overflow-hidden max-w-19 transition-[max-width,opacity] duration-400 ease-in-out group-data-[state=collapsed]:max-w-0 group-data-[state=collapsed]:opacity-0">
+                            <Image
+                                src="/logo-text.svg"
+                                alt="Unsaid text logo with white background"
+                                width={76}
+                                height={36}
+                            />
+                        </div>
                     </div>
                 </Link>
                 <SidebarTrigger className="group-data-[state=collapsed]:absolute group-data-[state=collapsed]:left-full group-data-[state=collapsed]:-translate-x-1/2 group-data-[state=collapsed]:top-5 group-data-[state=collapsed]:-translate-y-1/2 group-data-[state=collapsed]:z-20 group-data-[state=collapsed]:bg-neutral-100 group-data-[state=collapsed]:border group-data-[state=collapsed]:border-border" />
@@ -83,9 +82,9 @@ export const AppSidebar = ({
                     <SidebarMenuItem>
                         <Link
                             href="/entries/new"
-                            className="flex w-full items-center gap-2 rounded-sm p-2 text-zinc-600 hover:bg-sidebar-accent transition-[width,height,padding,gap] duration-400 ease-in-out group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:p-2! group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:justify-center"
+                            className="flex w-full items-center gap-2 rounded-sm p-2 text-zinc-600 hover:bg-sidebar-accent transition-[width,height,padding,gap] duration-400 ease-in-out group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:p-2! group-data-[collapsible=icon]:gap-0"
                         >
-                            <span className="btn-add-entry-icon bg-slate-400 relative flex items-center justify-center size-6 group-data-[state=collapsed]:size-8 shrink-0 rounded-md group-data-[state=collapsed]:rounded-lg overflow-hidden cursor-pointer transition-[width,height,border-radius] duration-400 ease-in-out group-data-[state=collapsed]:ring-6 group-data-[state=collapsed]:ring-border">
+                            <span className="btn-add-entry-icon bg-slate-400 relative flex items-center justify-center size-6 shrink-0 rounded-md overflow-hidden cursor-pointer duration-400 ease-in-out">
                                 <HugeiconsIcon
                                     icon={Add01Icon}
                                     className="relative z-10 size-4 text-white"

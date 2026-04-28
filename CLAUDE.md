@@ -79,6 +79,17 @@ The worktree starts with no `node_modules` and no env vars — skipping either s
 
 ---
 
+## Git Workflow
+
+Only stage and commit when explicitly asked (e.g. "plan commits", "commit this").
+
+- **Stage and commit via tool permission flow** — run `git add` and `git commit` directly; the Claude Code permission prompt handles approval (never ask for confirmation in chat)
+- **No co-author lines** — never append `Co-Authored-By:` trailers to commit messages
+- **Use `-p` for mixed files** — if one file mixes unrelated changes, use `git add -p <file>` and note which hunks to stage
+- **Conventional commits required** — `type(scope): message` (enforced by commitlint)
+
+---
+
 ## When Requirements Are Unclear
 
 Ask one clear clarification question. Do not guess business rules.

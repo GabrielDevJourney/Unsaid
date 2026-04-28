@@ -401,7 +401,7 @@ function SidebarGroup({ className, ...props }: React.ComponentProps<"div">) {
             data-slot="sidebar-group"
             data-sidebar="group"
             className={cn(
-                "relative flex w-full min-w-0 flex-col p-2 group-data-[state=collapsed]:items-center",
+                "relative flex w-full min-w-0 flex-col p-2",
                 className,
             )}
             {...props}
@@ -475,10 +475,7 @@ function SidebarMenu({ className, ...props }: React.ComponentProps<"ul">) {
         <ul
             data-slot="sidebar-menu"
             data-sidebar="menu"
-            className={cn(
-                "flex w-full min-w-0 flex-col gap-3 group-data-[collapsible=icon]:w-auto group-data-[collapsible=icon]:items-center",
-                className,
-            )}
+            className={cn("flex w-full min-w-0 flex-col gap-3", className)}
             {...props}
         />
     );
@@ -496,7 +493,7 @@ function SidebarMenuItem({ className, ...props }: React.ComponentProps<"li">) {
 }
 
 const sidebarMenuButtonVariants = cva(
-    "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-sm p-2 text-left text-sm text-zinc-600 outline-hidden ring-sidebar-ring transition-[width,height,padding,gap] duration-400 ease-in-out hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:border data-[active=true]:bg-gray-3 data-[active=true]:font-medium data-[active=true]:text-zinc-600 group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:p-[8px]! group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:[&>svg]:size-6 [&>span:not([data-slot=avatar])]:overflow-hidden [&>span:not([data-slot=avatar])]:whitespace-nowrap [&>span:not([data-slot=avatar])]:max-w-[160px] [&>span:not([data-slot=avatar])]:transition-[max-width] [&>span:not([data-slot=avatar])]:duration-400 [&>span:not([data-slot=avatar])]:ease-in-out group-data-[collapsible=icon]:[&>span:not([data-slot=avatar])]:max-w-0 [&>svg]:size-6 [&>svg]:shrink-0",
+    "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-sm p-2 text-left text-sm text-zinc-600 outline-hidden ring-sidebar-ring transition-[width,height,padding,gap] duration-400 ease-in-out hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 border border-transparent data-[active=true]:border-border data-[active=true]:bg-gray-3 data-[active=true]:font-medium data-[active=true]:text-zinc-600 group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:p-[8px]! group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:[&>svg]:size-6 [&>span:not([data-slot=avatar])]:overflow-hidden [&>span:not([data-slot=avatar])]:whitespace-nowrap [&>span:not([data-slot=avatar])]:max-w-[160px] [&>span:not([data-slot=avatar])]:transition-[max-width] [&>span:not([data-slot=avatar])]:duration-400 [&>span:not([data-slot=avatar])]:ease-in-out group-data-[collapsible=icon]:[&>span:not([data-slot=avatar])]:max-w-0 [&>svg]:size-6 [&>svg]:shrink-0",
     {
         variants: {
             variant: {
