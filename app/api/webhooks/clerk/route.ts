@@ -10,7 +10,7 @@ import {
 } from "@/lib/users/service";
 import type { CreateWithProgressPayload } from "@/types";
 
-export async function POST(req: NextRequest) {
+export const POST = async (req: NextRequest): Promise<Response> => {
     try {
         const evt = await verifyWebhook(req);
         const supabaseAdmin = createSupabaseAdmin();
@@ -93,4 +93,4 @@ export async function POST(req: NextRequest) {
         console.error("Error verifying webhook:", err);
         return new Response("Error verifying webhook", { status: 400 });
     }
-}
+};
