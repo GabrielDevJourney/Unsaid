@@ -4,7 +4,12 @@ import { MIN_ENTRIES_FOR_WEEKLY_INSIGHT } from "@/lib/constants";
 import type { PatternTypeCode } from "@/lib/constants/pattern-types";
 import { getWeekRange, getWeekStart } from "@/lib/date-utils";
 import { sendWeeklyPatternsEmail } from "@/lib/email/service";
+import { findAllEntriesByDateRange } from "@/lib/entries/repo";
+import { decryptEntryContent } from "@/lib/entries/transformers";
+import { countEntryInsightsByUserId } from "@/lib/entry-insights/repo";
+import { findUserProgress } from "@/lib/progress-insights/repo";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
+import { findUserForWeeklyEmail } from "@/lib/users/repo";
 import type {
     CreateWeeklyInsightPayload,
     ServiceResult,
@@ -12,7 +17,6 @@ import type {
     WeeklyInsightWithPatterns,
 } from "@/types";
 import { generateEmbedding } from "../ai/embeddings";
-import { decrypt } from "../crypto";
 import {
     countNewPatterns,
     countPatterns,
@@ -71,15 +75,12 @@ export const processWeeklyInsightsForAllUsers = async (): Promise<
     const weekStart = getWeekStart(lastWeekDate);
     const { start, end } = getWeekRange(weekStart);
 
-    // Fetch all entries from last week
-    const { data: entries, error: entriesError } = await supabase
-        .from("entries")
-        .select(
-            "id, user_id, encrypted_content, content_tag, content_iv, created_at",
-        )
-        .gte("created_at", start.toISOString())
-        .lte("created_at", end.toISOString())
-        .order("created_at", { ascending: true });
+    const { data: entries, error: entriesError } =
+        await findAllEntriesByDateRange(
+            supabase,
+            start.toISOString(),
+            end.toISOString(),
+        );
 
     if (entriesError) {
         console.error("Failed to fetch entries:", entriesError);
@@ -188,10 +189,10 @@ const processUserWeeklyInsight = async (
             entryIds: entries.map((e) => e.id),
             entries: entries.map((e) => ({
                 id: e.id,
-                content: decrypt({
-                    encryptedContent: e.encrypted_content ?? "",
-                    iv: e.content_iv ?? "",
-                    tag: e.content_tag ?? "",
+                content: decryptEntryContent({
+                    encrypted_content: e.encrypted_content ?? "",
+                    content_iv: e.content_iv ?? "",
+                    content_tag: e.content_tag ?? "",
                 }),
                 createdAt: e.created_at,
             })),
@@ -228,69 +229,46 @@ const sendWeeklyInsightEmail = async (
     _patterns: WeeklyInsightPattern[],
 ): Promise<{ sent: boolean; error?: string }> => {
     try {
-        const { data: user } = await supabase
-            .from("users")
-            .select("email, username, notify_weekly_patterns")
-            .eq("user_id", userId)
-            .single();
+        const [
+            userResult,
+            progressResult,
+            insightsResult,
+            weeklyInsightResult,
+        ] = await Promise.all([
+            findUserForWeeklyEmail(supabase, userId),
+            findUserProgress(supabase, userId),
+            countEntryInsightsByUserId(supabase, userId),
+            findWeeklyInsightWithPatternsByWeekStart(
+                supabase,
+                userId,
+                getWeekStart(new Date()),
+            ),
+        ]);
 
-        if (!user?.email) {
+        if (!userResult.data?.email) {
             return { sent: false, error: "User email not found" };
         }
 
-        if (!user.notify_weekly_patterns) {
+        if (!userResult.data.notifyWeeklyPatterns) {
             return { sent: false };
         }
 
-        const [progressResult, insightsResult] = await Promise.all([
-            supabase
-                .from("user_progress")
-                .select("total_entries")
-                .eq("user_id", userId)
-                .single(),
-            supabase
-                .from("entry_insights")
-                .select("id", { count: "exact", head: true })
-                .eq("user_id", userId),
-        ]);
+        const patterns = (weeklyInsightResult.data?.patterns ?? []).slice(0, 3);
 
-        const currentWeekStart = getWeekStart(new Date());
-        const { data: weeklyInsight } = await supabase
-            .from("weekly_insights")
-            .select("id")
-            .eq("user_id", userId)
-            .eq("week_start", currentWeekStart)
-            .single();
-
-        if (!weeklyInsight?.id) {
-            return { sent: false, error: "Weekly insight not found" };
-        }
-
-        const { data: patternRows, error: patternsError } = await supabase
-            .from("weekly_insight_patterns")
-            .select("title, pattern_type, created_at")
-            .eq("weekly_insight_id", weeklyInsight.id)
-            .order("created_at", { ascending: false })
-            .limit(3);
-
-        if (patternsError) {
-            return { sent: false, error: patternsError.message };
-        }
-
-        if (!patternRows || patternRows.length === 0) {
+        if (patterns.length === 0) {
             return { sent: false };
         }
 
         const emailResult = await sendWeeklyPatternsEmail(
-            user.email,
-            user.username,
+            userResult.data.email,
+            userResult.data.username ?? "",
             {
-                patternCount: patternRows.length,
+                patternCount: patterns.length,
                 entryCount: progressResult.data?.total_entries ?? 0,
-                insightsCount: insightsResult.count ?? 0,
-                patterns: patternRows.map((pattern) => ({
-                    title: pattern.title,
-                    patternType: pattern.pattern_type as PatternTypeCode,
+                insightsCount: insightsResult.count,
+                patterns: patterns.map((p) => ({
+                    title: p.title,
+                    patternType: p.patternType as PatternTypeCode,
                 })),
             },
         );
