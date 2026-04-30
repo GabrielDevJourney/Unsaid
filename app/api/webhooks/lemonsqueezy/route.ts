@@ -13,8 +13,7 @@ const verifySignature = (
     const secret = process.env.LEMONSQUEEZY_WEBHOOK_SECRET;
 
     if (!secret) {
-        console.error("Missing LEMONSQUEEZY_WEBHOOK_SECRET");
-        return false;
+        throw new Error("LEMONSQUEEZY_WEBHOOK_SECRET not configured");
     }
 
     if (!signature) {
