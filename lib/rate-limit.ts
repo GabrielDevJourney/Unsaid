@@ -12,7 +12,7 @@ const ENTRY_LIMITS = {
  */
 export const checkEntryRateLimit = async (
     supabase: SupabaseClient,
-    userId: string,
+    _userId: string,
 ): Promise<RateLimitResult> => {
     const now = new Date();
     const oneMinuteAgo = new Date(now.getTime() - 60 * 1000);
@@ -22,7 +22,6 @@ export const checkEntryRateLimit = async (
     const { count: recentCount, error: recentError } = await supabase
         .from("entries")
         .select("*", { count: "exact", head: true })
-        .eq("user_id", userId)
         .gte("created_at", oneMinuteAgo.toISOString());
 
     if (recentError) {
@@ -42,7 +41,6 @@ export const checkEntryRateLimit = async (
     const { count: dailyCount, error: dailyError } = await supabase
         .from("entries")
         .select("*", { count: "exact", head: true })
-        .eq("user_id", userId)
         .gte("created_at", todayStart.toISOString());
 
     if (dailyError) {
