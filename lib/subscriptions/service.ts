@@ -12,6 +12,7 @@ import type { SubscriptionRow } from "@/types/domain/subscriptions";
 import {
     createPaymentEvent,
     createSubscription,
+    findExpiredTrials,
     findExpiringTrials,
     findPaymentEventByLemonId,
     findSubscriptionByUserId,
@@ -239,11 +240,7 @@ export const getExpiringTrials = async (
 export const expireTrials = async (
     supabase: SupabaseClient,
 ): Promise<ServiceResult<{ count: number }>> => {
-    const { data: expiredTrials, error } = await supabase
-        .from("subscriptions")
-        .select("user_id")
-        .eq("status", "trial")
-        .lt("trial_ends_at", new Date().toISOString());
+    const { data: expiredTrials, error } = await findExpiredTrials(supabase);
 
     if (error) {
         console.error("Failed to find expired trials:", error);
