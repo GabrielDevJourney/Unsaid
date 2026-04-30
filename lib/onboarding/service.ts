@@ -84,6 +84,33 @@ export const saveOnboardingPreview = async (
     return { data: null };
 };
 
+export const getEntryForOnboardingPreview = async (
+    supabase: SupabaseClient,
+    entryId: string,
+): Promise<
+    ServiceResult<{
+        content: string;
+        insight: { content: string; tags: InsightTagType[] };
+    }>
+> => {
+    const { data: entry, error } = await findEntryWithInsightById(
+        supabase,
+        entryId,
+    );
+    if (error || !entry || !entry.entryInsight) {
+        return { error: "entry_insight_not_found" };
+    }
+    return {
+        data: {
+            content: entry.content,
+            insight: {
+                content: entry.entryInsight.content,
+                tags: entry.entryInsight.tags as InsightTagType[],
+            },
+        },
+    };
+};
+
 export const generateOnboardingPreview = async (
     supabase: SupabaseClient,
     userId: string,

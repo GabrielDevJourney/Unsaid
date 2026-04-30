@@ -1,8 +1,17 @@
 import { auth } from "@clerk/nextjs/server";
 import * as Sentry from "@sentry/nextjs";
 import { type NextRequest, NextResponse } from "next/server";
-import { generateOnboardingPreview } from "@/lib/onboarding/service";
+import {
+    generateOnboardingPreview,
+    getEntryForOnboardingPreview,
+} from "@/lib/onboarding/service";
+import {
+    consumeRateLimit,
+    RATE_LIMIT_ERROR,
+    RATE_LIMIT_SCOPES,
+} from "@/lib/rate-limits/service";
 import { onboardingPreviewRequestSchema } from "@/lib/schemas/onboarding-preview";
+import { createSupabaseAdmin } from "@/lib/supabase/admin";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { isServiceError } from "@/types";
 
@@ -21,17 +30,59 @@ export const POST = async (req: NextRequest) => {
 
         if (!validated.success) {
             return NextResponse.json(
-                { error: validated.error.issues },
+                {
+                    error:
+                        validated.error.issues[0]?.message ?? "Invalid request",
+                },
                 { status: 400 },
             );
         }
 
-        const supabase = await createSupabaseServer();
-        const result = await generateOnboardingPreview(
-            supabase,
+        const adminSupabase = createSupabaseAdmin();
+        const rateLimit = await consumeRateLimit(
+            adminSupabase,
+            RATE_LIMIT_SCOPES.onboardingPreview,
             userId,
-            validated.data,
+            60 * 60 * 1000,
+            3,
         );
+
+        if (rateLimit.error === RATE_LIMIT_ERROR) {
+            return NextResponse.json(
+                { error: "Too many requests" },
+                { status: 429 },
+            );
+        }
+        if (rateLimit.error) {
+            return NextResponse.json(
+                { error: "Service unavailable" },
+                { status: 503 },
+            );
+        }
+
+        // Re-fetch entry + insight server-side to prevent prompt injection via
+        // client-supplied content/insight fields.
+        const supabase = await createSupabaseServer();
+        const entryResult = await getEntryForOnboardingPreview(
+            supabase,
+            validated.data.entry_id,
+        );
+
+        if (entryResult.error || !entryResult.data) {
+            return NextResponse.json(
+                { error: "Entry insight not found" },
+                { status: 404 },
+            );
+        }
+
+        const { content, insight } = entryResult.data;
+
+        const result = await generateOnboardingPreview(supabase, userId, {
+            entry_id: validated.data.entry_id,
+            content,
+            insight: insight.content,
+            tags: insight.tags,
+        });
 
         if (isServiceError(result)) {
             return NextResponse.json({ error: result.error }, { status: 500 });
