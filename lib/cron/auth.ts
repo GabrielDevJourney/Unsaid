@@ -21,7 +21,8 @@ export const validateCronRequest = (req: NextRequest, jobName: string) => {
     const expectedHeader = `Bearer ${cronSecret}`;
     const isValid =
         authHeader !== null &&
-        authHeader.length === expectedHeader.length &&
+        Buffer.byteLength(authHeader, "utf8") ===
+            Buffer.byteLength(expectedHeader, "utf8") &&
         crypto.timingSafeEqual(
             Buffer.from(authHeader, "utf8"),
             Buffer.from(expectedHeader, "utf8"),
