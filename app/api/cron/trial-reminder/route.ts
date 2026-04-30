@@ -3,6 +3,7 @@ import { validateCronRequest } from "@/lib/cron/auth";
 import { sendTrialEndingEmail } from "@/lib/email/service";
 import { getExpiringTrials } from "@/lib/subscriptions/service";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
+import { getUserTrialEmailContext } from "@/lib/users/service";
 import { isServiceError } from "@/types";
 
 const DAYS_BEFORE_EXPIRY = 3;
@@ -48,55 +49,32 @@ export const GET = async (req: NextRequest) => {
         results.processed++;
 
         try {
-            const { data: user } = await supabase
-                .from("users")
-                .select("email, username")
-                .eq("user_id", trial.user_id)
-                .single();
+            const contextResult = await getUserTrialEmailContext(
+                supabase,
+                trial.user_id,
+            );
 
-            if (!user) {
+            if (!contextResult.data) {
                 results.failed++;
                 continue;
             }
 
-            const [entriesResult, insightsResult, weeklyInsightsResult] =
-                await Promise.all([
-                    supabase
-                        .from("entries")
-                        .select("id", { count: "exact", head: true })
-                        .eq("user_id", trial.user_id),
-                    supabase
-                        .from("entry_insights")
-                        .select("id", { count: "exact", head: true })
-                        .eq("user_id", trial.user_id),
-                    supabase
-                        .from("weekly_insights")
-                        .select("id")
-                        .eq("user_id", trial.user_id),
-                ]);
-
-            const weeklyInsightIds =
-                weeklyInsightsResult.data?.map((insight) => insight.id) ?? [];
-
-            let patternsFound = 0;
-
-            if (weeklyInsightIds.length > 0) {
-                const patternsResult = await supabase
-                    .from("weekly_insight_patterns")
-                    .select("id", { count: "exact", head: true })
-                    .in("weekly_insight_id", weeklyInsightIds);
-
-                patternsFound = patternsResult.count ?? 0;
-            }
+            const {
+                email,
+                username,
+                entriesWritten,
+                insightsReceived,
+                patternsFound,
+            } = contextResult.data;
 
             const emailResult = await sendTrialEndingEmail(
-                user.email,
-                user.username,
+                email,
+                username ?? "",
                 DAYS_BEFORE_EXPIRY,
                 {
-                    entriesWritten: entriesResult.count ?? 0,
+                    entriesWritten,
                     patternsFound,
-                    insightsReceived: insightsResult.count ?? 0,
+                    insightsReceived,
                 },
             );
 

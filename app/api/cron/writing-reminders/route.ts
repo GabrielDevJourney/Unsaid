@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { validateCronRequest } from "@/lib/cron/auth";
 import { sendWritingReminderEmail } from "@/lib/email/service";
+import { getLatestEntryForUser } from "@/lib/entries/service";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
 import {
     getUsersOptedIntoWritingReminders,
@@ -56,18 +57,16 @@ export const GET = async (req: NextRequest) => {
         results.processed++;
 
         try {
-            const { data: latestEntry } = await supabase
-                .from("entries")
-                .select("created_at")
-                .eq("user_id", user.user_id)
-                .order("created_at", { ascending: false })
-                .limit(1)
-                .maybeSingle();
+            const latestEntryResult = await getLatestEntryForUser(
+                supabase,
+                user.user_id,
+            );
+            const latestEntry = latestEntryResult.data;
 
             // Skip if user wrote recently
             if (
                 latestEntry &&
-                new Date(latestEntry.created_at) > inactivityCutoff
+                new Date(latestEntry.createdAt) > inactivityCutoff
             ) {
                 results.skipped++;
                 continue;
@@ -75,8 +74,7 @@ export const GET = async (req: NextRequest) => {
 
             const daysSinceLastEntry = latestEntry
                 ? Math.floor(
-                      (Date.now() -
-                          new Date(latestEntry.created_at).getTime()) /
+                      (Date.now() - new Date(latestEntry.createdAt).getTime()) /
                           (1000 * 60 * 60 * 24),
                   )
                 : null;

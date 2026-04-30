@@ -1,13 +1,17 @@
 import { clerkClient } from "@clerk/nextjs/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { countEntriesByUserId } from "@/lib/entries/repo";
+import { countEntryInsightsByUserId } from "@/lib/entry-insights/repo";
 import { createSubscription } from "@/lib/subscriptions/repo";
 import { cancelLemonSubscription } from "@/lib/subscriptions/service";
+import { countPatternsForUser } from "@/lib/weekly-insights/repo";
 import type { CreateWithProgressPayload, ServiceResult } from "@/types";
 import {
     createUser,
     createUserProgress,
     deleteUser as deleteUserRepo,
     findAccountDeletionStatus,
+    findUserById,
     findUserProgress,
     findUsersOptedIntoWritingReminders,
     findUsersScheduledForDeletion,
@@ -241,3 +245,40 @@ export const updateLastWritingReminderSent = async (
     supabase: SupabaseClient,
     userId: string,
 ) => updateLastWritingReminderSentRepo(supabase, userId);
+
+/**
+ * Aggregate user stats needed for trial ending reminder emails.
+ * Called with admin client (bypasses RLS) — userId is explicit on all queries.
+ */
+export const getUserTrialEmailContext = async (
+    supabase: SupabaseClient,
+    userId: string,
+): Promise<
+    ServiceResult<{
+        email: string;
+        username: string | null;
+        entriesWritten: number;
+        insightsReceived: number;
+        patternsFound: number;
+    }>
+> => {
+    const [userResult, entriesResult, insightsResult, patternsResult] =
+        await Promise.all([
+            findUserById(supabase, userId),
+            countEntriesByUserId(supabase, userId),
+            countEntryInsightsByUserId(supabase, userId),
+            countPatternsForUser(supabase, userId),
+        ]);
+
+    if (!userResult.data) return { error: "User not found" };
+
+    return {
+        data: {
+            email: userResult.data.email,
+            username: userResult.data.username,
+            entriesWritten: entriesResult.count,
+            insightsReceived: insightsResult.count,
+            patternsFound: patternsResult.count,
+        },
+    };
+};
