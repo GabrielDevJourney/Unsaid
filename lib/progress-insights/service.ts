@@ -285,7 +285,7 @@ export const getProgressInsightsPage = async (
         findUserProgress(supabase, userId),
     ]);
 
-    const progress = progressResult.data;
+    const progress = progressResult.error ? null : progressResult.data;
     const totalInsights = insightsResult.count ?? 0;
     return {
         insights: insightsResult.data,
