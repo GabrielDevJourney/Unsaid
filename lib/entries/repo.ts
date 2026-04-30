@@ -504,3 +504,78 @@ export const findRelatedEntries = async (
         error: null,
     };
 };
+
+export const findEntryEncryptedFields = async (
+    supabase: SupabaseClient,
+    entryId: string,
+): Promise<{
+    data: {
+        encrypted_content: string;
+        content_iv: string;
+        content_tag: string;
+    } | null;
+    error: PostgrestError | null;
+}> => {
+    const { data, error } = await supabase
+        .from("entries")
+        .select("encrypted_content, content_iv, content_tag")
+        .eq("id", entryId)
+        .single();
+    return { data, error };
+};
+
+export const findLatestEntryByUser = async (
+    supabase: SupabaseClient,
+    userId: string,
+): Promise<{
+    data: { created_at: string } | null;
+    error: PostgrestError | null;
+}> => {
+    const { data, error } = await supabase
+        .from("entries")
+        .select("created_at")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+    return { data, error };
+};
+
+export const findAllEntriesByDateRange = async (
+    supabase: SupabaseClient,
+    from: string,
+    to: string,
+): Promise<{
+    data:
+        | {
+              id: string;
+              user_id: string;
+              encrypted_content: string | null;
+              content_iv: string | null;
+              content_tag: string | null;
+              created_at: string;
+          }[]
+        | null;
+    error: PostgrestError | null;
+}> => {
+    const { data, error } = await supabase
+        .from("entries")
+        .select(
+            "id, user_id, encrypted_content, content_tag, content_iv, created_at",
+        )
+        .gte("created_at", from)
+        .lte("created_at", to)
+        .order("created_at", { ascending: true });
+    return { data, error };
+};
+
+export const countEntriesByUserId = async (
+    supabase: SupabaseClient,
+    userId: string,
+): Promise<{ count: number; error: PostgrestError | null }> => {
+    const { count, error } = await supabase
+        .from("entries")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId);
+    return { count: count ?? 0, error };
+};

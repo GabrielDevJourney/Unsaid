@@ -277,3 +277,18 @@ export const updateLastWritingReminderSent = async (
         .update({ last_writing_reminder_sent_at: new Date().toISOString() })
         .eq("user_id", userId);
 };
+
+export const findUserById = async (
+    supabase: SupabaseClient,
+    userId: string,
+): Promise<{
+    data: { email: string; username: string | null } | null;
+    error: PostgrestError | null;
+}> => {
+    const { data, error } = await supabase
+        .from("users")
+        .select("email, username")
+        .eq("user_id", userId)
+        .single();
+    return { data, error };
+};

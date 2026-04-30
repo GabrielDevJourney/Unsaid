@@ -208,3 +208,14 @@ export const toEntryReflectionPreview = (
         insightContent,
     };
 };
+
+export const decryptEntryContent = (row: {
+    encrypted_content: string;
+    content_iv: string;
+    content_tag: string;
+}): string =>
+    decrypt({
+        encryptedContent: row.encrypted_content,
+        iv: row.content_iv,
+        tag: row.content_tag,
+    });

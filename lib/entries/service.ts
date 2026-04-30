@@ -20,6 +20,7 @@ import {
     findEntriesWithInsightsPaginated,
     findEntryWithAllInsightsById,
     findEntryWithInsightById,
+    findLatestEntryByUser,
     insertEntry,
     updateEntryContent,
     updateEntryEmbedding,
@@ -262,4 +263,16 @@ export const getEntriesWithInsightsPaginated = async (
     }
 
     return { data: { entries: data, count } };
+};
+
+export const getLatestEntryForUser = async (
+    supabase: SupabaseClient,
+    userId: string,
+): Promise<ServiceResult<{ createdAt: string } | null>> => {
+    const { data, error } = await findLatestEntryByUser(supabase, userId);
+    if (error) {
+        console.error("Failed to fetch latest entry:", error);
+        return { error: "Failed to fetch latest entry" };
+    }
+    return { data: data ? { createdAt: data.created_at } : null };
 };
