@@ -29,7 +29,10 @@ export const POST = async (req: NextRequest) => {
 
         if (!validated.success) {
             return NextResponse.json(
-                { error: validated.error.issues },
+                {
+                    error:
+                        validated.error.issues[0]?.message ?? "Invalid request",
+                },
                 { status: 400 },
             );
         }
@@ -38,14 +41,22 @@ export const POST = async (req: NextRequest) => {
         const result = await createEntry(supabase, userId, validated.data);
 
         if (isServiceError(result)) {
-            const status = result.error === "FREE_LIMIT_REACHED" ? 403 : 429;
+            const status =
+                result.error === "FREE_LIMIT_REACHED"
+                    ? 403
+                    : result.error === "rate_limit"
+                      ? 429
+                      : 500;
             return NextResponse.json({ error: result.error }, { status });
         }
 
         return NextResponse.json({ data: result.data }, { status: 201 });
     } catch (error) {
         if (error instanceof z.ZodError) {
-            return NextResponse.json({ error: error.issues }, { status: 400 });
+            return NextResponse.json(
+                { error: error.issues[0]?.message ?? "Invalid request" },
+                { status: 400 },
+            );
         }
 
         Sentry.captureException(error);
@@ -79,7 +90,11 @@ export const GET = async (req: NextRequest) => {
         const pagination = PaginationSchema.safeParse(paginationInput);
         if (!pagination.success) {
             return NextResponse.json(
-                { error: pagination.error.issues },
+                {
+                    error:
+                        pagination.error.issues[0]?.message ??
+                        "Invalid request",
+                },
                 { status: 400 },
             );
         }

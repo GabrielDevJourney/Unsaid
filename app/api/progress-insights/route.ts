@@ -35,7 +35,11 @@ export const GET = async (req: NextRequest) => {
 
         if (!queryResult.success) {
             return NextResponse.json(
-                { error: queryResult.error.issues },
+                {
+                    error:
+                        queryResult.error.issues[0]?.message ??
+                        "Invalid request",
+                },
                 { status: 400 },
             );
         }
