@@ -2,7 +2,6 @@
 
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { z } from "zod";
-import { createSupabaseAdmin } from "@/lib/supabase/admin";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import {
     updateNotificationPreferences,
@@ -50,7 +49,7 @@ export const updateUsernameAction = async (
         const client = await clerkClient();
         await client.users.updateUser(userId, { username: parsed.data });
 
-        const supabase = createSupabaseAdmin();
+        const supabase = await createSupabaseServer();
         const result = await updateUserProfile(supabase, userId, {
             username: parsed.data,
         });
