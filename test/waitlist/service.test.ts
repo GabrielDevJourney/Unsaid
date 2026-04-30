@@ -1,11 +1,15 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { consumeRateLimit } from "@/lib/rate-limits/service";
+import {
+    checkRateLimit,
+    recordRateLimitUsage,
+} from "@/lib/rate-limits/service";
 import { countWaitlistEntries, createWaitlistEntry } from "@/lib/waitlist/repo";
 import { addToWaitlist } from "@/lib/waitlist/service";
 
 vi.mock("@/lib/rate-limits/service", () => ({
-    consumeRateLimit: vi.fn(),
+    checkRateLimit: vi.fn(),
+    recordRateLimitUsage: vi.fn(),
     RATE_LIMIT_ERROR: "rate_limit",
     RATE_LIMIT_SCOPES: { waitlistSignup: "waitlist_signup" },
 }));
@@ -21,7 +25,8 @@ const supabase = {} as SupabaseClient;
 describe("addToWaitlist", () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        vi.mocked(consumeRateLimit).mockResolvedValue({ data: null });
+        vi.mocked(checkRateLimit).mockResolvedValue({ data: null });
+        vi.mocked(recordRateLimitUsage).mockResolvedValue(undefined);
         vi.mocked(createWaitlistEntry).mockResolvedValue({
             data: null,
             error: null,
@@ -52,10 +57,11 @@ describe("addToWaitlist", () => {
             "a@example.com",
             "landing_page",
         );
+        expect(recordRateLimitUsage).toHaveBeenCalledOnce();
     });
 
     it("returns a rate-limit error before inserting repeated signups", async () => {
-        vi.mocked(consumeRateLimit).mockResolvedValue({ error: "rate_limit" });
+        vi.mocked(checkRateLimit).mockResolvedValue({ error: "rate_limit" });
 
         const result = await addToWaitlist(
             supabase,
@@ -66,5 +72,23 @@ describe("addToWaitlist", () => {
 
         expect(result).toEqual({ error: "rate_limit" });
         expect(createWaitlistEntry).not.toHaveBeenCalled();
+        expect(recordRateLimitUsage).not.toHaveBeenCalled();
+    });
+
+    it("does not record rate-limit usage when signup fails", async () => {
+        vi.mocked(createWaitlistEntry).mockResolvedValue({
+            data: null,
+            error: { code: "500", message: "DB error" },
+        } as never);
+
+        const result = await addToWaitlist(
+            supabase,
+            "a@example.com",
+            "landing_page",
+            "203.0.113.1",
+        );
+
+        expect(result).toEqual({ error: "Failed to add to waitlist" });
+        expect(recordRateLimitUsage).not.toHaveBeenCalled();
     });
 });

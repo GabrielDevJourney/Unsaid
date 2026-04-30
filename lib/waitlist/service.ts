@@ -19,6 +19,19 @@ export const addToWaitlist = async (
     source: string,
     ipAddress: string,
 ): Promise<ServiceResult<WaitlistSignupResult>> => {
+    // Check duplicate first — no token cost for returning users
+    const { data: existing } = await findWaitlistEntryByEmail(supabase, email);
+    if (existing) {
+        return {
+            data: {
+                message: "You're already on the waitlist!",
+                isExisting: true,
+                position: null,
+            },
+        };
+    }
+
+    // Atomically consume rate-limit token (eliminates TOCTOU race)
     const rateLimit = await consumeRateLimit(
         supabase,
         RATE_LIMIT_SCOPES.waitlistSignup,
@@ -37,6 +50,8 @@ export const addToWaitlist = async (
 
     const { error } = await createWaitlistEntry(supabase, email, source);
 
+    // Race-condition duplicate: two requests passed the duplicate check before
+    // either inserted — treat as existing signup.
     if (error?.code === "23505") {
         return {
             data: {
