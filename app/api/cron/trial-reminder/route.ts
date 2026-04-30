@@ -104,7 +104,7 @@ export const GET = async (req: NextRequest) => {
                 results.sent++;
             } else {
                 results.failed++;
-                results.errors.push(`${trial.user_id}: ${emailResult.error}`);
+                results.errors.push("Failed to send trial reminder email");
             }
         } catch (error) {
             console.error(`Error for ${trial.user_id}:`, error);

@@ -110,8 +110,8 @@ export const processWebhookEvent = async (
     if (userError || !user) {
         const customUserId = payload.meta.custom_data?.user_id;
         if (!customUserId) {
-            console.error("User not found for webhook:", userEmail);
-            return { error: `User not found: ${userEmail}` };
+            console.error("User not found for webhook");
+            return { error: "User not found" };
         }
         return processSubscriptionUpdate(
             supabase,

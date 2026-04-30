@@ -92,7 +92,7 @@ export const GET = async (req: NextRequest) => {
                 results.sent++;
             } else {
                 results.failed++;
-                results.errors.push(`${user.user_id}: ${emailResult.error}`);
+                results.errors.push("Failed to send writing reminder email");
             }
         } catch (error) {
             console.error(`Error for ${user.user_id}:`, error);
