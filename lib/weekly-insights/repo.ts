@@ -299,6 +299,28 @@ export const countWeeklyInsights = async (
     return { data: count ?? 0, error };
 };
 
+/**
+ * Count total patterns across all weekly insights for a specific user.
+ * Used with admin client in cron trial-reminder and weekly-insights email contexts.
+ */
+export const countPatternsForUser = async (
+    supabase: SupabaseClient,
+    userId: string,
+): Promise<{ count: number; error: PostgrestError | null }> => {
+    const { data: insights, error: insightsError } = await supabase
+        .from("weekly_insights")
+        .select("id")
+        .eq("user_id", userId);
+    if (insightsError) return { count: 0, error: insightsError };
+    const ids = (insights ?? []).map((i) => i.id);
+    if (ids.length === 0) return { count: 0, error: null };
+    const { count, error } = await supabase
+        .from("weekly_insight_patterns")
+        .select("id", { count: "exact", head: true })
+        .in("weekly_insight_id", ids);
+    return { count: count ?? 0, error };
+};
+
 export const findPatternsByType = async (
     supabase: SupabaseClient,
     userId: string,

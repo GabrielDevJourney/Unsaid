@@ -292,3 +292,34 @@ export const findUserById = async (
         .single();
     return { data, error };
 };
+
+/**
+ * Fetch minimal user fields needed for weekly insight email dispatch.
+ * Used with admin client in weekly-insights cron and sendWeeklyInsightEmail.
+ */
+export const findUserForWeeklyEmail = async (
+    supabase: SupabaseClient,
+    userId: string,
+): Promise<{
+    data: {
+        email: string;
+        username: string | null;
+        notifyWeeklyPatterns: boolean;
+    } | null;
+    error: PostgrestError | null;
+}> => {
+    const { data, error } = await supabase
+        .from("users")
+        .select("email, username, notify_weekly_patterns")
+        .eq("user_id", userId)
+        .single();
+    if (error || !data) return { data: null, error };
+    return {
+        data: {
+            email: data.email,
+            username: data.username,
+            notifyWeeklyPatterns: data.notify_weekly_patterns,
+        },
+        error: null,
+    };
+};

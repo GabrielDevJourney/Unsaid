@@ -122,3 +122,18 @@ export const countEntryInsights = async (
 
     return { count: count ?? 0, error };
 };
+
+/**
+ * Count entry insights for a specific user by userId.
+ * Used with admin client (bypasses RLS) in cron and weekly-insights contexts.
+ */
+export const countEntryInsightsByUserId = async (
+    supabase: SupabaseClient,
+    userId: string,
+): Promise<{ count: number; error: PostgrestError | null }> => {
+    const { count, error } = await supabase
+        .from("entry_insights")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId);
+    return { count: count ?? 0, error };
+};
