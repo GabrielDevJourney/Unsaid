@@ -22,7 +22,7 @@ const NotFoundPage = () => {
                 </p>
 
                 <Button asChild variant="sunrise" className="mt-10">
-                    <Link href="/">
+                    <Link href="/home">
                         <HugeiconsIcon
                             icon={ArrowLeft02Icon}
                             className="size-5 text-white"
