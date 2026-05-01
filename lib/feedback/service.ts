@@ -6,17 +6,17 @@ import type {
     ServiceResult,
 } from "@/types";
 import {
-    approveFeedbackItem,
     countUserSubmissionsLast24h,
+    createFeedbackItem,
+    createUpvote,
     deleteUpvote,
-    getApprovedFeedbackItemsAdmin,
-    getFeedbackItems,
-    getPendingFeedbackItems,
-    getUserUpvotedIds,
-    insertFeedbackItem,
-    insertUpvote,
-    softRejectFeedbackItem,
+    findApprovedFeedbackItems,
+    findFeedbackItems,
+    findPendingFeedbackItems,
+    findUserUpvotedIds,
     updateAdminReply,
+    updateFeedbackItemApproval,
+    updateFeedbackItemRejection,
     updateFeedbackStatus,
 } from "./repo";
 
@@ -28,12 +28,12 @@ export const listFeedbackForUser = async (
     supabase: SupabaseClient,
     userId: string,
 ): Promise<ServiceResult<FeedbackItemWithVote[]>> => {
-    const { data, error } = await getFeedbackItems(supabase);
+    const { data, error } = await findFeedbackItems(supabase);
     if (error) throw error;
 
     const feedbackIds = data.map((i) => i.id);
 
-    const { data: votes } = await getUserUpvotedIds(
+    const { data: votes } = await findUserUpvotedIds(
         supabase,
         userId,
         feedbackIds,
@@ -62,7 +62,7 @@ export const submitFeedback = async (
         return { error: "rate_limit" };
     }
 
-    const { error } = await insertFeedbackItem(
+    const { error } = await createFeedbackItem(
         supabase,
         userId,
         title,
@@ -93,7 +93,7 @@ export const toggleUpvote = async (
     userId: string,
     feedbackId: string,
 ): Promise<ServiceResult<{ hasVoted: boolean }>> => {
-    const { error: insertError } = await insertUpvote(
+    const { error: insertError } = await createUpvote(
         supabase,
         userId,
         feedbackId,
@@ -120,7 +120,7 @@ export const toggleUpvote = async (
 export const listPendingFeedback = async (
     supabase: SupabaseClient,
 ): Promise<ServiceResult<FeedbackItem[]>> => {
-    const { data, error } = await getPendingFeedbackItems(supabase);
+    const { data, error } = await findPendingFeedbackItems(supabase);
     if (error) throw error;
     return { data };
 };
@@ -128,7 +128,7 @@ export const listPendingFeedback = async (
 export const listApprovedFeedbackAdmin = async (
     supabase: SupabaseClient,
 ): Promise<ServiceResult<FeedbackItem[]>> => {
-    const { data, error } = await getApprovedFeedbackItemsAdmin(supabase);
+    const { data, error } = await findApprovedFeedbackItems(supabase);
     if (error) throw error;
     return { data };
 };
@@ -137,12 +137,15 @@ export const approveFeedback = async (
     supabase: SupabaseClient,
     feedbackId: string,
 ): Promise<ServiceResult<FeedbackItem>> => {
-    const { data, error } = await approveFeedbackItem(supabase, feedbackId);
+    const { data, error } = await updateFeedbackItemApproval(
+        supabase,
+        feedbackId,
+    );
     if (error) {
         if (error.code === "PGRST116") return { error: "Feedback not found" };
         throw error;
     }
-    if (!data) throw new Error("approveFeedbackItem returned no data");
+    if (!data) throw new Error("updateFeedbackItemApproval returned no data");
     return { data };
 };
 
@@ -151,7 +154,7 @@ export const rejectFeedback = async (
     feedbackId: string,
     adminUserId: string,
 ): Promise<ServiceResult<null>> => {
-    const { error } = await softRejectFeedbackItem(
+    const { error } = await updateFeedbackItemRejection(
         supabase,
         feedbackId,
         adminUserId,

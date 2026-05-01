@@ -1,8 +1,10 @@
 import { auth } from "@clerk/nextjs/server";
+import * as Sentry from "@sentry/nextjs";
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { getProgressInsightsPaginated } from "@/lib/progress-insights/repo";
+import { getProgressInsightsPaginated } from "@/lib/progress-insights/service";
 import { createSupabaseServer } from "@/lib/supabase/server";
+import { isServiceError } from "@/types";
 
 const QuerySchema = z.object({
     page: z.coerce.number().int().positive().default(1),
@@ -25,7 +27,6 @@ export const GET = async (req: NextRequest) => {
             );
         }
 
-        // Parse query parameters
         const { searchParams } = new URL(req.url);
         const queryResult = QuerySchema.safeParse({
             page: searchParams.get("page") ?? 1,
@@ -34,7 +35,11 @@ export const GET = async (req: NextRequest) => {
 
         if (!queryResult.success) {
             return NextResponse.json(
-                { error: queryResult.error.issues },
+                {
+                    error:
+                        queryResult.error.issues[0]?.message ??
+                        "Invalid request",
+                },
                 { status: 400 },
             );
         }
@@ -42,35 +47,28 @@ export const GET = async (req: NextRequest) => {
         const { page, pageSize } = queryResult.data;
         const supabase = await createSupabaseServer();
 
-        const {
-            data: insights,
-            count,
-            error,
-        } = await getProgressInsightsPaginated(
+        const result = await getProgressInsightsPaginated(
             supabase,
             userId,
             page,
             pageSize,
         );
 
-        if (error) {
-            console.error("Failed to fetch progress insights:", error);
-            return NextResponse.json(
-                { error: "Failed to fetch progress insights" },
-                { status: 500 },
-            );
+        if (isServiceError(result)) {
+            return NextResponse.json({ error: result.error }, { status: 500 });
         }
 
         return NextResponse.json({
             data: {
-                insights: insights ?? [],
-                total: count ?? 0,
+                insights: result.data.insights,
+                total: result.data.count,
                 page,
                 pageSize,
-                hasMore: (count ?? 0) > page * pageSize,
+                hasMore: result.data.count > page * pageSize,
             },
         });
     } catch (error) {
+        Sentry.captureException(error);
         console.error("Progress insights fetch failed:", error);
         return NextResponse.json(
             { error: "Failed to fetch progress insights" },

@@ -160,7 +160,7 @@ export const toEntryWithSimilarity = (
               content_iv: searchRow.insight_content_iv,
               content_tag: searchRow.insight_content_tag,
               tags: searchRow.insight_tags,
-              generation_order: searchRow.insight_count ?? 1,
+              generation_order: searchRow.generation_order ?? 1,
               content_before_length: null,
               created_at: searchRow.insight_created_at ?? searchRow.created_at,
           })
@@ -208,3 +208,14 @@ export const toEntryReflectionPreview = (
         insightContent,
     };
 };
+
+export const decryptEntryContent = (row: {
+    encrypted_content: string;
+    content_iv: string;
+    content_tag: string;
+}): string =>
+    decrypt({
+        encryptedContent: row.encrypted_content,
+        iv: row.content_iv,
+        tag: row.content_tag,
+    });

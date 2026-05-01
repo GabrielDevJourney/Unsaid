@@ -1,5 +1,6 @@
-import crypto from "node:crypto";
+import * as Sentry from "@sentry/nextjs";
 import { type NextRequest, NextResponse } from "next/server";
+import { validateCronRequest } from "@/lib/cron/auth";
 import { processWeeklyInsightsForAllUsers } from "@/lib/weekly-insights/service";
 import { isServiceError } from "@/types";
 
@@ -11,30 +12,8 @@ import { isServiceError } from "@/types";
  * Protected by CRON_SECRET.
  */
 export const GET = async (req: NextRequest) => {
-    // Verify cron secret
-    const authHeader = req.headers.get("authorization");
-    const cronSecret = process.env.CRON_SECRET;
-
-    if (!cronSecret) {
-        console.error("CRON_SECRET not configured");
-        return NextResponse.json(
-            { error: "Server configuration error" },
-            { status: 500 },
-        );
-    }
-
-    const expectedHeader = `Bearer ${cronSecret}`;
-    const isValid =
-        authHeader !== null &&
-        authHeader.length === expectedHeader.length &&
-        crypto.timingSafeEqual(
-            Buffer.from(authHeader, "utf8"),
-            Buffer.from(expectedHeader, "utf8"),
-        );
-
-    if (!isValid) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authError = validateCronRequest(req, "weekly-insights");
+    if (authError) return authError;
 
     try {
         const result = await processWeeklyInsightsForAllUsers();
@@ -55,6 +34,7 @@ export const GET = async (req: NextRequest) => {
             },
         });
     } catch (error) {
+        Sentry.captureException(error);
         console.error("Weekly insights cron failed:", error);
         return NextResponse.json(
             { error: "Failed to process weekly insights" },

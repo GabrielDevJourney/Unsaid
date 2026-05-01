@@ -1,19 +1,26 @@
 import { clerkClient } from "@clerk/nextjs/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { insertSubscription } from "@/lib/subscriptions/repo";
+import { countEntriesByUserId } from "@/lib/entries/repo";
+import { countEntryInsightsByUserId } from "@/lib/entry-insights/repo";
+import { createSubscription } from "@/lib/subscriptions/repo";
 import { cancelLemonSubscription } from "@/lib/subscriptions/service";
+import { countPatternsForUser } from "@/lib/weekly-insights/repo";
 import type { CreateWithProgressPayload, ServiceResult } from "@/types";
 import {
-    cancelAccountDeletion,
-    deleteUser,
-    getAccountDeletionStatus as getAccountDeletionStatusRepo,
-    getUserProgress as getUserProgressRepo,
-    getUsersScheduledForDeletion,
-    insertUser,
-    insertUserProgress,
+    createUser,
+    createUserProgress,
+    deleteUser as deleteUserRepo,
+    findAccountDeletionStatus,
+    findUserById,
+    findUserProgress,
+    findUsersOptedIntoWritingReminders,
+    findUsersScheduledForDeletion,
     type NotificationPreferences,
-    scheduleAccountDeletion,
+    updateAccountDeletionCancel,
+    updateAccountDeletionSchedule,
+    updateLastWritingReminderSent as updateLastWritingReminderSentRepo,
     updateNotificationPreferences as updateNotificationPreferencesRepo,
+    updateUserProfile as updateUserProfileRepo,
 } from "./repo";
 
 type CreateUserResult = {
@@ -30,7 +37,7 @@ export const createUserWithProgress = async (
     supabase: SupabaseClient,
     user: CreateWithProgressPayload,
 ): Promise<ServiceResult<CreateUserResult>> => {
-    const { error: userError } = await insertUser(supabase, {
+    const { error: userError } = await createUser(supabase, {
         id: user.id,
         email: user.email,
         username: user.username,
@@ -42,34 +49,31 @@ export const createUserWithProgress = async (
         throw userError;
     }
 
-    const { error: progressError } = await insertUserProgress(
+    const { error: progressError } = await createUserProgress(
         supabase,
         user.id,
     );
 
     if (progressError) {
-        await deleteUser(supabase, user.id);
+        await deleteUserRepo(supabase, user.id);
         throw progressError;
     }
 
     // Create trial subscription
-    const { error: subscriptionError } = await insertSubscription(
+    const { error: subscriptionError } = await createSubscription(
         supabase,
         user.id,
     );
 
     // Ignore duplicate constraint (idempotent for webhook retries)
     if (subscriptionError && subscriptionError.code !== "23505") {
-        await deleteUser(supabase, user.id);
+        await deleteUserRepo(supabase, user.id);
         throw subscriptionError;
     }
 
     return { data: { userId: user.id } };
 };
 
-/**
- * Update notification preferences for a user.
- */
 export const updateNotificationPreferences = async (
     supabase: SupabaseClient,
     userId: string,
@@ -98,7 +102,7 @@ export const initiateAccountDeletion = async (
     supabase: SupabaseClient,
     userId: string,
 ): Promise<ServiceResult<null>> => {
-    const { error } = await scheduleAccountDeletion(supabase, userId);
+    const { error } = await updateAccountDeletionSchedule(supabase, userId);
     if (error) {
         return { error: "Failed to schedule account deletion" };
     }
@@ -114,34 +118,11 @@ export const initiateAccountDeletion = async (
     return { data: null };
 };
 
-export const getAccountDeletionStatus = async (
-    supabase: SupabaseClient,
-): Promise<ServiceResult<{ deletedAt: string | null }>> => {
-    const { data, error } = await getAccountDeletionStatusRepo(supabase);
-    if (error || !data) {
-        return { error: "Failed to fetch deletion status" };
-    }
-    return { data };
-};
-
-export const getUserProgress = async (
-    supabase: SupabaseClient,
-): Promise<ServiceResult<{ totalEntries: number }>> => {
-    const { data, error } = await getUserProgressRepo(supabase);
-    if (error || !data) {
-        return { error: "Failed to fetch user progress" };
-    }
-    return { data };
-};
-
-/**
- * Cancel a pending account deletion by clearing deleted_at.
- */
 export const cancelScheduledDeletion = async (
     supabase: SupabaseClient,
     userId: string,
 ): Promise<ServiceResult<null>> => {
-    const { error } = await cancelAccountDeletion(supabase, userId);
+    const { error } = await updateAccountDeletionCancel(supabase, userId);
     if (error) {
         return { error: "Failed to cancel account deletion" };
     }
@@ -164,7 +145,7 @@ export const processExpiredDeletions = async (
     supabaseAdmin: SupabaseClient,
 ): Promise<ServiceResult<DeletionResult>> => {
     const { data: users, error } =
-        await getUsersScheduledForDeletion(supabaseAdmin);
+        await findUsersScheduledForDeletion(supabaseAdmin);
     if (error) {
         throw error;
     }
@@ -177,7 +158,7 @@ export const processExpiredDeletions = async (
     };
 
     for (const user of users) {
-        const { error: deleteError } = await deleteUser(
+        const { error: deleteError } = await deleteUserRepo(
             supabaseAdmin,
             user.user_id,
         );
@@ -204,4 +185,100 @@ export const processExpiredDeletions = async (
     }
 
     return { data: result };
+};
+
+export const deleteUser = async (
+    supabase: SupabaseClient,
+    userId: string,
+): Promise<ServiceResult<null>> => {
+    const { error } = await deleteUserRepo(supabase, userId);
+    if (error) {
+        console.error("Failed to delete user:", error);
+        return { error: "Failed to delete user" };
+    }
+    return { data: null };
+};
+
+export const updateUserProfile = async (
+    supabase: SupabaseClient,
+    userId: string,
+    data: { email?: string; username?: string },
+): Promise<ServiceResult<null>> => {
+    const { error } = await updateUserProfileRepo(supabase, userId, data);
+    if (error) {
+        console.error("Failed to update user profile:", error);
+        return { error: "Failed to update profile" };
+    }
+    return { data: null };
+};
+
+export const getUserProgress = async (
+    supabase: SupabaseClient,
+): Promise<ServiceResult<{ totalEntries: number }>> => {
+    const { data, error } = await findUserProgress(supabase);
+    if (error || !data) {
+        return { error: "Failed to fetch user progress" };
+    }
+    return { data };
+};
+
+export const getAccountDeletionStatus = async (
+    supabase: SupabaseClient,
+): Promise<ServiceResult<{ deletedAt: string | null }>> => {
+    const { data, error } = await findAccountDeletionStatus(supabase);
+    if (error) {
+        console.error("Failed to fetch account deletion status:", error);
+        return { error: "Failed to fetch account deletion status" };
+    }
+    if (!data) {
+        return { error: "Failed to fetch account deletion status" };
+    }
+    return { data };
+};
+
+export const getUsersOptedIntoWritingReminders = async (
+    supabase: SupabaseClient,
+    cooldownDays: number,
+) => findUsersOptedIntoWritingReminders(supabase, cooldownDays);
+
+export const updateLastWritingReminderSent = async (
+    supabase: SupabaseClient,
+    userId: string,
+) => updateLastWritingReminderSentRepo(supabase, userId);
+
+/**
+ * Aggregate user stats needed for trial ending reminder emails.
+ * Called with admin client (bypasses RLS) — userId is explicit on all queries.
+ */
+export const getUserTrialEmailContext = async (
+    supabase: SupabaseClient,
+    userId: string,
+): Promise<
+    ServiceResult<{
+        email: string;
+        username: string | null;
+        entriesWritten: number;
+        insightsReceived: number;
+        patternsFound: number;
+    }>
+> => {
+    const [userResult, entriesResult, insightsResult, patternsResult] =
+        await Promise.all([
+            findUserById(supabase, userId),
+            countEntriesByUserId(supabase, userId),
+            countEntryInsightsByUserId(supabase, userId),
+            countPatternsForUser(supabase, userId),
+        ]);
+
+    if (!userResult.data) return { error: "User not found" };
+
+    return {
+        data: {
+            email: userResult.data.email,
+            username: userResult.data.username,
+            entriesWritten: entriesResult.count,
+            insightsReceived: insightsResult.count,
+            patternsFound: patternsResult.count,
+        },
+    };
 };

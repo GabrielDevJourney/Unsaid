@@ -7,6 +7,7 @@ import { canUserWriteEntry } from "@/lib/subscriptions/entitlements";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { getAccountDeletionStatus, getUserProgress } from "@/lib/users/service";
 import { getNewPatternsCount } from "@/lib/weekly-insights/service";
+import { isServiceError } from "@/types";
 
 const Layout = async ({
     children,
@@ -15,11 +16,11 @@ const Layout = async ({
 }>) => {
     const supabase = await createSupabaseServer();
     const [
-        { data: newPatternsCount },
-        { data: newProgressCount },
+        newPatternsCountResult,
+        newProgressCountResult,
         canWrite,
-        { data: progressData },
-        { data: deletionStatus },
+        progressResult,
+        deletionStatusResult,
     ] = await Promise.all([
         getNewPatternsCount(supabase),
         getUnviewedProgressInsightsCount(supabase),
@@ -27,6 +28,19 @@ const Layout = async ({
         getUserProgress(supabase),
         getAccountDeletionStatus(supabase),
     ]);
+
+    const newPatternsCount = isServiceError(newPatternsCountResult)
+        ? 0
+        : newPatternsCountResult.data;
+    const newProgressCount = isServiceError(newProgressCountResult)
+        ? 0
+        : newProgressCountResult.data;
+    const progressData = isServiceError(progressResult)
+        ? null
+        : progressResult.data;
+    const deletionStatus = isServiceError(deletionStatusResult)
+        ? null
+        : deletionStatusResult.data;
 
     const isAtFreeLimit = (progressData?.totalEntries ?? 0) >= 15 && !canWrite;
     const isPendingDeletion = deletionStatus?.deletedAt != null;

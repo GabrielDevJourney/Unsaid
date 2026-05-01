@@ -27,7 +27,7 @@ Supabase (Postgres + RLS)          ← Data enforcement layer
 | Auth | `app/(auth)/` | sign-in, sign-up, privacy, terms |
 | Dashboard | `app/(dashboard)/` | all user-facing routes |
 | API | `app/api/` | JSON API routes |
-| Cron | `app/api/cron/` | scheduled jobs (protected by CRON_SECRET) |
+| Cron | `app/api/cron/` | scheduled jobs (protected by shared CRON_SECRET helper) |
 | Webhooks | `app/api/webhooks/` | Lemon Squeezy + Clerk webhooks |
 | Admin | `app/(dashboard)/backstage/` | internal admin views |
 

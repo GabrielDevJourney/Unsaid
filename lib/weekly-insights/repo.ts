@@ -52,7 +52,7 @@ export const insertWeeklyInsight = async (
  * Encrypts description, question, and suggested_experiment for each.
  * The return shape can be used in emails or other places where we want to show the decrypted content immediately.
  */
-export const insertWeeklyInsightPatterns = async (
+export const createWeeklyInsightPatterns = async (
     supabase: SupabaseClient,
     weeklyInsightId: string,
     patterns: Omit<InsertWeeklyInsightPatternData, "weeklyInsightId">[],
@@ -97,12 +97,7 @@ export const insertWeeklyInsightPatterns = async (
     return { data: patternRows.map(toWeeklyInsightPattern), error: null };
 };
 
-/**
- * Get weekly insight with patterns by week start date.
- * Combines the insight and its patterns in a single return.
- * Decrypts pattern content.
- */
-export const getWeeklyInsightWithPatternsByWeekStart = async (
+export const findWeeklyInsightWithPatternsByWeekStart = async (
     supabase: SupabaseClient,
     userId: string,
     weekStart: string,
@@ -146,7 +141,7 @@ export const getWeeklyInsightWithPatternsByWeekStart = async (
  * resolved to { entryId, label } (entry created_at date) in a single query —
  * no second round trip needed in the service layer.
  */
-export const getWeeklyInsightWithPatternsPaginated = async (
+export const findWeeklyInsightWithPatternsPaginated = async (
     supabase: SupabaseClient,
     cursor: string | null,
     limit: number,
@@ -182,7 +177,7 @@ export const getWeeklyInsightWithPatternsPaginated = async (
  * RLS ensures the pattern belongs to the authenticated user.
  * Evidence UUIDs are resolved to { entryId, label } via a second query.
  */
-export const getPatternById = async (
+export const findPatternById = async (
     supabase: SupabaseClient,
     patternId: string,
 ): Promise<{
@@ -225,11 +220,7 @@ export const getPatternById = async (
     return { data: toWeeklyInsightPatternResolved(resolved), error: null };
 };
 
-/**
- * Update weekly insight pattern is_viewed flag to true.
- * Used to track whether the user has viewed the insight card.
- */
-export const markPatternAsViewed = async (
+export const updatePatternViewStatus = async (
     supabase: SupabaseClient,
     patternId: string,
 ): Promise<{ data: null; error: PostgrestError | null }> => {
@@ -241,12 +232,7 @@ export const markPatternAsViewed = async (
     return { data: null, error };
 };
 
-/**
- * Get count of new (unviewed) patterns for the authenticated user.
- * Useful for showing notifications or badges for new insights.
- * RLS ensures only the user's own patterns are counted.
- */
-export const getNewPatternsCount = async (
+export const countNewPatterns = async (
     supabase: SupabaseClient,
 ): Promise<{ data: number; error: PostgrestError | null }> => {
     const { count, error } = await supabase
@@ -257,11 +243,7 @@ export const getNewPatternsCount = async (
     return { data: count ?? 0, error };
 };
 
-/**
- * Get total count of patterns across all weeks for the authenticated user.
- * RLS ensures only the user's own patterns are counted.
- */
-export const getTotalPatternsCount = async (
+export const countPatterns = async (
     supabase: SupabaseClient,
 ): Promise<{ data: number; error: PostgrestError | null }> => {
     const { count, error } = await supabase
@@ -271,11 +253,7 @@ export const getTotalPatternsCount = async (
     return { data: count ?? 0, error };
 };
 
-/**
- * Get all weekly insights for a user (paginated).
- * Does not include patterns - use getWeeklyInsightWithPatterns for that.
- */
-export const getWeeklyInsightsPaginated = async (
+export const findWeeklyInsightsPaginated = async (
     supabase: SupabaseClient,
     userId: string,
     page = 1,
@@ -311,11 +289,7 @@ export const getWeeklyInsightsPaginated = async (
     };
 };
 
-/**
- * Get total count of weekly insights for the authenticated user.
- * RLS ensures only the user's own rows are counted.
- */
-export const getWeeklyInsightsCount = async (
+export const countWeeklyInsights = async (
     supabase: SupabaseClient,
 ): Promise<{ data: number; error: PostgrestError | null }> => {
     const { count, error } = await supabase
@@ -326,10 +300,28 @@ export const getWeeklyInsightsCount = async (
 };
 
 /**
- * Get patterns by type for a user (for filtering/analytics).
- * Decrypts pattern content.
+ * Count total patterns across all weekly insights for a specific user.
+ * Used with admin client in cron trial-reminder and weekly-insights email contexts.
  */
-export const getPatternsByType = async (
+export const countPatternsForUser = async (
+    supabase: SupabaseClient,
+    userId: string,
+): Promise<{ count: number; error: PostgrestError | null }> => {
+    const { data: insights, error: insightsError } = await supabase
+        .from("weekly_insights")
+        .select("id")
+        .eq("user_id", userId);
+    if (insightsError) return { count: 0, error: insightsError };
+    const ids = (insights ?? []).map((i) => i.id);
+    if (ids.length === 0) return { count: 0, error: null };
+    const { count, error } = await supabase
+        .from("weekly_insight_patterns")
+        .select("id", { count: "exact", head: true })
+        .in("weekly_insight_id", ids);
+    return { count: count ?? 0, error };
+};
+
+export const findPatternsByType = async (
     supabase: SupabaseClient,
     userId: string,
     patternType: string,
@@ -358,7 +350,7 @@ export const getPatternsByType = async (
  * Used to enrich progress insight generation with recent pattern context.
  * Admin client bypasses RLS — filters by user_id explicitly.
  */
-export const getWeeklyPatternsForDateRange = async (
+export const findWeeklyPatternsForDateRange = async (
     supabase: SupabaseClient,
     userId: string,
     fromDate: string,
@@ -397,7 +389,7 @@ export const getWeeklyPatternsForDateRange = async (
  * Calls the search_weekly_insight_patterns_by_embedding RPC function.
  * Decrypts content for each result.
  */
-export const searchWeeklyInsightsPatternsByEmbedding = async (
+export const findWeeklyInsightPatternsByEmbedding = async (
     supabase: SupabaseClient,
     userId: string,
     queryEmbedding: string,

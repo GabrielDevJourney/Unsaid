@@ -1,8 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { generateEntryThemePrompt } from "@/lib/ai/generate-entry-theme";
-import { getEntriesPaginated } from "@/lib/entries/repo";
+import { findEntriesPaginated } from "@/lib/entries/repo";
 import type { ServiceResult } from "@/types";
-import { getPromptByEntryId, savePromptForEntry } from "./repo";
+import { createPromptForEntry, findPromptByEntryId } from "./repo";
 
 /**
  * Default prompts for users with no entries.
@@ -47,7 +47,7 @@ export const getEntryThemePrompt = async (
     const FIRST_PAGE = 1;
     const RECENT_ENTRIES_FOR_CONTEXT = 5;
 
-    const { data: entries, count } = await getEntriesPaginated(
+    const { data: entries, count } = await findEntriesPaginated(
         supabase,
         FIRST_PAGE,
         RECENT_ENTRIES_FOR_CONTEXT,
@@ -88,7 +88,7 @@ export const persistPromptForEntry = async (
     promptText: string,
     entryId: string,
 ): Promise<ServiceResult<null>> => {
-    const { error } = await savePromptForEntry(
+    const { error } = await createPromptForEntry(
         supabase,
         userId,
         promptText,
@@ -105,7 +105,7 @@ export const loadPromptForEntry = async (
     supabase: SupabaseClient,
     entryId: string,
 ): Promise<ServiceResult<string | null>> => {
-    const { data, error } = await getPromptByEntryId(supabase, entryId);
+    const { data, error } = await findPromptByEntryId(supabase, entryId);
     if (error) {
         console.error("Failed to load prompt:", error);
         return { error: "Failed to load prompt" };

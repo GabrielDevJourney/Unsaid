@@ -199,7 +199,7 @@ const testEntryInsight = async (
     const { streamEntryInsight } = await import(
         "../lib/ai/stream-entry-insight"
     );
-    const { insertEntryInsight } = await import("../lib/entry-insights/repo");
+    const { createEntryInsight } = await import("../lib/entry-insights/repo");
 
     const result = await streamEntryInsight(entry.content);
     const rawText = await result.text;
@@ -211,7 +211,7 @@ const testEntryInsight = async (
     log("💡", `  Insight preview: "${insightObject.insight.slice(0, 100)}..."`);
     log("🏷️", `  Tags: ${insightObject.tags.join(", ")}`);
 
-    const { error } = await insertEntryInsight(supabase, {
+    const { error } = await createEntryInsight(supabase, {
         userId,
         entryId: entry.id,
         content: insightObject.insight,
@@ -342,18 +342,18 @@ const testSemanticSearch = async (
 ) => {
     logSection("TEST 6: Semantic Search (Vector Functions)");
 
-    const { searchEntriesByEmbedding, findRelatedEntries } = await import(
+    const { findEntriesByEmbedding, findRelatedEntries } = await import(
         "../lib/entries/repo"
     );
 
-    log("🔍", "Testing searchEntriesByEmbedding...");
+    log("🔍", "Testing findEntriesByEmbedding...");
 
     // Generate embedding for a search query
     const searchQuery = "feeling overwhelmed at work";
     const queryEmbedding = await generateEmbedding(searchQuery);
 
     const { data: searchResults, error: searchError } =
-        await searchEntriesByEmbedding(
+        await findEntriesByEmbedding(
             supabase,
             userId,
             JSON.stringify(queryEmbedding),

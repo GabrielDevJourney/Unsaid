@@ -544,7 +544,7 @@ const createEntryInsights = async (
     const { streamEntryInsight } = await import(
         "../lib/ai/stream-entry-insight"
     );
-    const { insertEntryInsight } = await import("../lib/entry-insights/repo");
+    const { createEntryInsight } = await import("../lib/entry-insights/repo");
 
     let count = 0;
     for (let i = 0; i < entries.length; i++) {
@@ -558,7 +558,7 @@ const createEntryInsights = async (
                 tags: string[];
             };
 
-            await insertEntryInsight(supabase, {
+            await createEntryInsight(supabase, {
                 userId,
                 entryId: entries[i].id,
                 content: insightObject.insight,

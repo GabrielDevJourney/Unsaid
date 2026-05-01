@@ -2,7 +2,13 @@ import { auth } from "@clerk/nextjs/server";
 import { type NextRequest, NextResponse } from "next/server";
 import { MAX_INSIGHT_COUNT } from "@/lib/constants";
 import { generateEntryInsight } from "@/lib/entry-insights/service";
+import {
+    consumeRateLimit,
+    RATE_LIMIT_ERROR,
+    RATE_LIMIT_SCOPES,
+} from "@/lib/rate-limits/service";
 import { EntryInsightGenerateSchema } from "@/lib/schemas/entry-insight";
+import { createSupabaseAdmin } from "@/lib/supabase/admin";
 
 export const POST = async (req: NextRequest) => {
     try {
@@ -19,8 +25,33 @@ export const POST = async (req: NextRequest) => {
 
         if (!validated.success) {
             return NextResponse.json(
-                { error: validated.error.issues },
+                {
+                    error:
+                        validated.error.issues[0]?.message ?? "Invalid request",
+                },
                 { status: 400 },
+            );
+        }
+
+        const adminSupabase = createSupabaseAdmin();
+        const rateLimit = await consumeRateLimit(
+            adminSupabase,
+            RATE_LIMIT_SCOPES.entryInsight,
+            userId,
+            60 * 1000,
+            5,
+        );
+
+        if (rateLimit.error === RATE_LIMIT_ERROR) {
+            return NextResponse.json(
+                { error: "Too many requests" },
+                { status: 429 },
+            );
+        }
+        if (rateLimit.error) {
+            return NextResponse.json(
+                { error: "Service unavailable" },
+                { status: 503 },
             );
         }
 

@@ -1,19 +1,20 @@
 import { auth } from "@clerk/nextjs/server";
 import { EntryEditorPage } from "@/components/entries/entry-editor-page";
 import { EntryGate } from "@/components/entries/entry-gate";
-import { getTotalInsightsCount } from "@/lib/entry-insights/repo";
-import { getLatestProgressInsight } from "@/lib/progress-insights/repo";
+import { getTotalInsightsCount } from "@/lib/entry-insights/service";
+import { getLatestProgressInsight } from "@/lib/progress-insights/service";
 import {
     getPatternReflectionContext,
     getProgressReflectionContext,
 } from "@/lib/reflections/service";
 import { canUserWriteEntry } from "@/lib/subscriptions/entitlements";
 import { createSupabaseServer } from "@/lib/supabase/server";
-import { getUserProgress } from "@/lib/users/repo";
+import { getUserProgress } from "@/lib/users/service";
 import {
     getTotalPatternsCount,
     getWeeklyInsightWithPatternsPaginated,
-} from "@/lib/weekly-insights/repo";
+} from "@/lib/weekly-insights/service";
+import { isServiceError } from "@/types";
 
 const NewEntryPage = async ({
     searchParams,
@@ -32,11 +33,11 @@ const NewEntryPage = async ({
 
     const [
         canWrite,
-        { data: progress },
-        { data: patternsCount },
-        { count: insightsCount },
-        { data: latestProgressInsight },
-        { data: latestWeeklyInsights },
+        progressResult,
+        patternsCountResult,
+        insightsCountResult,
+        latestProgressInsightResult,
+        latestWeeklyInsightsResult,
     ] = await Promise.all([
         canUserWriteEntry(supabase),
         getUserProgress(supabase),
@@ -44,9 +45,25 @@ const NewEntryPage = async ({
         getTotalInsightsCount(supabase),
         userId
             ? getLatestProgressInsight(supabase, userId)
-            : Promise.resolve({ data: null, error: null }),
+            : Promise.resolve({ data: null }),
         getWeeklyInsightWithPatternsPaginated(supabase, null, 1),
     ]);
+
+    const progress = isServiceError(progressResult)
+        ? null
+        : progressResult.data;
+    const patternsCount = isServiceError(patternsCountResult)
+        ? 0
+        : patternsCountResult.data;
+    const insightsCount = isServiceError(insightsCountResult)
+        ? 0
+        : insightsCountResult.data;
+    const latestProgressInsight = isServiceError(latestProgressInsightResult)
+        ? null
+        : latestProgressInsightResult.data;
+    const latestWeeklyInsights = isServiceError(latestWeeklyInsightsResult)
+        ? []
+        : latestWeeklyInsightsResult.data.insights;
 
     if (!canWrite && (progress?.totalEntries ?? 0) >= 15) {
         const patterns = latestWeeklyInsights?.[0]?.patterns ?? [];

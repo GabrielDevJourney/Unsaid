@@ -1,9 +1,12 @@
 import { auth } from "@clerk/nextjs/server";
+import * as Sentry from "@sentry/nextjs";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getEntriesWithInsightsPaginated } from "@/lib/entries/repo";
-import { createEntry } from "@/lib/entries/service";
+import {
+    createEntry,
+    getEntriesWithInsightsPaginated,
+} from "@/lib/entries/service";
 import { EntryCreateSchema, PaginationSchema } from "@/lib/schemas/entry";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { isServiceError } from "@/types";
@@ -26,7 +29,10 @@ export const POST = async (req: NextRequest) => {
 
         if (!validated.success) {
             return NextResponse.json(
-                { error: validated.error.issues },
+                {
+                    error:
+                        validated.error.issues[0]?.message ?? "Invalid request",
+                },
                 { status: 400 },
             );
         }
@@ -35,16 +41,25 @@ export const POST = async (req: NextRequest) => {
         const result = await createEntry(supabase, userId, validated.data);
 
         if (isServiceError(result)) {
-            // Expected error (rate limit)
-            return NextResponse.json({ error: result.error }, { status: 429 });
+            const status =
+                result.error === "FREE_LIMIT_REACHED"
+                    ? 403
+                    : result.error === "rate_limit"
+                      ? 429
+                      : 500;
+            return NextResponse.json({ error: result.error }, { status });
         }
 
         return NextResponse.json({ data: result.data }, { status: 201 });
     } catch (error) {
         if (error instanceof z.ZodError) {
-            return NextResponse.json({ error: error.issues }, { status: 400 });
+            return NextResponse.json(
+                { error: error.issues[0]?.message ?? "Invalid request" },
+                { status: 400 },
+            );
         }
 
+        Sentry.captureException(error);
         console.error("Entry creation failed:", error);
         return NextResponse.json(
             { error: "Failed to create entry" },
@@ -75,7 +90,11 @@ export const GET = async (req: NextRequest) => {
         const pagination = PaginationSchema.safeParse(paginationInput);
         if (!pagination.success) {
             return NextResponse.json(
-                { error: pagination.error.issues },
+                {
+                    error:
+                        pagination.error.issues[0]?.message ??
+                        "Invalid request",
+                },
                 { status: 400 },
             );
         }
@@ -83,30 +102,22 @@ export const GET = async (req: NextRequest) => {
         const { page, pageSize } = pagination.data;
 
         const supabase = await createSupabaseServer();
-        const {
-            data: entries,
-            count,
-            error,
-        } = await getEntriesWithInsightsPaginated(
+        const result = await getEntriesWithInsightsPaginated(
             supabase,
             page,
             pageSize,
             userId,
         );
 
-        if (error) {
-            console.error("Failed to fetch entries:", error);
-            return NextResponse.json(
-                { error: "Failed to fetch entries" },
-                { status: 500 },
-            );
+        if (isServiceError(result)) {
+            return NextResponse.json({ error: result.error }, { status: 500 });
         }
 
-        const total = count ?? 0;
+        const total = result.data.count;
         const offset = (page - 1) * pageSize;
 
         return NextResponse.json({
-            data: entries ?? [],
+            data: result.data.entries,
             pagination: {
                 page,
                 pageSize,
@@ -115,6 +126,7 @@ export const GET = async (req: NextRequest) => {
             },
         });
     } catch (error) {
+        Sentry.captureException(error);
         console.error("Failed to fetch entries:", error);
         return NextResponse.json(
             { error: "Failed to fetch entries" },

@@ -56,7 +56,6 @@ export const generateWeeklyInsight = async (
             ],
         });
 
-        console.log("Raw AI response:", text);
         // Strip markdown code fences if presented (AI sometimes wraps JSON)
         const jsonText = text
             .replace(/^```(?:json)?\s*\n?/i, "")

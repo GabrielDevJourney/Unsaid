@@ -1,6 +1,8 @@
 # Cron Jobs
 
-All cron jobs live in `app/api/cron/`. Scheduled in `vercel.json`. Protected by `CRON_SECRET` Bearer token with timing-safe comparison.
+All cron jobs live in `app/api/cron/`. Scheduled in `vercel.json`.
+Protected by `CRON_SECRET` Bearer token through `validateCronRequest()` in
+`lib/cron/auth.ts`.
 
 ---
 
@@ -14,12 +16,12 @@ All cron jobs live in `app/api/cron/`. Scheduled in `vercel.json`. Protected by 
 
 ### `trial-reminder` — Daily
 **Route:** `app/api/cron/trial-reminder/route.ts`  
-**Delegates to:** `getExpiringTrials(supabase, 3)` from `lib/subscriptions/repo.ts` → `sendTrialEndingEmail()` from `lib/email/service.ts`  
+**Delegates to:** `getExpiringTrials(supabase, 3)` from `lib/subscriptions/service.ts` → `sendTrialEndingEmail()` from `lib/email/service.ts`  
 **What it does:** Finds users whose trial ends in exactly 3 days (`DAYS_BEFORE_EXPIRY = 3`) and sends a trial ending email.
 
 ### `writing-reminders` — Daily
 **Route:** `app/api/cron/writing-reminders/route.ts`  
-**Delegates to:** `getUsersOptedIntoWritingReminders()` from `lib/users/repo.ts` → `sendWritingReminderEmail()` from `lib/email/service.ts`  
+**Delegates to:** `getUsersOptedIntoWritingReminders()` from `lib/users/service.ts` → `sendWritingReminderEmail()` from `lib/email/service.ts`  
 **What it does:** Targets users with all of: `notify_writing_reminders = true`, `subscription_status` = `active` or `trial`, no entry in last 3 days (`INACTIVITY_DAYS = 3`), last reminder sent 7+ days ago (`COOLDOWN_DAYS = 7`). Sends re-engagement email and updates `last_writing_reminder_sent_at`.
 
 ### `account-deletion` — Daily
@@ -32,14 +34,13 @@ All cron jobs live in `app/api/cron/`. Scheduled in `vercel.json`. Protected by 
 ## Auth Pattern (all routes)
 
 ```typescript
-const authHeader = req.headers.get("authorization");
-const cronSecret = process.env.CRON_SECRET;
-const expectedHeader = `Bearer ${cronSecret}`;
-const isValid = crypto.timingSafeEqual(Buffer.from(authHeader), Buffer.from(expectedHeader));
-if (!isValid) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+const authError = validateCronRequest(req, "weekly-insights");
+if (authError) return authError;
 ```
 
-Missing `CRON_SECRET` → 500 (not 401). This is intentional — misconfiguration should be loud.
+Missing `CRON_SECRET` → 500 (not 401) and Sentry capture. Invalid/missing
+bearer auth → 401 and a server warning. This keeps misconfiguration loud while
+avoiding Sentry noise from public probes.
 
 ---
 
@@ -57,7 +58,7 @@ See `docs/local-testing.md` for full environment setup.
 
 ## Adding a New Cron Job
 
-1. Create `app/api/cron/[name]/route.ts` following the existing auth pattern
+1. Create `app/api/cron/[name]/route.ts` and call `validateCronRequest(req, "<job-name>")`
 2. Add the schedule to `vercel.json` under `crons`
 3. Delegate to a service function — no business logic in the route handler
 4. Add an entry to this doc

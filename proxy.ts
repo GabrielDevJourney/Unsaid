@@ -88,6 +88,8 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
     // Pass user role to Server Components via request header — avoids a redundant DB
     // query in the dashboard layout which needs to know if the user is an admin
     const requestHeaders = new Headers(req.headers);
+    // Strip any client-supplied role before writing the trusted DB value
+    requestHeaders.delete("x-user-role");
     requestHeaders.set("x-user-role", user.role ?? "");
     return NextResponse.next({ request: { headers: requestHeaders } });
 });

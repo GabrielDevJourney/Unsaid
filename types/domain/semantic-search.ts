@@ -18,7 +18,7 @@ export interface SearchEntryRowResult extends EntryRowEncrypted {
     insight_content_iv: string | null;
     insight_content_tag: string | null;
     insight_tags: string[] | null;
-    insight_count: number | null;
+    generation_order: number | null;
     insight_created_at: string | null;
 }
 

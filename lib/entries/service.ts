@@ -4,7 +4,7 @@ import { generateEmbedding } from "@/lib/ai/embeddings";
 import { checkEntryRateLimit } from "@/lib/rate-limit";
 import { canUserWriteEntry } from "@/lib/subscriptions/entitlements";
 import { checkAndTriggerProgress } from "@/lib/triggers/check-progress-trigger";
-import { getUserProgress } from "@/lib/users/repo";
+import { findUserProgress } from "@/lib/users/repo";
 import type {
     CreateEntryPayload,
     Entry,
@@ -14,16 +14,18 @@ import type {
     ServiceResult,
 } from "@/types";
 import {
-    decrementUserProgress,
     deleteEntry,
-    getEntriesBySource,
-    getEntriesWithInsights,
-    getEntryWithAllInsightsById,
-    getEntryWithInsightById,
-    incrementUserProgress,
+    findEntriesBySource,
+    findEntriesWithInsights,
+    findEntriesWithInsightsPaginated,
+    findEntryWithAllInsightsById,
+    findEntryWithInsightById,
+    findLatestEntryByUser,
     insertEntry,
     updateEntryContent,
     updateEntryEmbedding,
+    updateUserProgressDecrement,
+    updateUserProgressIncrement,
 } from "./repo";
 import { toEntryReflectionPreview } from "./transformers";
 
@@ -53,7 +55,7 @@ const updateProgress = async (
     supabase: SupabaseClient,
     userId: string,
 ): Promise<void> => {
-    const { error } = await incrementUserProgress(supabase, userId);
+    const { error } = await updateUserProgressIncrement(supabase);
     if (error) console.error("Failed to increment user progress:", error);
 
     void checkAndTriggerProgress(userId).then((result) => {
@@ -80,7 +82,7 @@ export const createEntry = async (
     }
 
     if (!canWrite) {
-        const { data: progress } = await getUserProgress(supabase);
+        const { data: progress } = await findUserProgress(supabase);
         // Fail closed: if progress is unavailable (DB error), deny rather than allow.
         if (!progress || progress.totalEntries >= 15) {
             return { error: "FREE_LIMIT_REACHED" };
@@ -142,7 +144,7 @@ export const deleteEntryById = async (
 ): Promise<ServiceResult<null>> => {
     const [deleteResult, progressResult] = await Promise.all([
         deleteEntry(supabase, entryId, userId),
-        decrementUserProgress(supabase, userId),
+        updateUserProgressDecrement(supabase),
     ]);
 
     if (deleteResult.error) return { error: "Failed to delete entry" };
@@ -159,7 +161,7 @@ export const deleteEntryById = async (
 export const getUserEntriesWithInsights = async (
     supabase: SupabaseClient,
 ): Promise<ServiceResult<EntryWithInsight[]>> => {
-    const { data, error } = await getEntriesWithInsights(supabase);
+    const { data, error } = await findEntriesWithInsights(supabase);
 
     if (error) {
         return { error: "Failed to fetch entries" };
@@ -172,11 +174,15 @@ export const getEntryWithInsight = async (
     supabase: SupabaseClient,
     entryId: string,
 ): Promise<ServiceResult<EntryWithInsight>> => {
-    const { data, error } = await getEntryWithInsightById(supabase, entryId);
+    const { data, error } = await findEntryWithInsightById(supabase, entryId);
 
-    if (error || !data) {
-        return { error: "Entry not found" };
+    if (error) {
+        if (error.code === "PGRST116") return { error: "entry_not_found" };
+        console.error("Failed to fetch entry:", error);
+        return { error: "Failed to fetch entry" };
     }
+
+    if (!data) return { error: "entry_not_found" };
 
     return { data };
 };
@@ -189,14 +195,18 @@ export const getEntryWithAllInsights = async (
     supabase: SupabaseClient,
     entryId: string,
 ): Promise<ServiceResult<EntryWithAllInsights>> => {
-    const { data, error } = await getEntryWithAllInsightsById(
+    const { data, error } = await findEntryWithAllInsightsById(
         supabase,
         entryId,
     );
 
-    if (error || !data) {
-        return { error: "Entry not found" };
+    if (error) {
+        if (error.code === "PGRST116") return { error: "entry_not_found" };
+        console.error("Failed to fetch entry:", error);
+        return { error: "Failed to fetch entry" };
     }
+
+    if (!data) return { error: "entry_not_found" };
 
     return { data };
 };
@@ -219,7 +229,7 @@ export const getEntryReflectionPreviews = async (
         return { error: "Invalid source" };
     }
 
-    const { data: rows, error } = await getEntriesBySource(
+    const { data: rows, error } = await findEntriesBySource(
         supabase,
         sourceType,
         sourceId,
@@ -232,4 +242,37 @@ export const getEntryReflectionPreviews = async (
     } catch {
         return { error: "Failed to decrypt reflections" };
     }
+};
+
+export const getEntriesWithInsightsPaginated = async (
+    supabase: SupabaseClient,
+    page: number,
+    pageSize: number,
+    userId?: string,
+): Promise<ServiceResult<{ entries: EntryWithInsight[]; count: number }>> => {
+    const { data, error, count } = await findEntriesWithInsightsPaginated(
+        supabase,
+        page,
+        pageSize,
+        userId,
+    );
+
+    if (error) {
+        console.error("Failed to fetch paginated entries:", error);
+        return { error: "Failed to fetch entries" };
+    }
+
+    return { data: { entries: data, count } };
+};
+
+export const getLatestEntryForUser = async (
+    supabase: SupabaseClient,
+    userId: string,
+): Promise<ServiceResult<{ createdAt: string } | null>> => {
+    const { data, error } = await findLatestEntryByUser(supabase, userId);
+    if (error) {
+        console.error("Failed to fetch latest entry:", error);
+        return { error: "Failed to fetch latest entry" };
+    }
+    return { data: data ? { createdAt: data.created_at } : null };
 };

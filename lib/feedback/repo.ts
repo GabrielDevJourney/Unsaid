@@ -8,7 +8,7 @@ const ITEM_COLS =
 
 // ─── User-facing reads ───────────────────────────────────────────────────────
 
-export const getFeedbackItems = async (
+export const findFeedbackItems = async (
     supabase: SupabaseClient,
 ): Promise<{ data: FeedbackItem[]; error: PostgrestError | null }> => {
     const { data, error } = await supabase
@@ -20,7 +20,7 @@ export const getFeedbackItems = async (
     return { data: (data ?? []) as FeedbackItem[], error };
 };
 
-export const getUserUpvotedIds = (
+export const findUserUpvotedIds = (
     supabase: SupabaseClient,
     userId: string,
     feedbackIds: string[],
@@ -54,7 +54,7 @@ export const countUserSubmissionsLast24h = (
 
 // ─── Mutations ───────────────────────────────────────────────────────────────
 
-export const insertFeedbackItem = async (
+export const createFeedbackItem = async (
     supabase: SupabaseClient,
     userId: string,
     title: string,
@@ -78,7 +78,7 @@ export const insertFeedbackItem = async (
     return { data: data as FeedbackItem | null, error };
 };
 
-export const insertUpvote = (
+export const createUpvote = (
     supabase: SupabaseClient,
     userId: string,
     feedbackId: string,
@@ -100,7 +100,7 @@ export const deleteUpvote = (
 
 // ─── Admin reads ─────────────────────────────────────────────────────────────
 
-export const getPendingFeedbackItems = async (
+export const findPendingFeedbackItems = async (
     supabase: SupabaseClient,
 ): Promise<{ data: FeedbackItem[]; error: PostgrestError | null }> => {
     const { data, error } = await supabase
@@ -112,7 +112,7 @@ export const getPendingFeedbackItems = async (
     return { data: (data ?? []) as FeedbackItem[], error };
 };
 
-export const getApprovedFeedbackItemsAdmin = async (
+export const findApprovedFeedbackItems = async (
     supabase: SupabaseClient,
 ): Promise<{ data: FeedbackItem[]; error: PostgrestError | null }> => {
     const { data, error } = await supabase
@@ -126,7 +126,7 @@ export const getApprovedFeedbackItemsAdmin = async (
 
 // ─── Admin mutations ─────────────────────────────────────────────────────────
 
-export const approveFeedbackItem = async (
+export const updateFeedbackItemApproval = async (
     supabase: SupabaseClient,
     feedbackId: string,
 ): Promise<{ data: FeedbackItem | null; error: PostgrestError | null }> => {
@@ -140,7 +140,7 @@ export const approveFeedbackItem = async (
 };
 
 // Soft-delete: records who rejected and when; row is preserved for audit history
-export const softRejectFeedbackItem = async (
+export const updateFeedbackItemRejection = async (
     supabase: SupabaseClient,
     feedbackId: string,
     adminUserId: string,

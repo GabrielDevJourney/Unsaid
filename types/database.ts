@@ -479,6 +479,27 @@ export type Database = {
                     },
                 ];
             };
+            rate_limit_events: {
+                Row: {
+                    created_at: string;
+                    id: string;
+                    key_hash: string;
+                    scope: string;
+                };
+                Insert: {
+                    created_at?: string;
+                    id?: string;
+                    key_hash: string;
+                    scope: string;
+                };
+                Update: {
+                    created_at?: string;
+                    id?: string;
+                    key_hash?: string;
+                    scope?: string;
+                };
+                Relationships: [];
+            };
             subscriptions: {
                 Row: {
                     canceled_at: string | null;
@@ -753,10 +774,7 @@ export type Database = {
             [_ in never]: never;
         };
         Functions: {
-            decrement_entry_count: {
-                Args: { uid: string };
-                Returns: undefined;
-            };
+            decrement_entry_count: { Args: never; Returns: undefined };
             find_related_entries: {
                 Args: {
                     entry_id_param: string;
@@ -788,10 +806,7 @@ export type Database = {
                     week_start: string;
                 }[];
             };
-            increment_entry_count: {
-                Args: { uid: string };
-                Returns: undefined;
-            };
+            increment_entry_count: { Args: never; Returns: undefined };
             search_entries_by_embedding: {
                 Args: {
                     match_count?: number;
@@ -804,10 +819,10 @@ export type Database = {
                     content_tag: string;
                     created_at: string;
                     encrypted_content: string;
+                    generation_order: number;
                     id: string;
                     insight_content_iv: string;
                     insight_content_tag: string;
-                    insight_count: number;
                     insight_created_at: string;
                     insight_encrypted_content: string;
                     insight_id: string;
@@ -845,6 +860,15 @@ export type Database = {
                     week_start: string;
                     weekly_insight_id: string;
                 }[];
+            };
+            try_consume_rate_limit: {
+                Args: {
+                    p_key_hash: string;
+                    p_limit: number;
+                    p_scope: string;
+                    p_since: string;
+                };
+                Returns: boolean;
             };
         };
         Enums: {

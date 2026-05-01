@@ -244,18 +244,15 @@ const main = async () => {
         const encInsight = encrypt(insight);
         const { error: insightError } = await supabase
             .from("entry_insights")
-            .upsert(
-                {
-                    user_id: userId,
-                    entry_id: entryRow.id,
-                    encrypted_content: encInsight.encryptedContent,
-                    content_iv: encInsight.iv,
-                    content_tag: encInsight.tag,
-                    tags,
-                    insight_count: 1,
-                },
-                { onConflict: "entry_id" },
-            );
+            .insert({
+                user_id: userId,
+                entry_id: entryRow.id,
+                encrypted_content: encInsight.encryptedContent,
+                content_iv: encInsight.iv,
+                content_tag: encInsight.tag,
+                tags,
+                generation_order: 1,
+            });
 
         if (insightError) {
             console.error(

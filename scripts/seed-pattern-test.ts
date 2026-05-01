@@ -158,7 +158,7 @@ const main = async () => {
     }
 
     // Use repo functions so encryption is handled automatically
-    const { insertWeeklyInsight, insertWeeklyInsightPatterns } = await import(
+    const { insertWeeklyInsight, createWeeklyInsightPatterns } = await import(
         "../lib/weekly-insights/repo"
     );
 
@@ -186,7 +186,7 @@ const main = async () => {
     }));
 
     const { data: patterns, error: patternsError } =
-        await insertWeeklyInsightPatterns(
+        await createWeeklyInsightPatterns(
             supabase,
             insight.id,
             patternsWithEvidence,

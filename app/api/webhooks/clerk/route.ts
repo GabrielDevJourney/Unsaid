@@ -3,11 +3,14 @@ import { verifyWebhook } from "@clerk/nextjs/webhooks";
 import type { NextRequest } from "next/server";
 import { cancelLemonSubscription } from "@/lib/subscriptions/service";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
-import { deleteUser, updateUserProfile } from "@/lib/users/repo";
-import { createUserWithProgress } from "@/lib/users/service";
+import {
+    createUserWithProgress,
+    deleteUser,
+    updateUserProfile,
+} from "@/lib/users/service";
 import type { CreateWithProgressPayload } from "@/types";
 
-export async function POST(req: NextRequest) {
+export const POST = async (req: NextRequest): Promise<Response> => {
     try {
         const evt = await verifyWebhook(req);
         const supabaseAdmin = createSupabaseAdmin();
@@ -90,4 +93,4 @@ export async function POST(req: NextRequest) {
         console.error("Error verifying webhook:", err);
         return new Response("Error verifying webhook", { status: 400 });
     }
-}
+};

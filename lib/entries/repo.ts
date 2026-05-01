@@ -50,12 +50,7 @@ export const insertEntry = async (
     return { data: toEntry(entryRow), error: null };
 };
 
-/**
- * Get a single entry by ID.
- * Decrypts content before returning.
- * RLS ensures user can only fetch their own entries.
- */
-export const getEntryById = async (
+export const findEntryById = async (
     supabase: SupabaseClient,
     entryId: string,
 ): Promise<{ data: Entry | null; error: PostgrestError | null }> => {
@@ -74,12 +69,7 @@ export const getEntryById = async (
     return { data: toEntry(entryRow), error: null };
 };
 
-/**
- * Get multiple entries by ID array.
- * Decrypts content for each entry.
- * RLS ensures user can only fetch their own entries.
- */
-export const getEntriesByIds = async (
+export const findEntriesByIds = async (
     supabase: SupabaseClient,
     entryIds: string[],
 ): Promise<{ data: Entry[]; error: PostgrestError | null }> => {
@@ -101,8 +91,7 @@ export const getEntriesByIds = async (
  * Joins entry_insights so the service layer can decrypt insight prose.
  * RLS scopes results to the authenticated user automatically.
  */
-
-export const getEntriesBySource = async (
+export const findEntriesBySource = async (
     supabase: SupabaseClient,
     sourceType: string,
     sourceId: string,
@@ -127,7 +116,7 @@ export const getEntriesBySource = async (
  * When using server client, RLS filters automatically.
  * When using admin client (dev/testing), pass userId to filter.
  */
-export const getEntriesPaginated = async (
+export const findEntriesPaginated = async (
     supabase: SupabaseClient,
     page: number,
     pageSize: number,
@@ -174,7 +163,7 @@ export const getEntriesPaginated = async (
  * Lightweight query used to populate the calendar without loading full entry data.
  * RLS filters to the authenticated user automatically.
  */
-export const getEntryDates = async (
+export const findEntryDates = async (
     supabase: SupabaseClient,
 ): Promise<{ data: string[]; error: PostgrestError | null }> => {
     const { data, error } = await supabase
@@ -186,7 +175,7 @@ export const getEntryDates = async (
     return { data: data.map((e) => e.created_at as string), error: null };
 };
 
-export const getEntriesWithInsights = async (
+export const findEntriesWithInsights = async (
     supabase: SupabaseClient,
 ): Promise<{
     data: EntryWithInsight[];
@@ -218,7 +207,7 @@ export const getEntriesWithInsights = async (
  * Decrypts both entry content and insight content.
  * Returns only the latest insight per entry (for list views, cards).
  */
-export const getEntriesWithInsightsPaginated = async (
+export const findEntriesWithInsightsPaginated = async (
     supabase: SupabaseClient,
     page: number,
     pageSize: number,
@@ -263,11 +252,7 @@ export const getEntriesWithInsightsPaginated = async (
     };
 };
 
-/**
- * Get single entry WITH its latest insight.
- * Returns latest insight only (for general use, not editor).
- */
-export const getEntryWithInsightById = async (
+export const findEntryWithInsightById = async (
     supabase: SupabaseClient,
     entryId: string,
 ): Promise<{ data: EntryWithInsight | null; error: PostgrestError | null }> => {
@@ -295,7 +280,7 @@ export const getEntryWithInsightById = async (
  * Get single entry WITH all insight generations, ordered ASC.
  * Used by the editor to reconstruct segment layout on reload.
  */
-export const getEntryWithAllInsightsById = async (
+export const findEntryWithAllInsightsById = async (
     supabase: SupabaseClient,
     entryId: string,
 ): Promise<{
@@ -403,31 +388,17 @@ export const deleteEntry = async (
     return { error };
 };
 
-/**
- * Atomically decrement total_entries in user_progress via RPC.
- * Floors at 0 in SQL — no race condition vs the old read-then-write pattern.
- */
-export const decrementUserProgress = async (
+export const updateUserProgressDecrement = async (
     supabase: SupabaseClient,
-    userId: string,
 ): Promise<{ error: PostgrestError | null }> => {
-    const { error } = await supabase.rpc("decrement_entry_count", {
-        uid: userId,
-    });
+    const { error } = await supabase.rpc("decrement_entry_count");
     return { error };
 };
 
-/**
- * Atomically increment total_entries in user_progress via RPC.
- * Single round trip — no race condition vs the old read-then-write pattern.
- */
-export const incrementUserProgress = async (
+export const updateUserProgressIncrement = async (
     supabase: SupabaseClient,
-    userId: string,
 ): Promise<{ error: PostgrestError | null }> => {
-    const { error } = await supabase.rpc("increment_entry_count", {
-        uid: userId,
-    });
+    const { error } = await supabase.rpc("increment_entry_count");
     return { error };
 };
 
@@ -436,7 +407,7 @@ export const incrementUserProgress = async (
  * Calls the search_entries_by_embedding RPC function.
  * Decrypts content for each result.
  */
-export const searchEntriesByEmbedding = async (
+export const findEntriesByEmbedding = async (
     supabase: SupabaseClient,
     userId: string,
     queryEmbedding: string,
@@ -464,17 +435,12 @@ export const searchEntriesByEmbedding = async (
 };
 
 /**
- * Find entries related to a specific entry by semantic similarity.
- * Calls the find_related_entries RPC function.
- * Decrypts content for each result.
- */
-/**
  * Get entry id + created_at for a list of entry IDs.
  * Used to resolve entry dates for progress insight reference panels.
  * RLS ensures only the user's own entries are returned.
  * No decryption needed — only metadata is fetched.
  */
-export const getEntryDatesByIds = async (
+export const findEntryDatesByIds = async (
     supabase: SupabaseClient,
     ids: string[],
 ): Promise<{
@@ -523,4 +489,79 @@ export const findRelatedEntries = async (
         data: (searchRows as SearchEntryRowResult[]).map(toEntryWithSimilarity),
         error: null,
     };
+};
+
+export const findEntryEncryptedFields = async (
+    supabase: SupabaseClient,
+    entryId: string,
+): Promise<{
+    data: {
+        encrypted_content: string;
+        content_iv: string;
+        content_tag: string;
+    } | null;
+    error: PostgrestError | null;
+}> => {
+    const { data, error } = await supabase
+        .from("entries")
+        .select("encrypted_content, content_iv, content_tag")
+        .eq("id", entryId)
+        .single();
+    return { data, error };
+};
+
+export const findLatestEntryByUser = async (
+    supabase: SupabaseClient,
+    userId: string,
+): Promise<{
+    data: { created_at: string } | null;
+    error: PostgrestError | null;
+}> => {
+    const { data, error } = await supabase
+        .from("entries")
+        .select("created_at")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+    return { data, error };
+};
+
+export const findAllEntriesByDateRange = async (
+    supabase: SupabaseClient,
+    from: string,
+    to: string,
+): Promise<{
+    data:
+        | {
+              id: string;
+              user_id: string;
+              encrypted_content: string | null;
+              content_iv: string | null;
+              content_tag: string | null;
+              created_at: string;
+          }[]
+        | null;
+    error: PostgrestError | null;
+}> => {
+    const { data, error } = await supabase
+        .from("entries")
+        .select(
+            "id, user_id, encrypted_content, content_tag, content_iv, created_at",
+        )
+        .gte("created_at", from)
+        .lte("created_at", to)
+        .order("created_at", { ascending: true });
+    return { data, error };
+};
+
+export const countEntriesByUserId = async (
+    supabase: SupabaseClient,
+    userId: string,
+): Promise<{ count: number; error: PostgrestError | null }> => {
+    const { count, error } = await supabase
+        .from("entries")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId);
+    return { count: count ?? 0, error };
 };

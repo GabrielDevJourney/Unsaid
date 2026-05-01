@@ -98,27 +98,33 @@ export const EntryEditorPage = ({
         setSource,
     ]);
 
-    // Fetch suggestion on mount — guarded so it doesn't re-fetch after /new → /[id] navigation
+    // Fetch suggestion for new entries.
     useEffect(() => {
-        if (isNewEntry.current) {
-            if (suggestion !== null || _hasInitialSuggestion.current) return;
-            fetch("/api/prompts/entry-theme")
-                .then((res) => res.json())
-                .then((json) => setSuggestion(json.data.promptText))
-                .catch(() =>
-                    setSuggestion(
-                        "What's been on your mind lately that you haven't said out loud?",
-                    ),
-                )
-                .finally(() => setIsLoadingSuggestion(false));
-        } else if (initialEntryId.current) {
-            fetch(`/api/prompts/entry/${initialEntryId.current}`)
-                .then((res) => res.json())
-                .then((json) => setSuggestion(json.data?.promptText ?? null))
-                .catch(() => setSuggestion(null));
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        if (!isNewEntry.current) return;
+        if (suggestion !== null || _hasInitialSuggestion.current) return;
+
+        fetch("/api/prompts/entry-theme")
+            .then((res) => res.json())
+            .then((json) => setSuggestion(json.data.promptText))
+            .catch(() =>
+                setSuggestion(
+                    "What's been on your mind lately that you haven't said out loud?",
+                ),
+            )
+            .finally(() => setIsLoadingSuggestion(false));
     }, [setIsLoadingSuggestion, setSuggestion, suggestion]);
+
+    // Fetch the saved prompt for existing entries.
+    useEffect(() => {
+        if (isNewEntry.current || !initialEntryId.current) return;
+
+        setIsLoadingSuggestion(true);
+        fetch(`/api/prompts/entry/${initialEntryId.current}`)
+            .then((res) => res.json())
+            .then((json) => setSuggestion(json.data?.promptText ?? null))
+            .catch(() => setSuggestion(null))
+            .finally(() => setIsLoadingSuggestion(false));
+    }, [setIsLoadingSuggestion, setSuggestion]);
 
     // Save prompt when autosave first creates the entry
     useEffect(() => {
@@ -131,8 +137,14 @@ export const EntryEditorPage = ({
         )
             return;
 
-        hasSavedPrompt.current = true;
-        savePromptAction(suggestion, storeEntryId);
+        void savePromptAction(suggestion, storeEntryId).then((result) => {
+            if ("error" in result) {
+                console.error("Failed to persist prompt:", result.error);
+                return;
+            }
+
+            hasSavedPrompt.current = true;
+        });
     }, [storeEntryId, suggestion]);
 
     useEffect(() => {

@@ -1,9 +1,11 @@
 import { auth } from "@clerk/nextjs/server";
+import * as Sentry from "@sentry/nextjs";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { WeekStartParamSchema } from "@/lib/schemas/weekly-insight";
 import { createSupabaseServer } from "@/lib/supabase/server";
-import { getWeeklyInsightWithPatternsByWeekStart } from "@/lib/weekly-insights/repo";
+import { getWeeklyInsightWithPatternsByWeekStart } from "@/lib/weekly-insights/service";
+import { isServiceError } from "@/types";
 
 interface RouteParams {
     params: Promise<{ weekStart: string }>;
@@ -27,7 +29,6 @@ export const GET = async (_req: NextRequest, { params }: RouteParams) => {
 
         const { weekStart } = await params;
 
-        // Validate weekStart format
         const validated = WeekStartParamSchema.safeParse(weekStart);
         if (!validated.success) {
             return NextResponse.json(
@@ -37,37 +38,26 @@ export const GET = async (_req: NextRequest, { params }: RouteParams) => {
         }
 
         const supabase = await createSupabaseServer();
-        const { data: insight, error } =
-            await getWeeklyInsightWithPatternsByWeekStart(
-                supabase,
-                userId,
-                weekStart,
-            );
+        const result = await getWeeklyInsightWithPatternsByWeekStart(
+            supabase,
+            userId,
+            weekStart,
+        );
 
-        if (error) {
-            // PGRST116 = no rows found
-            if ("code" in error && error.code === "PGRST116") {
-                return NextResponse.json(
-                    { error: "Weekly insight not found for this week" },
-                    { status: 404 },
-                );
-            }
-            console.error("Failed to fetch weekly insight:", error);
-            return NextResponse.json(
-                { error: "Failed to fetch weekly insight" },
-                { status: 500 },
-            );
+        if (isServiceError(result)) {
+            return NextResponse.json({ error: result.error }, { status: 500 });
         }
 
-        if (!insight) {
+        if (!result.data) {
             return NextResponse.json(
                 { error: "Weekly insight not found for this week" },
                 { status: 404 },
             );
         }
 
-        return NextResponse.json({ data: insight });
+        return NextResponse.json({ data: result.data });
     } catch (error) {
+        Sentry.captureException(error);
         console.error("Failed to fetch weekly insight:", error);
         return NextResponse.json(
             { error: "Failed to fetch weekly insight" },

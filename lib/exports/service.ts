@@ -1,9 +1,9 @@
 import * as Sentry from "@sentry/nextjs";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { DATE_DISPLAY_LONG, formatDate } from "@/lib/date-utils";
-import { getEntriesWithInsightsPaginated } from "@/lib/entries/repo";
-import { getProgressInsightsPaginated } from "@/lib/progress-insights/repo";
-import { getWeeklyInsightWithPatternsPaginated } from "@/lib/weekly-insights/repo";
+import { findEntriesWithInsightsPaginated } from "@/lib/entries/repo";
+import { findProgressInsightsPaginated } from "@/lib/progress-insights/repo";
+import { findWeeklyInsightWithPatternsPaginated } from "@/lib/weekly-insights/repo";
 import type { EntryWithInsight } from "@/types/domain/entries";
 import type {
     ProgressInsight,
@@ -156,7 +156,7 @@ export const exportUserData = async (
     while (hasMoreEntries) {
         try {
             const { data, count, error } =
-                await getEntriesWithInsightsPaginated(
+                await findEntriesWithInsightsPaginated(
                     supabase,
                     entryPage,
                     ENTRY_BATCH_SIZE,
@@ -213,7 +213,7 @@ export const exportUserData = async (
     while (hasMoreWeekly) {
         try {
             const { data, nextCursor, error } =
-                await getWeeklyInsightWithPatternsPaginated(
+                await findWeeklyInsightWithPatternsPaginated(
                     supabase,
                     weeklyCursor,
                     WEEKLY_BATCH_SIZE,
@@ -266,7 +266,7 @@ export const exportUserData = async (
 
     while (hasMoreProgress) {
         try {
-            const { data, error } = await getProgressInsightsPaginated(
+            const { data, error } = await findProgressInsightsPaginated(
                 supabase,
                 userId,
                 progressPage,

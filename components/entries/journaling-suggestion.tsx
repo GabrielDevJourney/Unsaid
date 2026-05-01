@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -21,12 +21,24 @@ export const JournalingSuggestion = ({
     onDismiss,
     autoActivate,
 }: JournalingSuggestionProps) => {
-    const [isUsed, setIsUsed] = useState(autoActivate ?? false);
+    const [isUsed, setIsUsed] = useState(autoActivate ?? !isNewEntry);
     const [isDismissed, setIsDismissed] = useState(false);
+
+    useEffect(() => {
+        if (!isNewEntry) {
+            setIsUsed(true);
+            setIsDismissed(false);
+            return;
+        }
+
+        if (autoActivate) {
+            setIsUsed(true);
+        }
+    }, [autoActivate, isNewEntry]);
 
     if (isDismissed) return null;
 
-    if (hasContent && !isUsed) return null;
+    if (isNewEntry && hasContent && !isUsed) return null;
 
     if (isLoading) {
         return (

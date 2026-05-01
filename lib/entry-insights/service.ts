@@ -1,9 +1,16 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { streamEntryInsight } from "@/lib/ai/stream-entry-insight";
 import { MAX_INSIGHT_COUNT } from "@/lib/constants";
-import { decrypt } from "@/lib/crypto";
+import { findEntryEncryptedFields } from "@/lib/entries/repo";
+import { decryptEntryContent } from "@/lib/entries/transformers";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
 import { createSupabaseServer } from "@/lib/supabase/server";
-import { getEntryInsightsByEntryId, insertEntryInsight } from "./repo";
+import type { ServiceResult } from "@/types";
+import {
+    countEntryInsights,
+    createEntryInsight,
+    findEntryInsightsByEntryId,
+} from "./repo";
 
 /**
  * Generate and stream a structured entry insight.
@@ -26,35 +33,29 @@ export const generateEntryInsight = async (
     entryId: string,
     reflectionContext?: string,
 ) => {
-    // Verify ownership and fetch content server-side.
+    // Verify ownership and fetch encrypted content via repo (RLS-scoped).
     const serverSupabase = await createSupabaseServer();
-    const { data: entryRow } = await serverSupabase
-        .from("entries")
-        .select("encrypted_content, content_iv, content_tag")
-        .eq("id", entryId)
-        .single();
+    const { data: encryptedRow, error: entryError } =
+        await findEntryEncryptedFields(serverSupabase, entryId);
 
-    if (!entryRow) return null;
+    if (entryError || !encryptedRow) return null;
     if (
-        !entryRow.encrypted_content ||
-        !entryRow.content_iv ||
-        !entryRow.content_tag
+        !encryptedRow.encrypted_content ||
+        !encryptedRow.content_iv ||
+        !encryptedRow.content_tag
     ) {
         return null;
     }
 
-    const content = decrypt({
-        encryptedContent: entryRow.encrypted_content,
-        iv: entryRow.content_iv,
-        tag: entryRow.content_tag,
-    });
+    // Decryption via transformer — never inline in services.
+    const content = decryptEntryContent(encryptedRow);
 
     // Character count of content at generation time — used to split segments on reload
     const contentBeforeLength = content.length;
 
     const supabase = createSupabaseAdmin();
 
-    const { data: existingInsights } = await getEntryInsightsByEntryId(
+    const { data: existingInsights } = await findEntryInsightsByEntryId(
         supabase,
         entryId,
     );
@@ -81,14 +82,11 @@ export const generateEntryInsight = async (
                     tags: string[];
                 };
             } catch {
-                console.error(
-                    "Entry insight generation produced invalid JSON",
-                    text,
-                );
+                console.error("Entry insight generation produced invalid JSON");
                 return;
             }
 
-            const { error } = await insertEntryInsight(supabase, {
+            const { error } = await createEntryInsight(supabase, {
                 userId,
                 entryId,
                 content: parsed.insight,
@@ -104,4 +102,17 @@ export const generateEntryInsight = async (
     });
 
     return result;
+};
+
+export const getTotalInsightsCount = async (
+    supabase: SupabaseClient,
+): Promise<ServiceResult<number>> => {
+    const { count, error } = await countEntryInsights(supabase);
+
+    if (error) {
+        console.error("Failed to get total insights count:", error);
+        return { error: "Failed to get total insights count" };
+    }
+
+    return { data: count };
 };

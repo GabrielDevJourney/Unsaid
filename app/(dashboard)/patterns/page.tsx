@@ -6,6 +6,7 @@ import {
     getNewPatternsCount,
     getWeeklyInsightWithPatternsPaginated,
 } from "@/lib/weekly-insights/service";
+import { isServiceError } from "@/types";
 
 const INITIAL_LIMIT = 5;
 
@@ -14,15 +15,20 @@ const PatternsPage = async () => {
     if (!userId) redirect("/sign-in");
 
     const supabase = await createSupabaseServer();
-    const [{ data: insights, nextCursor }, { data: initialNewCount }] =
-        await Promise.all([
-            getWeeklyInsightWithPatternsPaginated(
-                supabase,
-                null,
-                INITIAL_LIMIT,
-            ),
-            getNewPatternsCount(supabase),
-        ]);
+    const [insightsResult, newCountResult] = await Promise.all([
+        getWeeklyInsightWithPatternsPaginated(supabase, null, INITIAL_LIMIT),
+        getNewPatternsCount(supabase),
+    ]);
+
+    const insights = isServiceError(insightsResult)
+        ? []
+        : insightsResult.data.insights;
+    const nextCursor = isServiceError(insightsResult)
+        ? null
+        : insightsResult.data.nextCursor;
+    const initialNewCount = isServiceError(newCountResult)
+        ? 0
+        : newCountResult.data;
 
     return (
         <PatternsView

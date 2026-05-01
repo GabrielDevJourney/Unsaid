@@ -1,10 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
-    getEntriesWithInsightsPaginated,
-    getEntryDates,
+    findEntriesWithInsightsPaginated,
+    findEntryDates,
 } from "@/lib/entries/repo";
-import { getUserProgress } from "@/lib/users/repo";
-import { getTotalPatternsCount } from "@/lib/weekly-insights/repo";
+import { findUserProgress } from "@/lib/users/repo";
+import { countPatterns } from "@/lib/weekly-insights/repo";
 import type { EntryWithInsight } from "@/types";
 
 const INITIAL_PAGE_SIZE = 20;
@@ -32,10 +32,10 @@ export const getHomePageData = async (
         { data: patternsCount, error: patternsError },
         { data: entryDates, error: datesError },
     ] = await Promise.all([
-        getEntriesWithInsightsPaginated(supabase, 1, INITIAL_PAGE_SIZE),
-        getUserProgress(supabase),
-        getTotalPatternsCount(supabase),
-        getEntryDates(supabase),
+        findEntriesWithInsightsPaginated(supabase, 1, INITIAL_PAGE_SIZE),
+        findUserProgress(supabase),
+        countPatterns(supabase),
+        findEntryDates(supabase),
     ]);
 
     if (entriesError) throw entriesError;

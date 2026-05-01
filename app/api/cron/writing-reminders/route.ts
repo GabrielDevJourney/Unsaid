@@ -1,11 +1,12 @@
-import crypto from "node:crypto";
 import { type NextRequest, NextResponse } from "next/server";
+import { validateCronRequest } from "@/lib/cron/auth";
 import { sendWritingReminderEmail } from "@/lib/email/service";
+import { getLatestEntryForUser } from "@/lib/entries/service";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
 import {
     getUsersOptedIntoWritingReminders,
     updateLastWritingReminderSent,
-} from "@/lib/users/repo";
+} from "@/lib/users/service";
 
 const INACTIVITY_DAYS = 3;
 const COOLDOWN_DAYS = 7;
@@ -19,29 +20,8 @@ const COOLDOWN_DAYS = 7;
  * Protected by CRON_SECRET.
  */
 export const GET = async (req: NextRequest) => {
-    const authHeader = req.headers.get("authorization");
-    const cronSecret = process.env.CRON_SECRET;
-
-    if (!cronSecret) {
-        console.error("CRON_SECRET not configured");
-        return NextResponse.json(
-            { error: "Server configuration error" },
-            { status: 500 },
-        );
-    }
-
-    const expectedHeader = `Bearer ${cronSecret}`;
-    const isValid =
-        authHeader !== null &&
-        authHeader.length === expectedHeader.length &&
-        crypto.timingSafeEqual(
-            Buffer.from(authHeader, "utf8"),
-            Buffer.from(expectedHeader, "utf8"),
-        );
-
-    if (!isValid) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authError = validateCronRequest(req, "writing-reminders");
+    if (authError) return authError;
 
     const supabase = createSupabaseAdmin();
 
@@ -77,18 +57,16 @@ export const GET = async (req: NextRequest) => {
         results.processed++;
 
         try {
-            const { data: latestEntry } = await supabase
-                .from("entries")
-                .select("created_at")
-                .eq("user_id", user.user_id)
-                .order("created_at", { ascending: false })
-                .limit(1)
-                .maybeSingle();
+            const latestEntryResult = await getLatestEntryForUser(
+                supabase,
+                user.user_id,
+            );
+            const latestEntry = latestEntryResult.data;
 
             // Skip if user wrote recently
             if (
                 latestEntry &&
-                new Date(latestEntry.created_at) > inactivityCutoff
+                new Date(latestEntry.createdAt) > inactivityCutoff
             ) {
                 results.skipped++;
                 continue;
@@ -96,8 +74,7 @@ export const GET = async (req: NextRequest) => {
 
             const daysSinceLastEntry = latestEntry
                 ? Math.floor(
-                      (Date.now() -
-                          new Date(latestEntry.created_at).getTime()) /
+                      (Date.now() - new Date(latestEntry.createdAt).getTime()) /
                           (1000 * 60 * 60 * 24),
                   )
                 : null;
@@ -113,7 +90,7 @@ export const GET = async (req: NextRequest) => {
                 results.sent++;
             } else {
                 results.failed++;
-                results.errors.push(`${user.user_id}: ${emailResult.error}`);
+                results.errors.push("Failed to send writing reminder email");
             }
         } catch (error) {
             console.error(`Error for ${user.user_id}:`, error);
