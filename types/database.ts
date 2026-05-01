@@ -819,10 +819,10 @@ export type Database = {
                     content_tag: string;
                     created_at: string;
                     encrypted_content: string;
+                    generation_order: number;
                     id: string;
                     insight_content_iv: string;
                     insight_content_tag: string;
-                    insight_count: number;
                     insight_created_at: string;
                     insight_encrypted_content: string;
                     insight_id: string;
