@@ -126,21 +126,78 @@ export const shouldTriggerProgressInsight = async (
     };
 };
 
+/** Resolve the list of recent entries — from payload if provided, else fetch from DB. */
+const resolveRecentEntries = async (
+    supabase: ReturnType<typeof createSupabaseAdmin>,
+    userId: string,
+    payload?: CreateProgressInsightPayload,
+): Promise<ServiceResult<EntryMinimal[]>> => {
+    if (payload?.recentEntries && payload.recentEntries.length > 0) {
+        return { data: payload.recentEntries };
+    }
+
+    const { data: entries, error: entriesError } = await findRecentEntries(
+        supabase,
+        userId,
+        PROGRESS_TRIGGER_INTERVAL,
+    );
+
+    if (entriesError) {
+        console.error("Failed to fetch recent entries:", entriesError);
+        throw entriesError;
+    }
+
+    if (!entries || entries.length < PROGRESS_TRIGGER_INTERVAL) {
+        return {
+            error: `Not enough entries for progress insight (need ${PROGRESS_TRIGGER_INTERVAL}, have ${entries?.length ?? 0})`,
+        };
+    }
+
+    return {
+        data: entries.map((e) => ({
+            id: e.id,
+            content: e.content,
+            createdAt: e.createdAt,
+        })),
+    };
+};
+
+interface ProgressInsightContext {
+    relatedPastEntries: EntryMinimalWithSimilarity[];
+    entryInsights: { entryIndex: number; summary: string; tags: string[] }[];
+    weeklyPatterns: WeeklyPatternContext[];
+}
+
+/** Build AI context by fetching related entries, entry insights, and weekly patterns in parallel. */
+const buildProgressInsightContext = async (
+    supabase: ReturnType<typeof createSupabaseAdmin>,
+    userId: string,
+    recentEntries: EntryMinimal[],
+    payload?: CreateProgressInsightPayload,
+): Promise<ProgressInsightContext> => {
+    const [relatedPastEntries, entryInsights, weeklyPatterns] =
+        await Promise.all([
+            payload?.relatedPastEntries
+                ? Promise.resolve(payload.relatedPastEntries)
+                : findRelatedPastEntries(supabase, userId, recentEntries),
+            fetchEntryInsightsContext(supabase, recentEntries),
+            fetchWeeklyPatternsContext(supabase, userId, recentEntries),
+        ]);
+
+    return { relatedPastEntries, entryInsights, weeklyPatterns };
+};
+
 /**
  * Generate and save a progress insight.
  *
  * Flow:
- * 1. Fetch last 15 entries
- * 2. Find semantically related past entries
- * 3. Enrich with entry insights (Tier 1 summaries + tags) and weekly patterns
- * 4. Generate structured JSON insight using AI
- * 5. Compute is_milestone, serialize, save to database
- * 6. Update user progress tracking
+ * 1. Resolve recent entries (from payload or DB)
+ * 2. Build AI context in parallel (related entries, insights, patterns)
+ * 3. Generate structured JSON insight using AI
+ * 4. Save to database and update progress tracking
  *
  * Uses admin client (bypasses RLS - insights are system-created).
- *
- * Returns error for expected failures (not enough entries, AI failure).
- * Throws for unexpected DB errors.
+ * Returns error for expected failures. Throws for unexpected DB errors.
  */
 export const createProgressInsight = async (
     userId: string,
@@ -148,63 +205,18 @@ export const createProgressInsight = async (
 ): Promise<ServiceResult<ProgressInsight>> => {
     const supabase = createSupabaseAdmin();
 
-    // Get recent entries if not provided in payload
-    let recentEntries: EntryMinimal[];
+    const entriesResult = await resolveRecentEntries(supabase, userId, payload);
+    if (entriesResult.error) return { error: entriesResult.error };
+    const recentEntries = entriesResult.data!;
 
-    if (payload?.recentEntries && payload.recentEntries.length > 0) {
-        recentEntries = payload.recentEntries;
-    } else {
-        const { data: entries, error: entriesError } = await findRecentEntries(
-            supabase,
-            userId,
-            PROGRESS_TRIGGER_INTERVAL,
-        );
-
-        if (entriesError) {
-            console.error("Failed to fetch recent entries:", entriesError);
-            throw entriesError;
-        }
-
-        if (!entries || entries.length < PROGRESS_TRIGGER_INTERVAL) {
-            return {
-                error: `Not enough entries for progress insight (need ${PROGRESS_TRIGGER_INTERVAL}, have ${entries?.length ?? 0})`,
-            };
-        }
-
-        recentEntries = entries.map((e) => ({
-            id: e.id,
-            content: e.content,
-            createdAt: e.createdAt,
-        }));
-    }
-
-    // Find related past entries using semantic search
-    let relatedPastEntries: EntryMinimalWithSimilarity[] = [];
-
-    if (payload?.relatedPastEntries) {
-        relatedPastEntries = payload.relatedPastEntries;
-    } else {
-        relatedPastEntries = await findRelatedPastEntries(
+    const { relatedPastEntries, entryInsights, weeklyPatterns } =
+        await buildProgressInsightContext(
             supabase,
             userId,
             recentEntries,
+            payload,
         );
-    }
 
-    // Enrich context with entry insights (Tier 1 summaries + tags)
-    const entryInsights = await fetchEntryInsightsContext(
-        supabase,
-        recentEntries,
-    );
-
-    // Enrich context with weekly patterns in the date range
-    const weeklyPatterns = await fetchWeeklyPatternsContext(
-        supabase,
-        userId,
-        recentEntries,
-    );
-
-    // Generate progress insight using AI (structured JSON output)
     const aiOutput = await generateProgressInsight({
         recentEntries: recentEntries.map((e) => ({
             id: e.id,
@@ -225,19 +237,15 @@ export const createProgressInsight = async (
         return { error: "AI failed to generate progress insight" };
     }
 
-    // Map key_entry_numbers (1-indexed) to actual entry IDs
     const keyEntryIds = aiOutput.key_entry_numbers
         .map((n) => recentEntries[n - 1]?.id)
         .filter((id): id is string => id !== undefined);
 
-    const content = JSON.stringify(aiOutput);
-
-    // Save to database
     const { data: insight, error: insertError } = await insertProgressInsight(
         supabase,
         {
             userId,
-            content,
+            content: JSON.stringify(aiOutput),
             recentEntryIds: recentEntries.map((e) => e.id),
             relatedPastEntryIds: relatedPastEntries.map((e) => e.id),
             keyEntryIds,
@@ -253,7 +261,6 @@ export const createProgressInsight = async (
         throw new Error("Progress insight was not created");
     }
 
-    // Update user progress tracking
     const { data: progress } = await findUserProgress(supabase, userId);
     if (progress) {
         await updateUserProgressAfterInsight(
@@ -314,7 +321,6 @@ export const getProgressInsightDetail = async (
     );
     if (!insight) return null;
 
-    // Determine key entry IDs: use stored key_entry_ids, or fall back to first/middle/last
     const keyIds = resolveKeyEntryIds(insight);
 
     const { data: entryDates } = await findEntryDatesByIds(supabase, keyIds);
@@ -450,13 +456,11 @@ const findRelatedPastEntries = async (
     userId: string,
     recentEntries: EntryMinimal[],
 ): Promise<EntryMinimalWithSimilarity[]> => {
-    // Get the oldest recent entry date to exclude recent entries from search
     const oldestRecentDate = recentEntries.reduce((oldest, entry) => {
         const date = new Date(entry.createdAt);
         return date < oldest ? date : oldest;
     }, new Date());
 
-    // Create a combined theme summary from recent entries
     const themeSummary = recentEntries
         .map((e) => e.content.slice(0, 500))
         .join(" ")
