@@ -23,7 +23,10 @@ export const findPromptByEntryId = async (
         .from("prompts")
         .select("prompt_text")
         .eq("entry_id", entryId)
-        .single();
+        .order("created_at", { ascending: false })
+        .order("id", { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
     return { data: data?.prompt_text ?? null, error };
 };
