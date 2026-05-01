@@ -55,7 +55,7 @@ const updateProgress = async (
     supabase: SupabaseClient,
     userId: string,
 ): Promise<void> => {
-    const { error } = await updateUserProgressIncrement(supabase, userId);
+    const { error } = await updateUserProgressIncrement(supabase);
     if (error) console.error("Failed to increment user progress:", error);
 
     void checkAndTriggerProgress(userId).then((result) => {
@@ -144,7 +144,7 @@ export const deleteEntryById = async (
 ): Promise<ServiceResult<null>> => {
     const [deleteResult, progressResult] = await Promise.all([
         deleteEntry(supabase, entryId, userId),
-        updateUserProgressDecrement(supabase, userId),
+        updateUserProgressDecrement(supabase),
     ]);
 
     if (deleteResult.error) return { error: "Failed to delete entry" };

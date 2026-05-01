@@ -388,31 +388,17 @@ export const deleteEntry = async (
     return { error };
 };
 
-/**
- * Atomically decrement total_entries in user_progress via RPC.
- * Floors at 0 in SQL — no race condition vs the old read-then-write pattern.
- */
 export const updateUserProgressDecrement = async (
     supabase: SupabaseClient,
-    userId: string,
 ): Promise<{ error: PostgrestError | null }> => {
-    const { error } = await supabase.rpc("decrement_entry_count", {
-        uid: userId,
-    });
+    const { error } = await supabase.rpc("decrement_entry_count");
     return { error };
 };
 
-/**
- * Atomically increment total_entries in user_progress via RPC.
- * Single round trip — no race condition vs the old read-then-write pattern.
- */
 export const updateUserProgressIncrement = async (
     supabase: SupabaseClient,
-    userId: string,
 ): Promise<{ error: PostgrestError | null }> => {
-    const { error } = await supabase.rpc("increment_entry_count", {
-        uid: userId,
-    });
+    const { error } = await supabase.rpc("increment_entry_count");
     return { error };
 };
 
