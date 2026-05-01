@@ -207,7 +207,8 @@ export const createProgressInsight = async (
 
     const entriesResult = await resolveRecentEntries(supabase, userId, payload);
     if (entriesResult.error) return { error: entriesResult.error };
-    const recentEntries = entriesResult.data!;
+    if (!entriesResult.data) return { error: "No entries returned" };
+    const recentEntries = entriesResult.data;
 
     const { relatedPastEntries, entryInsights, weeklyPatterns } =
         await buildProgressInsightContext(
