@@ -70,7 +70,7 @@ export const useEntryEditorStore = create<
             savedContent: content,
             insights,
             suggestion: null,
-            isLoadingSuggestion: false,
+            isLoadingSuggestion: true,
         });
     },
 
