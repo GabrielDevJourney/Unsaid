@@ -94,12 +94,13 @@ export const createEntry = async (
 
     const wordCount = calculateWordCount(payload.content);
 
+    const isOnboardingSource = payload.sourceType === "onboarding";
     const { data: entry, error: insertError } = await insertEntry(supabase, {
         userId,
         content: payload.content,
         wordCount,
-        sourceType: payload.sourceType ?? null,
-        sourceId: payload.sourceId ?? null,
+        sourceType: isOnboardingSource ? null : (payload.sourceType ?? null),
+        sourceId: isOnboardingSource ? null : (payload.sourceId ?? null),
     });
 
     if (insertError || !entry) {
