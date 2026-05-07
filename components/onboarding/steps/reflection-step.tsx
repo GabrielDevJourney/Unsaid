@@ -210,8 +210,9 @@ const ReflectionStep = ({
         setPhase("loading");
         contentRef.current = content;
 
-        const result = await createEntryAction(content);
+        const result = await createEntryAction(content, "onboarding");
         if (result.error ?? !result.data) {
+            console.error("[Onboarding] Entry creation failed:", result.error);
             setPhase("writing");
             return;
         }

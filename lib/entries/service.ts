@@ -82,10 +82,13 @@ export const createEntry = async (
     }
 
     if (!canWrite) {
-        const { data: progress } = await findUserProgress(supabase);
-        // Fail closed: if progress is unavailable (DB error), deny rather than allow.
-        if (!progress || progress.totalEntries >= 15) {
-            return { error: "FREE_LIMIT_REACHED" };
+        const isOnboarding = payload.sourceType === "onboarding";
+        if (!isOnboarding) {
+            const { data: progress } = await findUserProgress(supabase);
+            // Fail closed: if progress is unavailable (DB error), deny rather than allow.
+            if (!progress || progress.totalEntries >= 15) {
+                return { error: "FREE_LIMIT_REACHED" };
+            }
         }
     }
 
