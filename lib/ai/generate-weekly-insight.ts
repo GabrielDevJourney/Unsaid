@@ -34,11 +34,16 @@ const formatEntriesForPrompt = (entries: EntryForAnalysis[]): string => {
  */
 export const generateWeeklyInsight = async (
     entries: EntryForAnalysis[],
+    personaContext?: string,
 ): Promise<Pattern[]> => {
     const [systemPrompt, taskPrompt] = await Promise.all([
         loadSystemPrompt(),
         loadWeeklyTaskPrompt(),
     ]);
+
+    const personaBlock = personaContext
+        ? `\n\n---\n\n## User Context\n${personaContext}`
+        : "";
 
     const formattedEntries = formatEntriesForPrompt(entries);
     const patternTypesSection = generatePatternTypesPromptSection();
@@ -47,7 +52,7 @@ export const generateWeeklyInsight = async (
     try {
         const { text } = await generateText({
             model: anthropic("claude-sonnet-4-6"),
-            system: systemPrompt,
+            system: `${systemPrompt}${personaBlock}`,
             messages: [
                 {
                     role: "user",

@@ -1,5 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { generateUpdatedPersonaSummary } from "@/lib/ai/generate-persona-summary";
 import { generateWeeklyInsight } from "@/lib/ai/generate-weekly-insight";
+import { buildPersonaContext } from "@/lib/ai/persona-context";
 import { MIN_ENTRIES_FOR_WEEKLY_INSIGHT } from "@/lib/constants";
 import type { PatternTypeCode } from "@/lib/constants/pattern-types";
 import { getWeekRange, getWeekStart } from "@/lib/date-utils";
@@ -7,6 +9,8 @@ import { sendWeeklyPatternsEmail } from "@/lib/email/service";
 import { findAllEntriesByDateRange } from "@/lib/entries/repo";
 import { decryptEntryContent } from "@/lib/entries/transformers";
 import { countEntryInsightsByUserId } from "@/lib/entry-insights/repo";
+import { findPersona } from "@/lib/persona/repo";
+import { savePersonaSummary } from "@/lib/persona/service";
 import { findUserProgress } from "@/lib/progress-insights/repo";
 import type { Pattern } from "@/lib/schemas/weekly-insight";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
@@ -190,22 +194,48 @@ const processUserWeeklyInsight = async (
     emailError?: string;
 }> => {
     try {
-        const result = await createWeeklyInsight(userId, {
-            weekStart,
-            entryIds: entries.map((e) => e.id),
-            entries: entries.map((e) => ({
-                id: e.id,
-                content: decryptEntryContent({
-                    encrypted_content: e.encrypted_content ?? "",
-                    content_iv: e.content_iv ?? "",
-                    content_tag: e.content_tag ?? "",
-                }),
-                createdAt: e.created_at,
-            })),
-        });
+        const { data: persona } = await findPersona(supabase, userId);
+        const personaContext =
+            buildPersonaContext(persona ?? null) || undefined;
+
+        const decryptedEntries = entries.map((e) => ({
+            id: e.id,
+            content: decryptEntryContent({
+                encrypted_content: e.encrypted_content ?? "",
+                content_iv: e.content_iv ?? "",
+                content_tag: e.content_tag ?? "",
+            }),
+            createdAt: e.created_at,
+        }));
+
+        const result = await createWeeklyInsight(
+            userId,
+            {
+                weekStart,
+                entryIds: entries.map((e) => e.id),
+                entries: decryptedEntries,
+            },
+            personaContext,
+        );
 
         if ("error" in result && result.error) {
             return { success: false, error: result.error };
+        }
+
+        // Fire-and-forget: update persona summary with weekly evidence
+        if (persona?.summary) {
+            const patterns = result.data?.patterns ?? [];
+            void updatePersonaSummaryFromWeekly(
+                supabase,
+                userId,
+                persona.displayName,
+                persona.summary,
+                decryptedEntries.map((e) => e.content),
+                patterns.map((p) => ({
+                    title: p.title,
+                    description: p.description,
+                })),
+            );
         }
 
         const emailResult = await sendWeeklyInsightEmail(
@@ -222,6 +252,27 @@ const processUserWeeklyInsight = async (
     } catch (error) {
         console.error(`Unexpected error for user ${userId}:`, error);
         return { success: false, error: "Unexpected error" };
+    }
+};
+
+const updatePersonaSummaryFromWeekly = async (
+    supabase: ReturnType<typeof createSupabaseAdmin>,
+    userId: string,
+    displayName: string,
+    currentSummary: string,
+    recentEntries: string[],
+    weeklyPatterns: { title: string; description: string }[],
+): Promise<void> => {
+    const newSummary = await generateUpdatedPersonaSummary({
+        currentSummary,
+        displayName,
+        recentEntries,
+        weeklyPatterns,
+    });
+    if (!newSummary) return;
+    const { error } = await savePersonaSummary(supabase, userId, newSummary);
+    if (error) {
+        console.error("Failed to update persona summary after weekly:", error);
     }
 };
 
@@ -315,6 +366,7 @@ const attachEmbeddingsToPatterns = async (
 export const createWeeklyInsight = async (
     userId: string,
     payload: CreateWeeklyInsightPayload,
+    personaContext?: string,
 ): Promise<ServiceResult<WeeklyInsightWithPatterns>> => {
     const supabase = createSupabaseAdmin();
 
@@ -328,6 +380,7 @@ export const createWeeklyInsight = async (
             content: e.content,
             createdAt: e.createdAt,
         })),
+        personaContext,
     );
 
     if (patterns.length === 0) {
