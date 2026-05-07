@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { OnboardingWizard } from "@/components/onboarding/onboarding-wizard";
 import { getOnboardingEntrySnapshot } from "@/lib/onboarding/service";
+import { getPersona } from "@/lib/persona/service";
 import { createSupabaseServer } from "@/lib/supabase/server";
 
 const OnboardingPage = async () => {
@@ -19,9 +20,17 @@ const OnboardingPage = async () => {
         redirect("/home");
     }
 
-    const { data: entrySnapshot } = await getOnboardingEntrySnapshot(supabase);
+    const [{ data: entrySnapshot }, { data: persona }] = await Promise.all([
+        getOnboardingEntrySnapshot(supabase),
+        getPersona(supabase, userId),
+    ]);
 
-    return <OnboardingWizard initialEntry={entrySnapshot ?? undefined} />;
+    return (
+        <OnboardingWizard
+            initialPersona={persona}
+            initialEntry={entrySnapshot ?? undefined}
+        />
+    );
 };
 
 export default OnboardingPage;
