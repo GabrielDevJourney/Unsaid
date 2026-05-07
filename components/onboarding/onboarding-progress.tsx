@@ -8,18 +8,24 @@ import { cn } from "@/lib/utils";
 interface OnboardingProgressProps {
     currentStep: number;
     totalSteps?: number;
+    /** 1–5, only used when currentStep === 2 (persona step) to show inner fill */
+    personaInnerStep?: number;
     onBack?: () => void;
     onForward?: () => void;
 }
 
+const PERSONA_STEP = 2;
+const PERSONA_INNER_STEPS = 5;
+
 const OnboardingProgress = ({
     currentStep,
-    totalSteps = 5,
+    totalSteps = 6,
+    personaInnerStep,
     onBack,
     onForward,
 }: OnboardingProgressProps) => {
     return (
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
             <button
                 type="button"
                 onClick={onBack}
@@ -40,15 +46,24 @@ const OnboardingProgress = ({
                     const step = i + 1;
                     const isActive = step === currentStep;
                     const isCompleted = step < currentStep;
+                    const isPersonaFilling =
+                        isActive &&
+                        step === PERSONA_STEP &&
+                        personaInnerStep !== undefined &&
+                        personaInnerStep < PERSONA_INNER_STEPS;
+
+                    const pillClass = isPersonaFilling
+                        ? "bg-neutral-300 ring-2 ring-neutral-300"
+                        : isActive || isCompleted
+                          ? "bg-slate-400 ring-2 ring-neutral-300"
+                          : "bg-neutral-300";
 
                     return (
                         <motion.div
                             key={step}
                             className={cn(
                                 "relative h-3 rounded-full overflow-hidden",
-                                isActive || isCompleted
-                                    ? "bg-slate-400 ring-2 ring-neutral-300"
-                                    : "bg-neutral-300",
+                                pillClass,
                             )}
                             animate={{ width: isActive ? 64 : 12 }}
                             transition={{
@@ -57,8 +72,23 @@ const OnboardingProgress = ({
                                 damping: 75,
                             }}
                         >
-                            {isActive && (
+                            {isActive && !isPersonaFilling && (
                                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_50%,rgba(247,107,21,0.6)_0%,transparent_70%)]" />
+                            )}
+                            {isPersonaFilling && (
+                                <motion.div
+                                    className="absolute inset-y-0 left-0 bg-slate-400 overflow-hidden rounded-full"
+                                    animate={{
+                                        width: `${((personaInnerStep ?? 0) / PERSONA_INNER_STEPS) * 100}%`,
+                                    }}
+                                    transition={{
+                                        type: "spring",
+                                        stiffness: 300,
+                                        damping: 40,
+                                    }}
+                                >
+                                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_100%_50%,rgba(251,146,60,0.75)_5%,rgba(255,115,1,0.45)_20%,transparent_55%)]" />
+                                </motion.div>
                             )}
                         </motion.div>
                     );
