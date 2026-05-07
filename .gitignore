@@ -47,6 +47,7 @@ CLAUDE_USAGE.md
 claude-backup.md
 
 /prompts/sandbox
+/docs/_local-future/
 # Sentry Config File
 .env.sentry-build-plugin
 
@@ -57,3 +58,4 @@ claude-backup.md
 /screenshots
 # clerk configuration (can include secrets)
 /.clerk/
+.gitnexus
