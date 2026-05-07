@@ -25,6 +25,7 @@ interface GenerateProgressInsightParams {
     entryInsights?: EntryInsightContext[];
     weeklyPatterns?: WeeklyPatternContext[];
     userName?: string;
+    personaContext?: string;
 }
 
 /**
@@ -101,12 +102,17 @@ export const generateProgressInsight = async (
         entryInsights = [],
         weeklyPatterns = [],
         userName,
+        personaContext,
     } = params;
 
     const [systemPrompt, taskPrompt] = await Promise.all([
         loadSystemPrompt(),
         loadProgressTaskPrompt(),
     ]);
+
+    const personaBlock = personaContext
+        ? `\n\n---\n\n## User Context\n${personaContext}`
+        : "";
 
     const formattedRecent = formatRecentEntries(recentEntries, entryInsights);
     const formattedPast = formatRelatedPastEntries(relatedPastEntries);
@@ -129,7 +135,7 @@ ${formattedPast}${formattedPatterns}`;
         const { object } = await generateObject({
             model: anthropic("claude-sonnet-4-6"),
             schema: ProgressInsightAIOutputSchema,
-            system: systemPrompt,
+            system: `${systemPrompt}${personaBlock}`,
             messages: [{ role: "user", content: userPrompt }],
         });
 

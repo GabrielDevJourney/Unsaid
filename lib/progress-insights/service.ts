@@ -202,6 +202,7 @@ const buildProgressInsightContext = async (
 export const createProgressInsight = async (
     userId: string,
     payload?: CreateProgressInsightPayload,
+    personaContext?: string,
 ): Promise<ServiceResult<ProgressInsight>> => {
     const supabase = createSupabaseAdmin();
 
@@ -232,6 +233,7 @@ export const createProgressInsight = async (
         })),
         entryInsights,
         weeklyPatterns,
+        personaContext,
     });
 
     if (!aiOutput) {

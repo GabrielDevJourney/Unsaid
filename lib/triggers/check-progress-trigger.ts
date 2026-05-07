@@ -1,5 +1,9 @@
+import { generateUpdatedPersonaSummary } from "@/lib/ai/generate-persona-summary";
+import { buildPersonaContext } from "@/lib/ai/persona-context";
 import { PROGRESS_TRIGGER_INTERVAL } from "@/lib/constants";
 import { sendProgressCheckEmail } from "@/lib/email/service";
+import { findPersona } from "@/lib/persona/repo";
+import { savePersonaSummary } from "@/lib/persona/service";
 import {
     createProgressInsight,
     shouldTriggerProgressInsight,
@@ -54,14 +58,11 @@ export const checkAndTriggerProgress = async (
     userId: string,
 ): Promise<ServiceResult<ProgressTriggerResult>> => {
     try {
-        // Check if we should trigger
         const { data: triggerCheck, error: checkError } =
             await shouldTriggerProgressInsight(userId);
 
         if (checkError) {
-            return {
-                error: checkError,
-            };
+            return { error: checkError };
         }
 
         if (!triggerCheck?.shouldTrigger) {
@@ -73,9 +74,13 @@ export const checkAndTriggerProgress = async (
             };
         }
 
-        // Generate the progress insight
+        const supabase = createSupabaseAdmin();
+        const { data: persona } = await findPersona(supabase, userId);
+        const personaContext =
+            buildPersonaContext(persona ?? null) || undefined;
+
         const { data: insight, error: generateError } =
-            await createProgressInsight(userId);
+            await createProgressInsight(userId, undefined, personaContext);
 
         if (generateError) {
             return {
@@ -88,7 +93,6 @@ export const checkAndTriggerProgress = async (
 
         if (insight?.content) {
             try {
-                const supabase = createSupabaseAdmin();
                 const { data: user } = await supabase
                     .from("users")
                     .select("email, username")
@@ -154,6 +158,17 @@ export const checkAndTriggerProgress = async (
             } catch (emailError) {
                 console.error("Progress email error:", emailError);
             }
+
+            // Fire-and-forget: update persona summary with progress evidence
+            if (persona?.summary) {
+                void updatePersonaSummaryFromProgress(
+                    supabase,
+                    userId,
+                    persona.displayName,
+                    persona.summary,
+                    insight.content,
+                );
+            }
         }
 
         return {
@@ -164,7 +179,6 @@ export const checkAndTriggerProgress = async (
             },
         };
     } catch (error) {
-        // Log but don't throw - progress insights shouldn't block entry creation
         console.error("Progress trigger check failed:", error);
         return {
             data: {
@@ -172,6 +186,29 @@ export const checkAndTriggerProgress = async (
                 reason: "Internal error during progress check",
             },
         };
+    }
+};
+
+const updatePersonaSummaryFromProgress = async (
+    supabase: ReturnType<typeof createSupabaseAdmin>,
+    userId: string,
+    displayName: string,
+    currentSummary: string,
+    progressInsight: string,
+): Promise<void> => {
+    const newSummary = await generateUpdatedPersonaSummary({
+        currentSummary,
+        displayName,
+        recentEntries: [],
+        progressInsight,
+    });
+    if (!newSummary) return;
+    const { error } = await savePersonaSummary(supabase, userId, newSummary);
+    if (error) {
+        console.error(
+            "Failed to update persona summary after progress:",
+            error,
+        );
     }
 };
 
