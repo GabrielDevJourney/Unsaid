@@ -32,6 +32,7 @@ export const generateEntryInsight = async (
     userId: string,
     entryId: string,
     reflectionContext?: string,
+    personaContext?: string,
 ) => {
     // Verify ownership and fetch encrypted content via repo (RLS-scoped).
     const serverSupabase = await createSupabaseServer();
@@ -73,6 +74,7 @@ export const generateEntryInsight = async (
         previousInsight,
         previousTags,
         reflectionContext,
+        personaContext,
         onFinish: async ({ text }) => {
             let parsed: { insight: string; tags: string[] } | undefined;
 

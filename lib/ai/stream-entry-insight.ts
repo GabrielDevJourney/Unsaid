@@ -9,6 +9,7 @@ interface StreamEntryInsightOptions {
     previousInsight?: string;
     previousTags?: string[];
     reflectionContext?: string;
+    personaContext?: string;
     onFinish?: (event: { text: string }) => Promise<void> | void;
 }
 
@@ -36,6 +37,10 @@ export const streamEntryInsight = async (
         loadEntryTaskPrompt(),
     ]);
 
+    const personaBlock = options?.personaContext
+        ? `\n\n---\n\n## User Context\n${options.personaContext}`
+        : "";
+
     const previousContext =
         options?.previousInsight && options?.previousTags
             ? `\n\n---\n\n**Previous insight (refine this):** ${options.previousInsight}\n**Previous tags:** ${options.previousTags.join(", ")}`
@@ -56,7 +61,7 @@ export const streamEntryInsight = async (
             chunking: "word",
             delayInMs: 20,
         }),
-        system: systemPrompt,
+        system: `${systemPrompt}${personaBlock}`,
         messages: [
             {
                 role: "user",

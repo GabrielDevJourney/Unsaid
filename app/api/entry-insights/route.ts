@@ -1,7 +1,9 @@
 import { auth } from "@clerk/nextjs/server";
 import { type NextRequest, NextResponse } from "next/server";
+import { buildPersonaContext } from "@/lib/ai/persona-context";
 import { MAX_INSIGHT_COUNT } from "@/lib/constants";
 import { generateEntryInsight } from "@/lib/entry-insights/service";
+import { getPersona } from "@/lib/persona/service";
 import {
     consumeRateLimit,
     RATE_LIMIT_ERROR,
@@ -9,6 +11,7 @@ import {
 } from "@/lib/rate-limits/service";
 import { EntryInsightGenerateSchema } from "@/lib/schemas/entry-insight";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
+import { createSupabaseServer } from "@/lib/supabase/server";
 
 export const POST = async (req: NextRequest) => {
     try {
@@ -55,10 +58,16 @@ export const POST = async (req: NextRequest) => {
             );
         }
 
+        const supabase = await createSupabaseServer();
+        const { data: persona } = await getPersona(supabase, userId);
+        const personaContext =
+            buildPersonaContext(persona ?? null) || undefined;
+
         const result = await generateEntryInsight(
             userId,
             validated.data.entry_id,
             validated.data.reflection_context,
+            personaContext,
         );
 
         if (!result) {
