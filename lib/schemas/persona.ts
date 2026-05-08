@@ -66,7 +66,7 @@ export const Q4_OPTIONS = [
     { key: "identity_direction", label: "Who I am and where I'm headed" },
     {
         key: "everything",
-        label: "Everything at once — it's hard to separate",
+        label: "Everything at once, it's hard to separate",
     },
 ] as const;
 
@@ -87,7 +87,7 @@ export const Q4_LABEL_MAP: Record<string, string> = Object.fromEntries(
 export const Q1_QUESTION = "How would you describe your journaling history?";
 export const Q2_QUESTION =
     "How are you feeling right now, in this season of your life?";
-export const Q3_QUESTION = "What are you hoping to find here?";
+export const Q3_QUESTION = "What are you hoping to find with Unsaid?";
 export const Q4_QUESTION =
     "When things get hard, what takes up most of your headspace?";
 
