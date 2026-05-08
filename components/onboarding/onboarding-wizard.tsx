@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import {
     completeOnboardingAction,
     skipOnboardingAction,
@@ -104,9 +104,9 @@ const OnboardingWizard = ({
         goToStep(3);
     };
 
-    const handlePersonaInnerStepChange = (innerStep: number) => {
+    const handlePersonaInnerStepChange = useCallback((innerStep: number) => {
         setState((prev) => ({ ...prev, personaInnerStep: innerStep }));
-    };
+    }, []);
 
     const handleEntryReady = (data: {
         entryId: string;

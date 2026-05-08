@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 interface PersonaQuestionStepProps {
-    question: string;
     options: readonly { key: string; label: string }[];
     onConfirm: (key: string) => void;
     isLastStep?: boolean;
@@ -13,7 +12,6 @@ interface PersonaQuestionStepProps {
 }
 
 const PersonaQuestionStep = ({
-    question,
     options,
     onConfirm,
     isLastStep = false,
@@ -25,9 +23,6 @@ const PersonaQuestionStep = ({
 
     return (
         <div className="flex flex-col gap-6">
-            <p className="font-serif italic text-4xl text-neutral-500 leading-snug">
-                {question}
-            </p>
             <div className="flex flex-col gap-2">
                 {options.map((option) => (
                     <button
@@ -47,11 +42,12 @@ const PersonaQuestionStep = ({
             </div>
             <Button
                 variant="sunrise"
+                size="cta"
                 disabled={!selected}
                 onClick={() => {
                     if (selected) onConfirm(selected);
                 }}
-                className="self-center"
+                className="self-center mt-10"
             >
                 {isLastStep ? "Let's Start" : "Continue"}
             </Button>
