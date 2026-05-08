@@ -23,7 +23,12 @@ export const findPersona = async (
         .eq("user_id", userId)
         .single();
 
-    if (error || !data) return { data: null, error: error as Error | null };
+    if (error) {
+        if ((error as { code?: string }).code === "PGRST116")
+            return { data: null, error: null };
+        return { data: null, error: error as Error };
+    }
+    if (!data) return { data: null, error: null };
 
     return {
         data: {

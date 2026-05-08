@@ -2,24 +2,15 @@ import { anthropic } from "@ai-sdk/anthropic";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { generateObject } from "ai";
 import { z } from "zod";
-import { generateInitialPersonaSummary } from "@/lib/ai/generate-persona-summary";
 import { loadPrompt, loadSystemPrompt } from "@/lib/ai/prompts";
 import type { InsightTagType } from "@/lib/constants/insight-tag-types";
 import { findEntryWithInsightById } from "@/lib/entries/repo";
-import { findPersona } from "@/lib/persona/repo";
-import { savePersonaSummary } from "@/lib/persona/service";
 import type {
     OnboardingPreview,
     OnboardingPreviewPattern,
     OnboardingPreviewProgress,
 } from "@/lib/schemas/onboarding-preview";
 import { onboardingPreviewSchema } from "@/lib/schemas/onboarding-preview";
-import {
-    Q1_LABEL_MAP,
-    Q2_LABEL_MAP,
-    Q3_LABEL_MAP,
-    Q4_LABEL_MAP,
-} from "@/lib/schemas/persona";
 import type { ServiceResult } from "@/types";
 import { createOnboardingPreview, findOnboardingPreview } from "./repo";
 
@@ -177,41 +168,5 @@ export const generateOnboardingPreview = async (
         console.warn("Failed to save onboarding preview");
     }
 
-    // Fire-and-forget: generate initial persona summary now that we have
-    // the first entry + insight. Only runs if persona exists and has no summary yet.
-    void generateAndSaveInitialPersonaSummary(
-        supabase,
-        userId,
-        payload.content,
-        payload.insight,
-    );
-
     return { data: object };
-};
-
-const generateAndSaveInitialPersonaSummary = async (
-    supabase: SupabaseClient,
-    userId: string,
-    entryContent: string,
-    insight: string,
-): Promise<void> => {
-    const { data: persona } = await findPersona(supabase, userId);
-    if (!persona || persona.summary) return;
-
-    const summary = await generateInitialPersonaSummary({
-        displayName: persona.displayName,
-        q1Answer: Q1_LABEL_MAP[persona.q1Answer] ?? persona.q1Answer,
-        q2Answer: Q2_LABEL_MAP[persona.q2Answer] ?? persona.q2Answer,
-        q3Answer: Q3_LABEL_MAP[persona.q3Answer] ?? persona.q3Answer,
-        q4Answer: Q4_LABEL_MAP[persona.q4Answer] ?? persona.q4Answer,
-        firstEntryContent: entryContent,
-        firstInsight: insight,
-    });
-
-    if (!summary) return;
-
-    const { error } = await savePersonaSummary(supabase, userId, summary);
-    if (error) {
-        console.error("Failed to save initial persona summary:", error);
-    }
 };

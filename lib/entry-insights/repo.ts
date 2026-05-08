@@ -124,6 +124,24 @@ export const countEntryInsights = async (
 };
 
 /**
+ * Get the oldest insight for the authenticated user (RLS-scoped).
+ * Used to seed the initial persona summary on first /home visit.
+ */
+export const findFirstEntryInsight = async (
+    supabase: SupabaseClient,
+): Promise<{ data: EntryInsight | null; error: PostgrestError | null }> => {
+    const { data: insightRow, error } = await supabase
+        .from("entry_insights")
+        .select(SELECT_FIELDS)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+    if (error || !insightRow) return { data: null, error: error ?? null };
+    return { data: toEntryInsight(insightRow), error: null };
+};
+
+/**
  * Count entry insights for a specific user by userId.
  * Used with admin client (bypasses RLS) in cron and weekly-insights contexts.
  */
