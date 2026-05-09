@@ -46,7 +46,10 @@ ${params.firstInsight}`;
         });
         return text.trim() || null;
     } catch (error) {
-        console.error("Failed to generate initial persona summary:", error);
+        console.error(
+            "Failed to generate initial persona summary:",
+            error instanceof Error ? error.message : String(error),
+        );
         return null;
     }
 };
@@ -103,7 +106,10 @@ ${entriesSection}${patternsSection}${progressSection}`;
         });
         return text.trim() || null;
     } catch (error) {
-        console.error("Failed to update persona summary:", error);
+        console.error(
+            "Failed to update persona summary:",
+            error instanceof Error ? error.message : String(error),
+        );
         return null;
     }
 };

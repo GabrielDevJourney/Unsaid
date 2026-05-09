@@ -1,7 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { generateInitialPersonaSummary } from "@/lib/ai/generate-persona-summary";
-import { findEntryEncryptedFields } from "@/lib/entries/repo";
-import { decryptEntryContent } from "@/lib/entries/transformers";
+import { findEntryWithInsightById } from "@/lib/entries/repo";
 import { findFirstEntryInsight } from "@/lib/entry-insights/repo";
 import type { PersonaInput } from "@/lib/schemas/persona";
 import {
@@ -26,7 +25,10 @@ export const getPersona = async (
 ): Promise<ServiceResult<PersonaRow | null>> => {
     const { data, error } = await findPersona(supabase, userId);
     if (error) {
-        console.error("Failed to fetch persona:", error);
+        console.error(
+            "Failed to fetch persona:",
+            error instanceof Error ? error.message : String(error),
+        );
         return { error: "Failed to fetch persona" };
     }
     return { data };
@@ -39,7 +41,10 @@ export const savePersona = async (
 ): Promise<ServiceResult<null>> => {
     const { error } = await upsertPersona(supabase, userId, input);
     if (error) {
-        console.error("Failed to save persona:", error);
+        console.error(
+            "Failed to save persona:",
+            error instanceof Error ? error.message : String(error),
+        );
         return { error: "Failed to save persona" };
     }
     return { data: null };
@@ -52,35 +57,40 @@ export const savePersonaSummary = async (
 ): Promise<ServiceResult<null>> => {
     const { error } = await updatePersonaSummary(supabase, userId, summary);
     if (error) {
-        console.error("Failed to update persona summary:", error);
+        console.error(
+            "Failed to update persona summary:",
+            error instanceof Error ? error.message : String(error),
+        );
         return { error: "Failed to update persona summary" };
     }
     return { data: null };
 };
 
+export const claimPersonaSummary = async (
+    supabase: SupabaseClient,
+    userId: string,
+): Promise<ServiceResult<null>> => {
+    return savePersonaSummary(supabase, userId, "pending");
+};
+
 /**
- * Generates and saves the initial persona summary on first /home visit.
- * Idempotent: returns immediately if summary already exists or no insight found.
- * Uses the user-scoped Supabase client (RLS enforced, no admin bypass).
+ * Generates and saves the initial persona summary after onboarding.
+ * Caller must pass the already-fetched PersonaRow to avoid a redundant DB round-trip.
+ * Idempotent: returns immediately if summary already exists or no insight is found.
  */
 export const ensureInitialPersonaSummary = async (
     supabase: SupabaseClient,
-    userId: string,
+    persona: PersonaRow,
 ): Promise<void> => {
-    const { data: persona } = await findPersona(supabase, userId);
-    if (!persona || persona.summary) return;
+    const { data: firstInsight, error: insightError } =
+        await findFirstEntryInsight(supabase);
+    if (insightError || !firstInsight) return;
 
-    const { data: firstInsight } = await findFirstEntryInsight(supabase);
-    if (!firstInsight) return;
-
-    const { data: encryptedRow } = await findEntryEncryptedFields(
+    const { data: entry, error: entryError } = await findEntryWithInsightById(
         supabase,
         firstInsight.entryId,
     );
-    if (!encryptedRow) return;
-
-    const entryContent = decryptEntryContent(encryptedRow);
-    if (!entryContent) return;
+    if (entryError || !entry || !entry.content) return;
 
     const summary = await generateInitialPersonaSummary({
         displayName: persona.displayName,
@@ -88,14 +98,18 @@ export const ensureInitialPersonaSummary = async (
         q2Answer: Q2_LABEL_MAP[persona.q2Answer] ?? persona.q2Answer,
         q3Answer: Q3_LABEL_MAP[persona.q3Answer] ?? persona.q3Answer,
         q4Answer: Q4_LABEL_MAP[persona.q4Answer] ?? persona.q4Answer,
-        firstEntryContent: entryContent,
+        firstEntryContent: entry.content,
         firstInsight: firstInsight.content,
     });
 
     if (!summary) return;
 
-    const { error } = await savePersonaSummary(supabase, userId, summary);
+    const { error } = await savePersonaSummary(
+        supabase,
+        persona.userId,
+        summary,
+    );
     if (error) {
-        console.error("Failed to save initial persona summary:", error);
+        console.error("ensureInitialPersonaSummary: failed to save:", error);
     }
 };
