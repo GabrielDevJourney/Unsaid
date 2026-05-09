@@ -1,66 +1,98 @@
 Log this dev session to the Notion Log page.
 
-Use the `mcp__notion__API-post-page` tool to create a new page in the Notion database.
-
-**Database ID**: `2c80a2ef-a791-801a-b7cb-c3e86ed03580`
-**Parent**: `{"database_id": "2c80a2ef-a791-801a-b7cb-c3e86ed03580"}`
-
-Based on everything we worked on in this session, compose a log entry using the following structure. Infer the content from the session — do not ask me to fill it in.
-
-**Page title (Name property)**: `YYYY-MM-DD — short description of what was built or solved`
-
-Use the actual date of the session (today if logging live, or the commit date if backfilling). Example: `2026-04-10 — 1:N insights: segment reconstruction and null guard fixes`
+Based on everything we worked on in this session, compose a log entry. Infer all content from the session — do not ask me to fill it in.
 
 ---
 
-## Block structure
+## Step 1 — Create the page
 
-Each section uses two blocks:
-1. A `heading_3` block for the section title
-2. One or more content blocks beneath it (see per-section rules below)
+Call `mcp__notion__API-post-page` with:
 
-Add a `divider` block between each section for visual separation.
-
----
-
-## Formatting rules
-
-### Inline code — MANDATORY
-
-This is not optional. Every technical token in every section must be a separate `rich_text` span with `"annotations":{"code":true}`.
-
-**Always code-format:**
-- File paths: `lib/feedback/repo.ts`, `entry-editor.tsx`, `app/actions/feedback.ts`
-- Function and method names: `submitFeedback()`, `toggleUpvote()`, `loadExistingEntry`
-- Component names: `InsightBlockquote`, `LockedPreviewCard`, `UpgradeFeatureGrid`
-- Constants and enum values: `ITEM_COLS`, `MAX_INSIGHT_COUNT`, `UPGRADE_CONSTANTS`
-- SQL identifiers and keywords: `feedback_items`, `upvote_count`, `SECURITY DEFINER`, `submitted_by`
-- DB column/table names: `generation_order`, `content_before_length`, `source_type`
-- Route paths: `/feedback`, `/backstage/feedback`, `/entries/new`
-- Prop names and types: `isPreview`, `onInsightComplete`, `source_id`
-- Env vars and flags: `NODE_ENV`, `is_approved = false`
-
-**Rich text span format:**
-- Plain text: `{"type":"text","text":{"content":"..."}}`
-- Inline code: `{"type":"text","text":{"content":"..."},"annotations":{"code":true}}`
-- Bold label: `{"type":"text","text":{"content":"Label"},"annotations":{"bold":true}}`
-
-**Pre-submission self-check (required):** Before calling `API-patch-block-children`, scan every sentence in your planned blocks. If a sentence mentions a file, function, component, constant, route, or identifier and it is inside a plain text span — split it out and give it `"annotations":{"code":true}`. Do not proceed until every technical token is in its own code span.
-
-### Sub-labels within paragraphs
-When a paragraph has a named sub-concept (e.g. "Page loads:", "DB trigger:", "The fix:"), render the label as bold using `"annotations":{"bold":true}`, followed by plain text, with code spans for any identifiers inline.
-
-Example rich_text array for "DB trigger for upvote count: a SECURITY DEFINER trigger on feedback_upvotes recounts upvote_count atomically":
+```json
+{
+  "parent": { "database_id": "2c80a2ef-a791-801a-b7cb-c3e86ed03580" },
+  "properties": {
+    "Name": {
+      "title": [{ "type": "text", "text": { "content": "YYYY-MM-DD — short description" } }]
+    },
+    "Tags": {
+      "multi_select": [{ "name": "Feature" }]
+    }
+  }
+}
 ```
+
+**Title format:** `YYYY-MM-DD — short description of what was built or solved`
+Use the actual date (today if logging live, commit date if backfilling).
+
+**Tags — always required, never omit:**
+
+| Tag | When to use |
+|-----|-------------|
+| `Feature` | user-facing additions |
+| `Bug Fix` | fixes |
+| `Refactor` | internal restructuring |
+| `Security` | security changes |
+| `DB` | migrations, schema, RLS |
+| `AI` | AI pipeline / prompt changes |
+
+Pick every tag that applies. If the session touched DB migrations AND added a feature, use both.
+
+---
+
+## Step 2 — Add content blocks
+
+Call `mcp__notion__API-patch-block-children` on the page ID returned in Step 1.
+
+### Block structure (exact types — no substitutions)
+
+Each section = one `heading_3` block + content blocks. Add a `divider` between every section.
+
+```
+heading_3       ← section title (e.g. "What I built")
+paragraph       ← content (repeat as needed)
+divider         ← separator between sections
+heading_3       ← next section title
+...
+```
+
+**Section 5 (Gotchas) uses `numbered_list_item`, not `paragraph` or `bulleted_list_item`.**
+
+### Rich text span types
+
+```json
+{ "type": "text", "text": { "content": "plain text" } }
+{ "type": "text", "text": { "content": "file/function/route" }, "annotations": { "code": true } }
+{ "type": "text", "text": { "content": "Label: " }, "annotations": { "bold": true } }
+```
+
+**`annotations` is always a sibling of `text`, never nested inside it.**
+
+### Inline code — mandatory
+
+Every technical token must be a separate `rich_text` span with `"annotations":{"code":true}`:
+- File paths: `lib/persona/repo.ts`, `components/onboarding/wizard.tsx`
+- Function names: `savePersona()`, `buildPersonaContext()`
+- Component names: `OnboardingWizard`, `PersonaStep`
+- Route paths: `/api/persona`, `/backstage/emails`
+- DB identifiers: `user_persona`, `encrypted_summary`, `summary_iv`
+- Env vars, constants: `CRON_SECRET`, `MIN_ENTRIES_FOR_WEEKLY_INSIGHT`
+- Code keywords: `COUNT(*)`, `SECURITY DEFINER`, `render()`
+
+**Before calling `API-patch-block-children`:** scan every sentence. Any file, function, component, route, or identifier sitting in a plain text span — split it out and give it `"annotations":{"code":true}`.
+
+### Sub-labels in paragraphs
+
+When a paragraph has a named concept, bold the label, then continue inline:
+
+```json
 [
-  {"type":"text","text":{"content":"DB trigger for upvote count"},"annotations":{"bold":true}},
-  {"type":"text","text":{"content":": a "}},
-  {"type":"text","text":{"content":"SECURITY DEFINER"},"annotations":{"code":true}},
-  {"type":"text","text":{"content":" trigger on "}},
-  {"type":"text","text":{"content":"feedback_upvotes"},"annotations":{"code":true}},
-  {"type":"text","text":{"content":" recounts "}},
-  {"type":"text","text":{"content":"upvote_count"},"annotations":{"code":true}},
-  {"type":"text","text":{"content":" atomically."}}
+  { "type": "text", "text": { "content": "DB trigger: " }, "annotations": { "bold": true } },
+  { "type": "text", "text": { "content": "a " } },
+  { "type": "text", "text": { "content": "SECURITY DEFINER" }, "annotations": { "code": true } },
+  { "type": "text", "text": { "content": " trigger on " } },
+  { "type": "text", "text": { "content": "feedback_upvotes" }, "annotations": { "code": true } },
+  { "type": "text", "text": { "content": " recounts atomically." } }
 ]
 ```
 
@@ -68,20 +100,52 @@ Example rich_text array for "DB trigger for upvote count: a SECURITY DEFINER tri
 
 ## Sections
 
-1. **What I built / set up** — `paragraph` block. What files, features, or changes were made. Use inline code for all file/function references.
+1. **What I built / set up** — one `paragraph` per distinct thing built. Use bold sub-labels (`lib/persona/repo.ts: `) and inline code for all file/function references.
 
-2. **Why I chose this approach** — `paragraph` block. The decision and reasoning, why this over alternatives. Use bold sub-labels for distinct decisions (e.g. **Optimistic state**: ...).
+2. **Why I chose this approach** — one `paragraph` per distinct decision. Bold the decision name, then explain reasoning and tradeoffs.
 
-3. **How it works** — one `paragraph` per distinct concern (page load, user interaction, persistence, etc.). Use bold sub-labels to separate each concern clearly. Do not write one wall of text.
+3. **How it works** — one `paragraph` per distinct concern (page load, data flow, persistence, etc.). Do not write one wall of text.
 
-4. **The moment it clicked** — `paragraph` block. The key insight or analogy that broke confusion open. Write it like a story — not documentation.
+4. **The moment it clicked** — one `paragraph`. The key insight that broke confusion open. Write it like a story, not documentation.
 
-5. **Gotchas / issues** — `numbered_list_item` blocks, one per gotcha. Each item: bold the root cause or symptom, then explain the fix with inline code where relevant.
+5. **Gotchas / issues** — `numbered_list_item` blocks, one per gotcha. Bold the symptom/root cause, then explain the fix with inline code.
 
-6. **Open question** — `paragraph` block. One thing still unclear going into the next session. Omit the section entirely if there is none.
+6. **Open question** — one `paragraph`. One thing still unclear. Omit the section entirely (including its `heading_3` and `divider`) if there is none.
 
-7. **Resources** — `paragraph` block with links. Optional — omit if none.
+7. **Resources** — `paragraph` with links. Optional — omit entirely if none.
 
 ---
 
-Once created, confirm with the Notion page URL.
+## Complete block skeleton
+
+```json
+[
+  { "type": "heading_3", "heading_3": { "rich_text": [{ "type": "text", "text": { "content": "What I built" } }] } },
+  { "type": "paragraph", "paragraph": { "rich_text": [ ... ] } },
+  { "type": "divider", "divider": {} },
+
+  { "type": "heading_3", "heading_3": { "rich_text": [{ "type": "text", "text": { "content": "Why I chose this approach" } }] } },
+  { "type": "paragraph", "paragraph": { "rich_text": [ ... ] } },
+  { "type": "divider", "divider": {} },
+
+  { "type": "heading_3", "heading_3": { "rich_text": [{ "type": "text", "text": { "content": "How it works" } }] } },
+  { "type": "paragraph", "paragraph": { "rich_text": [ ... ] } },
+  { "type": "divider", "divider": {} },
+
+  { "type": "heading_3", "heading_3": { "rich_text": [{ "type": "text", "text": { "content": "The moment it clicked" } }] } },
+  { "type": "paragraph", "paragraph": { "rich_text": [ ... ] } },
+  { "type": "divider", "divider": {} },
+
+  { "type": "heading_3", "heading_3": { "rich_text": [{ "type": "text", "text": { "content": "Gotchas / issues" } }] } },
+  { "type": "numbered_list_item", "numbered_list_item": { "rich_text": [ ... ] } },
+  { "type": "numbered_list_item", "numbered_list_item": { "rich_text": [ ... ] } },
+  { "type": "divider", "divider": {} },
+
+  { "type": "heading_3", "heading_3": { "rich_text": [{ "type": "text", "text": { "content": "Open question" } }] } },
+  { "type": "paragraph", "paragraph": { "rich_text": [ ... ] } }
+]
+```
+
+---
+
+Once done, confirm with the Notion page URL.
