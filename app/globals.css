@@ -127,6 +127,11 @@
     }
 }
 
+::selection {
+    background-color: oklch(0.88 0 0);
+    color: oklch(0.145 0 0);
+}
+
 /* Clerk auth overrides — unlayered so they beat @layer clerk */
 .cl-cardBox {
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0);
