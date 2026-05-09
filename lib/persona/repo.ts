@@ -1,47 +1,23 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { encrypt } from "@/lib/crypto";
 import type { PersonaInput } from "@/lib/schemas/persona";
+import { toPersonaRow } from "./transformers";
 
-export interface PersonaRow {
-    userId: string;
-    displayName: string;
-    q1Answer: string;
-    q2Answer: string;
-    q3Answer: string;
-    q4Answer: string;
-    summary: string | null;
-}
+export type { PersonaRow } from "./transformers";
 
-export const findPersona = async (
-    supabase: SupabaseClient,
-    userId: string,
-): Promise<{ data: PersonaRow | null; error: Error | null }> => {
+const SELECT_FIELDS =
+    "user_id, display_name, q1_answer, q2_answer, q3_answer, q4_answer, encrypted_summary, summary_iv, summary_tag";
+
+export const findPersona = async (supabase: SupabaseClient, userId: string) => {
     const { data, error } = await supabase
         .from("user_persona")
-        .select(
-            "user_id, display_name, q1_answer, q2_answer, q3_answer, q4_answer, summary",
-        )
+        .select(SELECT_FIELDS)
         .eq("user_id", userId)
-        .single();
+        .maybeSingle();
 
-    if (error) {
-        if ((error as { code?: string }).code === "PGRST116")
-            return { data: null, error: null };
-        return { data: null, error: error as Error };
-    }
+    if (error) return { data: null, error: error as Error };
     if (!data) return { data: null, error: null };
-
-    return {
-        data: {
-            userId: data.user_id,
-            displayName: data.display_name,
-            q1Answer: data.q1_answer,
-            q2Answer: data.q2_answer,
-            q3Answer: data.q3_answer,
-            q4Answer: data.q4_answer,
-            summary: data.summary,
-        },
-        error: null,
-    };
+    return { data: toPersonaRow(data), error: null };
 };
 
 export const upsertPersona = async (
@@ -67,9 +43,15 @@ export const updatePersonaSummary = async (
     userId: string,
     summary: string,
 ): Promise<{ error: Error | null }> => {
+    const { encryptedContent, iv, tag } = encrypt(summary);
     const { error } = await supabase
         .from("user_persona")
-        .update({ summary, updated_at: new Date().toISOString() })
+        .update({
+            encrypted_summary: encryptedContent,
+            summary_iv: iv,
+            summary_tag: tag,
+            updated_at: new Date().toISOString(),
+        })
         .eq("user_id", userId);
 
     return { error: error as Error | null };
