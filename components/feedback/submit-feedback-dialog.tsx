@@ -13,6 +13,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 
 const TITLE_MAX = 200;
 
@@ -161,7 +162,7 @@ const SubmitFeedbackDialog = ({
                         </div>
 
                         {/* Description */}
-                        <textarea
+                        <Textarea
                             required
                             minLength={10}
                             maxLength={2000}
@@ -169,7 +170,6 @@ const SubmitFeedbackDialog = ({
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             placeholder="Tell us more. What would you say if you knew we were listening?"
-                            className="resize-none rounded-md border border-input bg-background px-3 py-2 text-sm outline-none placeholder:text-muted-foreground focus:ring-1 focus:ring-ring"
                         />
 
                         {/* Media upload */}
