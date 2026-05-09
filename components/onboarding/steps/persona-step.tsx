@@ -26,6 +26,7 @@ interface PersonaStepProps {
     onComplete: (data: PersonaInput) => void;
     onInnerStepChange: (step: number) => void;
     initialData?: PersonaInput;
+    suggestedDisplayName?: string;
 }
 
 type InnerStep = 1 | 2 | 3 | 4 | 5;
@@ -49,12 +50,13 @@ const PersonaStep = ({
     onComplete,
     onInnerStepChange,
     initialData,
+    suggestedDisplayName,
 }: PersonaStepProps) => {
     const [innerStep, setInnerStep] = useState<InnerStep>(initialData ? 5 : 1);
     const [showOverview, setShowOverview] = useState(!!initialData);
     const [editMode, setEditMode] = useState(false);
     const [displayName, setDisplayName] = useState(
-        initialData?.displayName ?? "",
+        initialData?.displayName ?? suggestedDisplayName ?? "",
     );
     const [q1Answer, setQ1Answer] = useState(initialData?.q1Answer ?? "");
     const [q2Answer, setQ2Answer] = useState(initialData?.q2Answer ?? "");

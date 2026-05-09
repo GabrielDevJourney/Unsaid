@@ -37,6 +37,7 @@ interface WizardState {
 interface OnboardingWizardProps {
     initialPersona?: PersonaRow | null;
     initialEntry?: OnboardingEntrySnapshot;
+    suggestedDisplayName?: string;
 }
 
 const rowToPersonaInput = (row: PersonaRow): PersonaInput => ({
@@ -81,13 +82,20 @@ const getInitialState = (
 const OnboardingWizard = ({
     initialPersona,
     initialEntry,
+    suggestedDisplayName,
 }: OnboardingWizardProps) => {
     const [state, setState] = useState<WizardState>(() =>
         getInitialState(initialPersona, initialEntry),
     );
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSkip = async () => {
-        await skipOnboardingAction();
+        setIsSubmitting(true);
+        try {
+            await skipOnboardingAction();
+        } catch {
+            setIsSubmitting(false);
+        }
     };
 
     const goToStep = (step: Step) => {
@@ -99,7 +107,11 @@ const OnboardingWizard = ({
     };
 
     const handlePersonaComplete = async (data: PersonaInput) => {
-        void savePersonaAction(data);
+        try {
+            await savePersonaAction(data);
+        } catch {
+            // non-fatal — persona data lives in wizard state, user can continue
+        }
         setState((prev) => ({ ...prev, personaData: data }));
         goToStep(3);
     };
@@ -154,7 +166,12 @@ const OnboardingWizard = ({
     };
 
     const handleComplete = async () => {
-        await completeOnboardingAction();
+        setIsSubmitting(true);
+        try {
+            await completeOnboardingAction();
+        } catch {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -163,7 +180,8 @@ const OnboardingWizard = ({
                 <button
                     type="button"
                     onClick={handleSkip}
-                    className="absolute top-6 right-8 text-sm text-zinc-400 hover:text-zinc-600 transition-colors cursor-pointer"
+                    disabled={isSubmitting}
+                    className="absolute top-6 right-8 text-sm text-zinc-400 hover:text-zinc-600 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                     Skip
                 </button>
@@ -204,6 +222,7 @@ const OnboardingWizard = ({
                             onComplete={handlePersonaComplete}
                             onInnerStepChange={handlePersonaInnerStepChange}
                             initialData={state.personaData}
+                            suggestedDisplayName={suggestedDisplayName}
                         />
                     )}
 

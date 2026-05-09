@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { OnboardingWizard } from "@/components/onboarding/onboarding-wizard";
 import { getOnboardingEntrySnapshot } from "@/lib/onboarding/service";
@@ -20,15 +20,21 @@ const OnboardingPage = async () => {
         redirect("/home");
     }
 
-    const [{ data: entrySnapshot }, { data: persona }] = await Promise.all([
-        getOnboardingEntrySnapshot(supabase),
-        getPersona(supabase, userId),
-    ]);
+    const [{ data: entrySnapshot }, { data: persona }, clerkUser] =
+        await Promise.all([
+            getOnboardingEntrySnapshot(supabase),
+            getPersona(supabase, userId),
+            currentUser(),
+        ]);
+
+    const suggestedName =
+        clerkUser?.firstName ?? clerkUser?.username ?? undefined;
 
     return (
         <OnboardingWizard
             initialPersona={persona}
             initialEntry={entrySnapshot ?? undefined}
+            suggestedDisplayName={suggestedName}
         />
     );
 };
