@@ -559,6 +559,48 @@ export type Database = {
                     },
                 ];
             };
+            user_persona: {
+                Row: {
+                    created_at: string;
+                    display_name: string;
+                    encrypted_summary: string | null;
+                    q1_answer: Database["public"]["Enums"]["persona_q1_answer"];
+                    q2_answer: Database["public"]["Enums"]["persona_q2_answer"];
+                    q3_answer: Database["public"]["Enums"]["persona_q3_answer"];
+                    q4_answer: Database["public"]["Enums"]["persona_q4_answer"];
+                    summary_iv: string | null;
+                    summary_tag: string | null;
+                    updated_at: string;
+                    user_id: string;
+                };
+                Insert: {
+                    created_at?: string;
+                    display_name: string;
+                    encrypted_summary?: string | null;
+                    q1_answer: Database["public"]["Enums"]["persona_q1_answer"];
+                    q2_answer: Database["public"]["Enums"]["persona_q2_answer"];
+                    q3_answer: Database["public"]["Enums"]["persona_q3_answer"];
+                    q4_answer: Database["public"]["Enums"]["persona_q4_answer"];
+                    summary_iv?: string | null;
+                    summary_tag?: string | null;
+                    updated_at?: string;
+                    user_id: string;
+                };
+                Update: {
+                    created_at?: string;
+                    display_name?: string;
+                    encrypted_summary?: string | null;
+                    q1_answer?: Database["public"]["Enums"]["persona_q1_answer"];
+                    q2_answer?: Database["public"]["Enums"]["persona_q2_answer"];
+                    q3_answer?: Database["public"]["Enums"]["persona_q3_answer"];
+                    q4_answer?: Database["public"]["Enums"]["persona_q4_answer"];
+                    summary_iv?: string | null;
+                    summary_tag?: string | null;
+                    updated_at?: string;
+                    user_id?: string;
+                };
+                Relationships: [];
+            };
             user_progress: {
                 Row: {
                     entry_count_at_last_progress: number;
@@ -878,6 +920,26 @@ export type Database = {
                 | "completed"
                 | "wont_do"
                 | "rejected";
+            persona_q1_answer:
+                | "never_tried"
+                | "drifted_away"
+                | "sometimes"
+                | "regular_habit";
+            persona_q2_answer:
+                | "steady"
+                | "bit_lost"
+                | "overwhelmed"
+                | "quietly_okay";
+            persona_q3_answer:
+                | "self_understanding"
+                | "processing"
+                | "pattern_awareness"
+                | "safe_space";
+            persona_q4_answer:
+                | "relationships"
+                | "work_projects"
+                | "identity_direction"
+                | "everything";
         };
         CompositeTypes: {
             [_ in never]: never;
@@ -1017,6 +1079,30 @@ export const Constants = {
                 "completed",
                 "wont_do",
                 "rejected",
+            ],
+            persona_q1_answer: [
+                "never_tried",
+                "drifted_away",
+                "sometimes",
+                "regular_habit",
+            ],
+            persona_q2_answer: [
+                "steady",
+                "bit_lost",
+                "overwhelmed",
+                "quietly_okay",
+            ],
+            persona_q3_answer: [
+                "self_understanding",
+                "processing",
+                "pattern_awareness",
+                "safe_space",
+            ],
+            persona_q4_answer: [
+                "relationships",
+                "work_projects",
+                "identity_direction",
+                "everything",
             ],
         },
     },

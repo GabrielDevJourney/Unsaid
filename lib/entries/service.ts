@@ -82,21 +82,25 @@ export const createEntry = async (
     }
 
     if (!canWrite) {
-        const { data: progress } = await findUserProgress(supabase);
-        // Fail closed: if progress is unavailable (DB error), deny rather than allow.
-        if (!progress || progress.totalEntries >= 15) {
-            return { error: "FREE_LIMIT_REACHED" };
+        const isOnboarding = payload.sourceType === "onboarding";
+        if (!isOnboarding) {
+            const { data: progress } = await findUserProgress(supabase);
+            // Fail closed: if progress is unavailable (DB error), deny rather than allow.
+            if (!progress || progress.totalEntries >= 15) {
+                return { error: "FREE_LIMIT_REACHED" };
+            }
         }
     }
 
     const wordCount = calculateWordCount(payload.content);
 
+    const isOnboardingSource = payload.sourceType === "onboarding";
     const { data: entry, error: insertError } = await insertEntry(supabase, {
         userId,
         content: payload.content,
         wordCount,
-        sourceType: payload.sourceType ?? null,
-        sourceId: payload.sourceId ?? null,
+        sourceType: isOnboardingSource ? null : (payload.sourceType ?? null),
+        sourceId: isOnboardingSource ? null : (payload.sourceId ?? null),
     });
 
     if (insertError || !entry) {

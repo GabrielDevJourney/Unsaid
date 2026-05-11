@@ -9,6 +9,7 @@ import {
     updateStatusAction,
 } from "@/app/actions/feedback";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import type { FeedbackStatusType } from "@/lib/schemas/feedback";
 import { cn } from "@/lib/utils";
 import type { FeedbackItem } from "@/types";
@@ -189,13 +190,12 @@ const FeedbackAdminCard = ({
                         >
                             Team reply
                         </label>
-                        <textarea
+                        <Textarea
                             id={`reply-${item.id}`}
                             rows={3}
                             value={reply}
                             onChange={(e) => setReply(e.target.value)}
                             placeholder="Leave a public response from The Unsaid Team..."
-                            className="resize-none rounded-md border border-input bg-background px-3 py-2 text-sm outline-none placeholder:text-muted-foreground focus:ring-1 focus:ring-ring"
                         />
                         <div className="flex justify-end">
                             <Button

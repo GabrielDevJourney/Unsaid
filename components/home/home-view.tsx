@@ -32,6 +32,7 @@ interface HomeViewProps {
     totalEntriesAllTime: number;
     totalPatternsCount: number;
     entryDates: string[];
+    needsSummary?: boolean;
 }
 
 const getGreeting = (): string => {
@@ -48,6 +49,7 @@ const HomeView = ({
     totalEntriesAllTime,
     totalPatternsCount,
     entryDates,
+    needsSummary,
 }: HomeViewProps) => {
     const router = useRouter();
     const [entries, setEntries] = useState<EntryItem[]>(initialEntries);
@@ -103,6 +105,11 @@ const HomeView = ({
             return next.size === prev.size ? prev : next;
         });
     }, [entries]);
+
+    useEffect(() => {
+        if (!needsSummary) return;
+        fetch("/api/persona/summary", { method: "POST" }).catch(() => {});
+    }, [needsSummary]);
 
     const handleEntryDeleted = useCallback(
         (entryId: string) => {

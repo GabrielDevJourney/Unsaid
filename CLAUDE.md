@@ -43,6 +43,7 @@ Import rules: `app/` may import from `lib/`. `lib/` never imports from `app/`. S
 - RLS enforces per-user access — never hardcode user IDs, never bypass with service role in user-facing flows
 - API and Server Action responses: `{ data }` or `{ error }` — never expose stack traces
 - Max ~50 lines per function
+- **NEVER run `supabase reset` or `supabase db reset`** — this destroys the entire local database and all data. To roll back a migration use `supabase migration down --last 1` instead.
 
 ---
 
