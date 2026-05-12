@@ -388,20 +388,6 @@ export const deleteEntry = async (
     return { error };
 };
 
-export const updateUserProgressDecrement = async (
-    supabase: SupabaseClient,
-): Promise<{ error: PostgrestError | null }> => {
-    const { error } = await supabase.rpc("decrement_entry_count");
-    return { error };
-};
-
-export const updateUserProgressIncrement = async (
-    supabase: SupabaseClient,
-): Promise<{ error: PostgrestError | null }> => {
-    const { error } = await supabase.rpc("increment_entry_count");
-    return { error };
-};
-
 /**
  * Search entries by embedding vector using semantic similarity.
  * Calls the search_entries_by_embedding RPC function.
