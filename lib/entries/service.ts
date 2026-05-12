@@ -24,8 +24,6 @@ import {
     insertEntry,
     updateEntryContent,
     updateEntryEmbedding,
-    updateUserProgressDecrement,
-    updateUserProgressIncrement,
 } from "./repo";
 import { toEntryReflectionPreview } from "./transformers";
 
@@ -49,22 +47,6 @@ const generateAndAttachEmbedding = async (
     } catch (err) {
         console.error("Failed to generate embedding:", err);
     }
-};
-
-const updateProgress = async (
-    supabase: SupabaseClient,
-    userId: string,
-): Promise<void> => {
-    const { error } = await updateUserProgressIncrement(supabase);
-    if (error) console.error("Failed to increment user progress:", error);
-
-    void checkAndTriggerProgress(userId).then((result) => {
-        if (result.data?.triggered) {
-            console.log(
-                `[Progress] Auto-triggered insight for user ${userId}: ${result.data.reason}`,
-            );
-        }
-    });
 };
 
 export const createEntry = async (
@@ -107,10 +89,15 @@ export const createEntry = async (
         return { error: "Failed to create entry" };
     }
 
-    await Promise.all([
-        generateAndAttachEmbedding(supabase, entry.id, payload.content),
-        updateProgress(supabase, userId),
-    ]);
+    await generateAndAttachEmbedding(supabase, entry.id, payload.content);
+
+    void checkAndTriggerProgress(userId).then((result) => {
+        if (result.data?.triggered) {
+            console.log(
+                `[Progress] Auto-triggered insight for user ${userId}: ${result.data.reason}`,
+            );
+        }
+    });
 
     return { data: entry };
 };
@@ -146,18 +133,9 @@ export const deleteEntryById = async (
     userId: string,
     entryId: string,
 ): Promise<ServiceResult<null>> => {
-    const [deleteResult, progressResult] = await Promise.all([
-        deleteEntry(supabase, entryId, userId),
-        updateUserProgressDecrement(supabase),
-    ]);
+    const { error } = await deleteEntry(supabase, entryId, userId);
 
-    if (deleteResult.error) return { error: "Failed to delete entry" };
-    if (progressResult.error) {
-        console.error(
-            "Failed to decrement user progress:",
-            progressResult.error,
-        );
-    }
+    if (error) return { error: "Failed to delete entry" };
 
     return { data: null };
 };

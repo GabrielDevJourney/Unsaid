@@ -176,7 +176,7 @@ const HomeView = ({
     };
 
     const activeEntries = entries.filter((e) => !deletedIds.has(e.entry.id));
-    const activeTotal = totalEntriesAllTime - deletedIds.size;
+    const activeTotal = totalEntriesAllTime;
 
     const filteredEntries = activeEntries.filter((item) => {
         if (selectedTags.size > 0) {
