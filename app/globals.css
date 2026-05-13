@@ -161,31 +161,6 @@
     letter-spacing: 0.05em;
 }
 
-@layer components {
-    .btn-add-entry-icon::before {
-        content: "";
-        position: absolute;
-        top: -5px;
-        left: -5px;
-        width: 120px;
-        height: 120px;
-        background: radial-gradient(
-            circle at 80% 85%,
-            rgba(251, 146, 60, 0.7) 0%,
-            rgba(255, 115, 1, 0.5) 60%,
-            transparent 80%
-        );
-        pointer-events: none;
-        z-index: 10;
-    }
-
-    /* keep content above the glow */
-    .btn-add-entry-icon > * {
-        position: relative;
-        z-index: 10;
-    }
-}
-
 @keyframes pulse-wave {
     0% {
         transform: scale(0.8);

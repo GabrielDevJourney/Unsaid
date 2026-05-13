@@ -84,10 +84,10 @@ export const AppSidebar = ({
                             href="/entries/new"
                             className="flex w-full items-center gap-2 rounded-sm p-2 text-zinc-600 hover:bg-sidebar-accent transition-[width,height,padding,gap] duration-400 ease-in-out group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:p-2! group-data-[collapsible=icon]:gap-0"
                         >
-                            <span className="btn-add-entry-icon bg-slate-400 relative flex items-center justify-center size-6 shrink-0 rounded-md overflow-hidden cursor-pointer duration-400 ease-in-out">
+                            <span className="relative flex items-center justify-center size-6 shrink-0 rounded-md overflow-hidden cursor-pointer duration-400 ease-in-out bg-slate-400 bg-[radial-gradient(circle_at_90%_150%,rgba(247,107,21,0.8)_0%,rgba(255,115,1,0.5)_30%,transparent_70%)]">
                                 <HugeiconsIcon
                                     icon={Add01Icon}
-                                    className="relative z-10 size-4 text-white"
+                                    className="size-4 text-white"
                                 />
                             </span>
                             <span className="font-medium overflow-hidden whitespace-nowrap max-w-40 transition-[max-width] duration-400 ease-in-out group-data-[collapsible=icon]:max-w-0">
