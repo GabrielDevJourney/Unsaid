@@ -21,16 +21,7 @@ const buttonVariants = cva(
                 link: "text-primary underline-offset-4 hover:underline",
                 sunrise: cn(
                     "bg-slate-400 text-white",
-                    "bg-[radial-gradient(circle_at_80%_200%,rgba(247,107,21,0.8)_0%,rgba(255,115,1,0.5)_30%,transparent_70%)]",
                     "hover:bg-slate-400 hover:text-white",
-                    "ring-4 ring-zinc-300",
-                    "cursor-pointer",
-                ),
-                "sunrise-sm": cn(
-                    "bg-slate-400 text-white",
-                    "bg-[radial-gradient(circle_at_80%_200%,rgba(247,107,21,0.8)_0%,rgba(255,115,1,0.5)_30%,transparent_70%)]",
-                    "hover:bg-slate-400 hover:text-white",
-                    "ring-2 ring-zinc-300",
                     "cursor-pointer",
                 ),
                 filter: "",
@@ -52,6 +43,36 @@ const buttonVariants = cva(
             variant: "default",
             size: "default",
         },
+        compoundVariants: [
+            {
+                variant: "sunrise",
+                size: ["lg", "cta"],
+                class: "bg-[radial-gradient(circle_at_75%_230%,rgba(247,107,21,0.8)_0%,rgba(255,115,1,0.5)_30%,transparent_60%)]",
+            },
+            {
+                variant: "sunrise",
+                size: [
+                    "default",
+                    "sm",
+                    "xs",
+                    "icon",
+                    "icon-sm",
+                    "icon-xs",
+                    "icon-lg",
+                ],
+                class: "bg-[radial-gradient(circle_at_80%_200%,rgba(247,107,21,0.8)_0%,rgba(255,115,1,0.5)_30%,transparent_70%)]",
+            },
+            {
+                variant: "sunrise",
+                size: ["default", "lg", "cta", "icon", "icon-lg"],
+                class: "ring-4 ring-zinc-300",
+            },
+            {
+                variant: "sunrise",
+                size: ["sm", "xs", "icon-sm", "icon-xs"],
+                class: "ring-2 ring-zinc-300",
+            },
+        ],
     },
 );
 
