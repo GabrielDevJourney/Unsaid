@@ -63,7 +63,7 @@ export const JournalingSuggestion = ({
             {showButtons && (
                 <div className="mt-3 flex gap-2">
                     <Button
-                        variant="sunrise-sm"
+                        variant="sunrise"
                         size="sm"
                         onClick={() => setIsUsed(true)}
                     >

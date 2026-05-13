@@ -99,8 +99,9 @@ const PatternDetailPage = ({
                                 <div className="flex justify-start pt-4">
                                     <Button
                                         asChild
-                                        variant="sunrise-sm"
+                                        variant="sunrise"
                                         size="sm"
+                                        className="bg-[radial-gradient(circle_at_75%_230%,rgba(247,107,21,0.8)_0%,rgba(255,115,1,0.5)_30%,transparent_60%)]"
                                     >
                                         <Link
                                             href={`/entries/new?suggestion=${encodeURIComponent(pattern.question)}&sourceType=pattern&sourceId=${pattern.id}&from=/patterns/${pattern.id}`}

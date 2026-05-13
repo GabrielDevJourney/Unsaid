@@ -290,7 +290,7 @@ export const EntryEditor = ({
                     {isBelowMinLength && <span>Keep writing to save...</span>}
                     {!isAtLimit && (
                         <Button
-                            variant="sunrise-sm"
+                            variant="sunrise"
                             size="sm"
                             disabled={!canGenerateInsight}
                             onClick={() => insightRef.current?.generate()}
