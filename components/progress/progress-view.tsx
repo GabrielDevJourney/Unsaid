@@ -99,10 +99,10 @@ const ProgressView = ({
         <div className="flex h-full flex-col overflow-hidden">
             <PageHeader backHref="/home">
                 <div className="flex flex-1 items-center justify-between">
-                    <h1 className="font-serif text-4xl italic text-zinc-600">
+                    <h1 className="font-serif text-2xl md:text-4xl italic text-zinc-600">
                         Progress
                     </h1>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="hidden lg:block text-sm text-muted-foreground">
                         Deep synthesis generated every{" "}
                         <strong className="font-medium text-zinc-600">
                             15 entries
@@ -140,7 +140,7 @@ const ProgressView = ({
                                 <p>No reflections match your date filter.</p>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {filtered.map((insight) => (
                                     <ProgressCard
                                         key={insight.id}

@@ -47,19 +47,19 @@ const ProgressDetail = ({
         <div className="flex h-full flex-col overflow-hidden">
             <PageHeader backHref="/progress">
                 <div className="flex flex-1 items-center justify-between">
-                    <h1 className="font-serif text-4xl italic text-zinc-800">
+                    <h1 className="font-serif text-2xl md:text-4xl italic text-zinc-800">
                         Reflection
                     </h1>
                     <p className="text-sm text-muted-foreground">{date}</p>
                 </div>
             </PageHeader>
 
-            <div className="flex-1 overflow-hidden">
-                <div className="flex h-full gap-12 pl-12 bg-[radial-gradient(circle,#dddcdc_1px,transparent_1px)] bg-size-[10px_10px]">
+            <div className="flex-1 overflow-y-auto lg:overflow-hidden">
+                <div className="flex flex-col gap-6 px-6 py-8 bg-[radial-gradient(circle,#dddcdc_1px,transparent_1px)] bg-size-[10px_10px] lg:flex-row lg:h-full lg:gap-12 lg:pl-12 lg:pr-0 lg:pt-0 lg:pb-0">
                     {/* Left: reference panel — stays in place while content scrolls */}
                     {referenceItems.length > 0 && (
-                        <div className="shrink-0 py-10">
-                            <div className="rounded-xl border border-border overflow-hidden shadow-md">
+                        <div className="shrink-0 lg:py-10">
+                            <div className="w-fit rounded-xl border border-border overflow-hidden shadow-md">
                                 <ReferenceTimeline
                                     items={referenceItems}
                                     from={`/progress/${insight.id}`}
@@ -70,12 +70,12 @@ const ProgressDetail = ({
                     )}
 
                     {/* Right: card itself scrolls */}
-                    <div className="flex-1 flex flex-col pt-10 pr-10 pb-10 min-w-0">
+                    <div className="flex flex-col min-w-0 lg:flex-1 lg:pt-10 lg:pr-10 lg:pb-10">
                         {parsedContent ? (
-                            <div className="w-full h-full rounded-2xl overflow-hidden shadow-sm border border-border">
-                                <div className="flex flex-col gap-10 h-full overflow-y-auto bg-zinc-50 p-8 [&::-webkit-scrollbar]:w-0">
+                            <div className="w-full rounded-2xl overflow-hidden shadow-sm border border-border lg:h-full">
+                                <div className="flex flex-col gap-10 overflow-y-auto bg-zinc-50 p-8 [&::-webkit-scrollbar]:w-0 lg:h-full">
                                     {/* Headline */}
-                                    <h2 className="font-serif text-4xl italic text-neutral-500 leading-relaxed">
+                                    <h2 className="font-serif text-3xl lg:text-4xl italic text-neutral-500 leading-relaxed">
                                         {parsedContent.headline}
                                     </h2>
 
