@@ -42,7 +42,7 @@ export const JournalingSuggestion = ({
 
     if (isLoading) {
         return (
-            <div className="space-y-2 px-12 pt-8 pb-4">
+            <div className="space-y-2 px-6 lg:px-12 pt-8 pb-4">
                 <Skeleton className="h-4 w-3/4" />
                 <Skeleton className="h-4 w-1/2" />
             </div>
@@ -54,7 +54,7 @@ export const JournalingSuggestion = ({
     const showButtons = isNewEntry && !hasContent && !isUsed;
 
     return (
-        <div className="px-12 pt-8 pb-4">
+        <div className="px-6 lg:px-12 pt-8 pb-4">
             <p
                 className={`font-serif italic text-lg leading-relaxed transition-colors ${isUsed ? "text-neutral-500" : "text-neutral-300"}`}
             >

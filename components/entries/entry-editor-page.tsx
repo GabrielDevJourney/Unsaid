@@ -175,7 +175,7 @@ export const EntryEditorPage = ({
         <div className="flex h-full flex-col overflow-hidden">
             <PageHeader backHref={backHref}>
                 <div className="flex flex-1 items-center justify-between">
-                    <h1 className="font-serif text-3xl italic text-zinc-600">
+                    <h1 className="font-serif text-2xl md:text-3xl italic text-zinc-600">
                         {formatEntryDate(date)}
                     </h1>
                     <div className="flex items-center gap-3 pr-4">
@@ -194,7 +194,7 @@ export const EntryEditorPage = ({
             </PageHeader>
 
             <div className="flex flex-1 items-start justify-center overflow-hidden p-6">
-                <div className="h-full w-[70%]">
+                <div className="h-full w-full md:w-[70%]">
                     <EntryEditor
                         entryId={resolvedEntryId}
                         suggestion={suggestion}
