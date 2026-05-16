@@ -204,17 +204,22 @@ const PatternsView = ({
             <PageHeader backHref="/home">
                 <div className="flex flex-1 items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <h1 className="font-serif text-4xl italic text-zinc-600">
+                        <h1 className="font-serif text-2xl md:text-4xl italic text-zinc-600">
                             Patterns
                         </h1>
                         {newCount > 0 && (
-                            <span className="inline-flex items-center rounded-full bg-neutral-500 px-3 py-1 text-xs font-medium text-white">
-                                {newCount} new{" "}
-                                {newCount === 1 ? "insight" : "insights"}
-                            </span>
+                            <>
+                                <span className="lg:hidden inline-flex h-5 min-w-7 items-center justify-center rounded-full bg-neutral-500 px-2 text-xs font-medium text-white">
+                                    {newCount}
+                                </span>
+                                <span className="hidden lg:inline-flex items-center rounded-full bg-neutral-500 px-3 py-1 text-xs font-medium text-white whitespace-nowrap">
+                                    {newCount} new{" "}
+                                    {newCount === 1 ? "insight" : "insights"}
+                                </span>
+                            </>
                         )}
                     </div>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="hidden lg:block text-sm text-muted-foreground">
                         Discover patterns from your journal entries, updated{" "}
                         <strong className="font-medium text-zinc-600">
                             weekly
@@ -228,7 +233,7 @@ const PatternsView = ({
                 {insightsWithPatterns.length === 0 ? (
                     <PatternsEmptyState />
                 ) : (
-                    <div className="flex flex-col gap-6 px-10 py-8">
+                    <div className="flex flex-col gap-6 px-6 py-8 lg:px-10">
                         <Toolbar
                             isScrolled={isScrolled}
                             searchQuery={searchQuery}
