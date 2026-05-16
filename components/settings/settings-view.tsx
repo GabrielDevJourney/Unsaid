@@ -27,7 +27,7 @@ const SettingsView = ({
     return (
         <div className="flex h-full flex-col overflow-hidden">
             <PageHeader>
-                <h1 className="font-serif text-4xl italic text-zinc-600">
+                <h1 className="font-serif text-2xl md:text-4xl italic text-zinc-600">
                     Settings
                 </h1>
             </PageHeader>
