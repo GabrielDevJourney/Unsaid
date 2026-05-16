@@ -27,7 +27,7 @@ export const SidebarNavGroup = ({
     children,
 }: SidebarNavGroupProps) => {
     const pathname = usePathname();
-    const { state } = useSidebar();
+    const { state, isMobile, setOpenMobile } = useSidebar();
 
     const badgeStyles = {
         slate: {
@@ -60,7 +60,12 @@ export const SidebarNavGroup = ({
                                 asChild
                                 isActive={pathname === item.url}
                             >
-                                <Link href={item.url}>
+                                <Link
+                                    href={item.url}
+                                    onClick={() => {
+                                        if (isMobile) setOpenMobile(false);
+                                    }}
+                                >
                                     <HugeiconsIcon
                                         strokeWidth={1}
                                         icon={item.icon}
