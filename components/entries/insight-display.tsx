@@ -12,6 +12,7 @@ import {
 import { MAX_INSIGHT_COUNT } from "@/lib/constants";
 import { useEntryEditorStore } from "@/lib/entry-editor/store";
 import { insightSchema } from "@/lib/schemas/entry-insight";
+import { cn } from "@/lib/utils";
 
 export interface InsightDisplayHandle {
     generate: () => void;
@@ -27,7 +28,13 @@ interface InsightDisplayProps {
 }
 
 // Pure presentational blockquote — used both for completed segments and streaming
-export const InsightBlockquote = ({ content }: { content: string }) => (
+export const InsightBlockquote = ({
+    content,
+    isStreaming,
+}: {
+    content: string;
+    isStreaming?: boolean;
+}) => (
     <div className="mx-12 mb-6">
         <Image
             src="/logo-entry-editor-pen.svg"
@@ -35,7 +42,7 @@ export const InsightBlockquote = ({ content }: { content: string }) => (
             aria-hidden="true"
             width={12}
             height={12}
-            className="mb-2"
+            className={cn("mb-2", isStreaming && "animate-pulse")}
         />
         <blockquote className="border-l-2 border-[#79A1B9] pl-4">
             <p className="font-serif text-base leading-relaxed text-[#79A1B9]">
@@ -107,7 +114,12 @@ const InsightDisplay = forwardRef<InsightDisplayHandle, InsightDisplayProps>(
             ? (object?.insight ?? "")
             : (insights.at(-1)?.content ?? "");
 
-        return <InsightBlockquote content={displayContent} />;
+        return (
+            <InsightBlockquote
+                content={displayContent}
+                isStreaming={isLoading}
+            />
+        );
     },
 );
 
