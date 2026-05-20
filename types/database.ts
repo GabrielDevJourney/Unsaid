@@ -7,31 +7,6 @@ export type Json =
     | Json[];
 
 export type Database = {
-    graphql_public: {
-        Tables: {
-            [_ in never]: never;
-        };
-        Views: {
-            [_ in never]: never;
-        };
-        Functions: {
-            graphql: {
-                Args: {
-                    extensions?: Json;
-                    operationName?: string;
-                    query?: string;
-                    variables?: Json;
-                };
-                Returns: Json;
-            };
-        };
-        Enums: {
-            [_ in never]: never;
-        };
-        CompositeTypes: {
-            [_ in never]: never;
-        };
-    };
     public: {
         Tables: {
             entries: {
@@ -816,7 +791,6 @@ export type Database = {
             [_ in never]: never;
         };
         Functions: {
-            decrement_entry_count: { Args: never; Returns: undefined };
             find_related_entries: {
                 Args: {
                     entry_id_param: string;
@@ -848,7 +822,6 @@ export type Database = {
                     week_start: string;
                 }[];
             };
-            increment_entry_count: { Args: never; Returns: undefined };
             search_entries_by_embedding: {
                 Args: {
                     match_count?: number;
@@ -1068,9 +1041,6 @@ export type CompositeTypes<
       : never;
 
 export const Constants = {
-    graphql_public: {
-        Enums: {},
-    },
     public: {
         Enums: {
             feedback_status: [
