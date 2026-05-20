@@ -57,12 +57,29 @@ const SegmentTextarea = ({
         el.style.height = `${el.scrollHeight}px`;
     }, [value]);
 
+    useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+        let rafHandle = 0;
+        const recalc = () => {
+            rafHandle = requestAnimationFrame(() => {
+                el.style.height = "auto";
+                el.style.height = `${el.scrollHeight}px`;
+            });
+        };
+        window.addEventListener("resize", recalc);
+        return () => {
+            window.removeEventListener("resize", recalc);
+            cancelAnimationFrame(rafHandle);
+        };
+    }, []);
+
     return (
         <textarea
             ref={ref}
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            className="w-full resize-none bg-transparent px-12 pt-6 pb-2 text-base leading-relaxed text-neutral-500 outline-none placeholder:text-muted-foreground/50 font-serif"
+            className="w-full resize-none overflow-y-hidden bg-transparent px-12 pt-6 pb-2 text-base leading-relaxed text-neutral-500 outline-none placeholder:text-muted-foreground/50 font-serif"
             placeholder={
                 isFirst ? "What's on your mind?" : "Continue writing..."
             }
