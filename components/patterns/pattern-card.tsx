@@ -37,7 +37,7 @@ const PatternCard = ({
 
     return (
         <div
-            className={`flex ${isPreview ? "h-50" : "h-56"} rounded-xl border border-border bg-card shadow-xs hover:shadow-sm transition-shadow duration-200 overflow-hidden`}
+            className={`flex ${isPreview ? "h-52 md:h-50" : "h-52 md:h-56"} rounded-xl border border-border bg-card shadow-xs hover:shadow-sm transition-shadow duration-200 overflow-hidden`}
         >
             {/* Left: each pill is its own Link to the referenced entry */}
             <div className="border-r border-border">
@@ -57,7 +57,7 @@ const PatternCard = ({
                 onClick={handleView}
                 className="flex flex-col gap-2 p-5 flex-1 min-w-0"
             >
-                <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-2 flex-nowrap overflow-x-auto [&::-webkit-scrollbar]:hidden md:flex-wrap">
                     <span
                         className={`inline-flex h-7 items-center rounded-sm border px-2 text-xs font-medium ${badgeStyle}`}
                     >
@@ -69,11 +69,11 @@ const PatternCard = ({
                         </span>
                     )}
                 </div>
-                <h3 className="font-serif text-2xl italic text-muted-foreground leading-snug line-clamp-2">
+                <h3 className="font-serif text-xl md:text-2xl italic text-muted-foreground leading-snug line-clamp-2">
                     {pattern.title}
                 </h3>
                 <p
-                    className={`text-sm text-muted-foreground leading-relaxed ${isPreview ? "line-clamp-2" : "line-clamp-4"}`}
+                    className={`text-sm text-muted-foreground leading-relaxed ${isPreview ? "line-clamp-2" : "line-clamp-2 md:line-clamp-4"}`}
                 >
                     {pattern.description}
                 </p>

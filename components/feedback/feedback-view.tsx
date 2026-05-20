@@ -1,18 +1,18 @@
 "use client";
 
-import { Search01Icon } from "@hugeicons/core-free-icons";
+import { Add01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useMemo, useState } from "react";
 import type { DateRange } from "react-day-picker";
 import { PageHeader } from "@/components/layout/page-header";
 import { DateFilter } from "@/components/shared/date-filter";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import type {
     FeedbackSortType,
     FeedbackStatusType,
 } from "@/lib/schemas/feedback";
 import type { FeedbackItemWithVote } from "@/types";
+import { SearchInput } from "../shared/search-input";
 import { FeedbackCard } from "./feedback-card";
 import { FeedbackEmptyState } from "./feedback-empty-state";
 import { FeedbackFilter } from "./feedback-filter";
@@ -108,10 +108,10 @@ const FeedbackView = ({
     return (
         <div className="flex h-full flex-col overflow-hidden">
             <PageHeader backHref="/home">
-                <h1 className="font-serif text-3xl italic text-zinc-600">
+                <h1 className="font-serif text-2xl md:text-4xl italic text-zinc-600">
                     Feedback
                 </h1>
-                <p className="ml-auto text-sm text-neutral-400">
+                <p className="hidden lg:block ml-auto text-sm text-neutral-400">
                     Help shape the{" "}
                     <span className="font-bold text-neutral-400">
                         future of Unsaid
@@ -120,43 +120,42 @@ const FeedbackView = ({
             </PageHeader>
 
             <div className="flex-1 overflow-y-auto">
-                <div className="mx-auto w-[70%] px-6 py-8">
+                <div className="px-6 py-8 lg:px-10">
                     {/* Controls row — only shown when there are items */}
                     <div
-                        className={`mb-6 flex items-center gap-3 ${items.length === 0 ? "hidden" : ""}`}
+                        className={`mb-6 sticky top-0 z-30 flex items-center gap-3 bg-background py-2 pr-2 ${items.length === 0 ? "hidden" : ""}`}
                     >
-                        <div className="relative flex-1">
-                            <HugeiconsIcon
-                                icon={Search01Icon}
-                                className="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-muted-foreground"
+                        <SearchInput
+                            value={search}
+                            onChange={setSearch}
+                            placeholder="Search feedback..."
+                        />
+
+                        <div className="flex items-center gap-3 ml-auto md:ml-0">
+                            <FeedbackFilter
+                                sort={sort}
+                                onSortChange={setSort}
+                                statusFilter={statusFilter}
+                                onStatusFilterChange={setStatusFilter}
                             />
-                            <Input
-                                placeholder="Search..."
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                className="h-10 rounded-lg bg-card pl-9 text-muted-foreground font-medium"
+
+                            <DateFilter
+                                dateRange={dateRange}
+                                onDateRangeChange={setDateRange}
+                                popoverAlign="end"
                             />
+
+                            <Button
+                                variant="sunrise"
+                                size="icon-lg"
+                                onClick={() => setIsDialogOpen(true)}
+                            >
+                                <HugeiconsIcon
+                                    icon={Add01Icon}
+                                    className="size-4 text-white"
+                                />
+                            </Button>
                         </div>
-
-                        <FeedbackFilter
-                            sort={sort}
-                            onSortChange={setSort}
-                            statusFilter={statusFilter}
-                            onStatusFilterChange={setStatusFilter}
-                        />
-
-                        <DateFilter
-                            dateRange={dateRange}
-                            onDateRangeChange={setDateRange}
-                            popoverAlign="end"
-                        />
-
-                        <Button
-                            variant="sunrise"
-                            onClick={() => setIsDialogOpen(true)}
-                        >
-                            + Submit feedback
-                        </Button>
                     </div>
 
                     {/* Feedback list */}

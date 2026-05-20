@@ -29,10 +29,10 @@ const PatternDetailPage = ({
         <div className="flex h-full flex-col overflow-hidden">
             <PageHeader backHref="/patterns">
                 <div className="flex flex-1 items-center justify-between">
-                    <h1 className="font-serif text-4xl italic text-zinc-800">
+                    <h1 className="font-serif text-2xl md:text-4xl italic text-zinc-800">
                         Pattern
                     </h1>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="hidden lg:block text-sm text-muted-foreground">
                         Discover patterns from your journal entries, updated{" "}
                         <strong className="font-medium text-zinc-600">
                             weekly
@@ -42,10 +42,10 @@ const PatternDetailPage = ({
                 </div>
             </PageHeader>
             <div className="flex-1 overflow-y-auto">
-                <div className="flex gap-16 px-10 py-10">
+                <div className="flex flex-col gap-8 px-6 py-8 lg:flex-row lg:gap-16 lg:px-10 lg:py-10">
                     {/* Left: sticky reference panel — shows all evidence */}
-                    <div className="shrink-0 self-start sticky top-10">
-                        <div className="rounded-xl border border-border overflow-hidden">
+                    <div className="shrink-0 lg:self-start lg:sticky lg:top-10">
+                        <div className="w-fit rounded-xl border border-border overflow-hidden shadow-md">
                             <ReferenceTimeline
                                 items={pattern.evidence.map((e) => ({
                                     id: e.entryId,
@@ -58,7 +58,7 @@ const PatternDetailPage = ({
                     </div>
 
                     {/* Right: pattern content */}
-                    <div className="flex flex-col gap-8 flex-1 min-w-0 max-w-2/3">
+                    <div className="flex flex-col gap-8 flex-1 min-w-0 lg:max-w-2/3">
                         {/* Type badge */}
                         <span
                             className={`inline-flex h-7 items-center rounded-sm border px-2 text-xs font-medium self-start ${badgeStyle}`}
@@ -67,7 +67,7 @@ const PatternDetailPage = ({
                         </span>
 
                         {/* Title */}
-                        <h2 className="font-serif text-5xl italic text-neutral-500 leading-tight">
+                        <h2 className="font-serif text-4xl lg:text-5xl italic text-neutral-500 leading-tight">
                             {pattern.title}
                         </h2>
 

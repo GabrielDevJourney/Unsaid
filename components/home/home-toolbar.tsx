@@ -41,7 +41,22 @@ type HomeToolbarProps = HomeToolbarEmpty | HomeToolbarWithFilters;
 const HomeToolbar = (props: HomeToolbarProps) => {
     const actions = (
         <>
-            <Button variant="sunrise" asChild>
+            <Button
+                variant="sunrise"
+                size="icon-lg"
+                asChild
+                className="md:hidden"
+            >
+                <Link href="/entries/new">
+                    <HugeiconsIcon
+                        icon={Add01Icon}
+                        className="size-4 text-white"
+                    />
+                    <span className="sr-only">New entry</span>
+                </Link>
+            </Button>
+
+            <Button variant="sunrise" asChild className="hidden md:flex">
                 <Link href="/entries/new">
                     <HugeiconsIcon
                         icon={Add01Icon}
@@ -55,7 +70,7 @@ const HomeToolbar = (props: HomeToolbarProps) => {
 
             <Button
                 variant="outline"
-                size="icon"
+                size="icon-lg"
                 className="bg-card xl:hidden"
                 onClick={props.onToggleAside}
             >

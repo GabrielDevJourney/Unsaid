@@ -64,13 +64,18 @@ const buttonVariants = cva(
             },
             {
                 variant: "sunrise",
-                size: ["default", "lg", "cta", "icon", "icon-lg"],
+                size: ["default", "lg", "cta"],
                 class: "ring-4 ring-zinc-300",
             },
             {
                 variant: "sunrise",
-                size: ["sm", "xs", "icon-sm", "icon-xs"],
+                size: ["sm", "xs", "icon-sm", "icon-xs", "icon", "icon-lg"],
                 class: "ring-2 ring-zinc-300",
+            },
+            {
+                variant: "sunrise",
+                size: ["icon", "icon-lg"],
+                class: "size-9",
             },
         ],
     },

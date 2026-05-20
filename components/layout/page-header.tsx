@@ -3,6 +3,7 @@
 import { ArrowLeft02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 
 interface PageHeaderProps {
@@ -17,7 +18,8 @@ const PageHeader = ({ children, className, backHref }: PageHeaderProps) => {
         <header
             className={cn("flex shrink-0 flex-col border-b h-24", className)}
         >
-            <div className="flex items-center px-10 h-full">
+            <div className="flex items-center px-6 lg:px-10 h-full">
+                <SidebarTrigger className="lg:hidden mr-3 shrink-0" />
                 {backHref && (
                     <Link
                         href={backHref}

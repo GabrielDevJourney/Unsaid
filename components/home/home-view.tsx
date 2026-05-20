@@ -204,7 +204,7 @@ const HomeView = ({
             <div className="flex flex-1 flex-col overflow-hidden">
                 <PageHeader>
                     <div className="px-2">
-                        <h1 className="font-serif text-4xl text-zinc-600 italic">
+                        <h1 className="font-serif text-2xl md:text-4xl text-zinc-600 italic">
                             {getGreeting()} {userName}!
                         </h1>
                     </div>

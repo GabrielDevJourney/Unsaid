@@ -4,11 +4,8 @@ import { Cancel01Icon, Search01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
-import type { DateRange } from "react-day-picker";
-import { DateFilter } from "@/components/shared/date-filter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FilterBadges, type FilterOption } from "./filter-badges";
 
 const SEARCH_OVERLAY_TRANSITION = {
     type: "tween",
@@ -16,72 +13,54 @@ const SEARCH_OVERLAY_TRANSITION = {
     duration: 0.4,
 } as const;
 
-interface ToolbarProps {
-    isScrolled: boolean;
-    searchQuery: string;
-    onSearchChange: (query: string) => void;
-    searchPlaceholder?: string;
-    filterOptions: FilterOption[];
-    selectedFilters: Set<string>;
-    onToggleFilter: (value: string) => void;
-    onClearFilters: () => void;
-    filterLabel?: string;
-    dateRange: DateRange | undefined;
-    onDateRangeChange: (range: DateRange | undefined) => void;
-    actions?: React.ReactNode;
+interface SearchInputProps {
+    value: string;
+    onChange: (value: string) => void;
+    placeholder?: string;
 }
 
-const Toolbar = ({
-    isScrolled,
-    searchQuery,
-    onSearchChange,
-    searchPlaceholder = "Search...",
-    filterOptions,
-    selectedFilters,
-    onToggleFilter,
-    onClearFilters,
-    filterLabel,
-    dateRange,
-    onDateRangeChange,
-    actions,
-}: ToolbarProps) => {
-    const [isSearchOpen, setIsSearchOpen] = useState(false);
+/**
+ * Animated search field. Mobile: icon button → full-width overlay with slide-in animation.
+ * Desktop: inline input. Parent must have `relative` positioning for the overlay to cover it.
+ */
+const SearchInput = ({
+    value,
+    onChange,
+    placeholder = "Search...",
+}: SearchInputProps) => {
+    const [isOpen, setIsOpen] = useState(false);
     const overlayRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
-    // Focus input after overlay mounts
     useEffect(() => {
-        if (!isSearchOpen) return;
+        if (!isOpen) return;
         const id = setTimeout(() => inputRef.current?.focus(), 50);
         return () => clearTimeout(id);
-    }, [isSearchOpen]);
+    }, [isOpen]);
 
-    // Close on click outside the overlay
     useEffect(() => {
-        if (!isSearchOpen) return;
+        if (!isOpen) return;
         const handleClickOutside = (e: MouseEvent) => {
             if (
                 overlayRef.current &&
                 !overlayRef.current.contains(e.target as Node)
             ) {
-                setIsSearchOpen(false);
+                setIsOpen(false);
             }
         };
         document.addEventListener("mousedown", handleClickOutside);
         return () =>
             document.removeEventListener("mousedown", handleClickOutside);
-    }, [isSearchOpen]);
+    }, [isOpen]);
 
     return (
-        <div
-            className={`relative sticky top-0 z-30 mb-6 flex items-center gap-3 bg-background py-2 ${isScrolled ? "border-b border-border" : ""}`}
-        >
-            {/* Mobile: compact search icon button — same size as filter/calendar (icon-lg = size-10) */}
+        <>
+            {/* Mobile: compact icon button */}
             <Button
                 variant="outline"
                 size="icon-lg"
-                className={`md:hidden bg-card shrink-0 ${searchQuery.length > 0 ? "ring-2 ring-zinc-400" : ""}`}
-                onClick={() => setIsSearchOpen(true)}
+                className={`md:hidden bg-card shrink-0 ${value.length > 0 ? "ring-2 ring-zinc-400" : ""}`}
+                onClick={() => setIsOpen(true)}
             >
                 <HugeiconsIcon
                     icon={Search01Icon}
@@ -89,41 +68,23 @@ const Toolbar = ({
                 />
             </Button>
 
-            {/* Desktop: inline search input */}
+            {/* Desktop: inline input */}
             <div className="relative hidden md:flex flex-1">
                 <HugeiconsIcon
                     icon={Search01Icon}
                     className="pointer-events-none absolute top-1/2 left-3 size-5 -translate-y-1/2 text-muted-foreground"
                 />
                 <Input
-                    placeholder={searchPlaceholder}
-                    value={searchQuery}
-                    onChange={(e) => onSearchChange(e.target.value)}
+                    placeholder={placeholder}
+                    value={value}
+                    onChange={(e) => onChange(e.target.value)}
                     className="h-10 w-full rounded-lg bg-card pl-9 text-muted-foreground font-medium"
                 />
             </div>
 
-            {/* Right-aligned group on mobile; natural flow on desktop */}
-            <div className="flex items-center gap-3 ml-auto md:ml-0">
-                <FilterBadges
-                    options={filterOptions}
-                    selected={selectedFilters}
-                    onToggle={onToggleFilter}
-                    onClear={onClearFilters}
-                    label={filterLabel}
-                />
-
-                <DateFilter
-                    dateRange={dateRange}
-                    onDateRangeChange={onDateRangeChange}
-                />
-
-                {actions}
-            </div>
-
-            {/* Mobile search overlay — Framer Motion slide from/to left */}
+            {/* Mobile animated overlay — covers parent (parent must be relative) */}
             <AnimatePresence>
-                {isSearchOpen && (
+                {isOpen && (
                     <motion.div
                         ref={overlayRef}
                         className="md:hidden absolute inset-0 z-10 flex items-center gap-2 bg-background py-2"
@@ -139,12 +100,11 @@ const Toolbar = ({
                             />
                             <Input
                                 ref={inputRef}
-                                placeholder={searchPlaceholder}
-                                value={searchQuery}
-                                onChange={(e) => onSearchChange(e.target.value)}
+                                placeholder={placeholder}
+                                value={value}
+                                onChange={(e) => onChange(e.target.value)}
                                 onKeyDown={(e) => {
-                                    if (e.key === "Escape")
-                                        setIsSearchOpen(false);
+                                    if (e.key === "Escape") setIsOpen(false);
                                 }}
                                 className="h-10 rounded-lg bg-card pl-9 text-muted-foreground font-medium"
                             />
@@ -153,7 +113,7 @@ const Toolbar = ({
                             variant="ghost"
                             size="icon-lg"
                             className="shrink-0"
-                            onClick={() => setIsSearchOpen(false)}
+                            onClick={() => setIsOpen(false)}
                         >
                             <HugeiconsIcon
                                 icon={Cancel01Icon}
@@ -163,8 +123,8 @@ const Toolbar = ({
                     </motion.div>
                 )}
             </AnimatePresence>
-        </div>
+        </>
     );
 };
 
-export { Toolbar, type ToolbarProps };
+export { SearchInput, type SearchInputProps };

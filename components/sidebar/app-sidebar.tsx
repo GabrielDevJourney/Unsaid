@@ -12,6 +12,7 @@ import {
     SidebarHeader,
     SidebarMenuItem,
     SidebarTrigger,
+    useSidebar,
 } from "@/components/ui/sidebar";
 import { adminNavItems, brainNavItems, footerNavItems } from "@/config/sidebar";
 import { useSidebarBadgeStore } from "@/lib/stores/sidebar-badge-store";
@@ -33,6 +34,7 @@ export const AppSidebar = ({
     const { signOut } = useClerk();
     const { user } = useUser();
     const { progressAdjustment } = useSidebarBadgeStore();
+    const { isMobile, setOpenMobile } = useSidebar();
 
     const displayName = user?.username ?? user?.firstName ?? "User";
     const userEmail = user?.primaryEmailAddress?.emailAddress ?? "";
@@ -82,6 +84,9 @@ export const AppSidebar = ({
                     <SidebarMenuItem>
                         <Link
                             href="/entries/new"
+                            onClick={() => {
+                                if (isMobile) setOpenMobile(false);
+                            }}
                             className="flex w-full items-center gap-2 rounded-sm p-2 text-zinc-600 hover:bg-sidebar-accent transition-[width,height,padding,gap] duration-400 ease-in-out group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:p-2! group-data-[collapsible=icon]:gap-0"
                         >
                             <span className="relative flex items-center justify-center size-6 shrink-0 rounded-md overflow-hidden cursor-pointer duration-400 ease-in-out bg-slate-400 bg-[radial-gradient(circle_at_90%_150%,rgba(247,107,21,0.8)_0%,rgba(255,115,1,0.5)_30%,transparent_70%)]">

@@ -3,6 +3,30 @@ import { JournalDot } from "@/components/ui/journal-dot";
 
 const MAX_VISIBLE = 3;
 
+const MONTH_ABBREVS: Record<string, string> = {
+    January: "Jan",
+    February: "Feb",
+    March: "Mar",
+    April: "Apr",
+    May: "May",
+    June: "Jun",
+    July: "Jul",
+    August: "Aug",
+    September: "Sep",
+    October: "Oct",
+    November: "Nov",
+    December: "Dec",
+};
+
+const abbreviateMonth = (label: string): string =>
+    label.replace(
+        /^(january|february|march|april|may|june|july|august|september|october|november|december)/i,
+        (m) =>
+            MONTH_ABBREVS[
+                m.charAt(0).toUpperCase() + m.slice(1).toLowerCase()
+            ] ?? m,
+    );
+
 interface ReferenceItem {
     id: string;
     label: string;
@@ -26,7 +50,7 @@ const ReferenceTimeline = ({
 
     return (
         <div
-            className={`relative bg-neutral-100 flex flex-col shrink-0 w-44 overflow-hidden bg-[radial-gradient(circle,#dddcdc_1px,transparent_1px)] bg-size-[10px_10px] ${className ?? ""}`}
+            className={`relative bg-neutral-100 flex flex-col shrink-0 w-32 md:w-44 overflow-hidden bg-[radial-gradient(circle,#dddcdc_1px,transparent_1px)] bg-size-[10px_10px] ${className ?? ""}`}
         >
             <div className="px-5 py-5 flex flex-col gap-3">
                 <p className="text-[11px] font-medium text-zinc-500">
@@ -45,8 +69,11 @@ const ReferenceTimeline = ({
                             className="relative flex items-center gap-2 rounded-full border-2 border-zinc-200 bg-white px-2 py-1.5 hover:bg-zinc-50 transition-colors"
                         >
                             <JournalDot />
-                            <span className="font-sans text-xs text-muted-foreground whitespace-nowrap">
+                            <span className="hidden md:block font-sans text-xs text-muted-foreground whitespace-nowrap">
                                 {item.label}
+                            </span>
+                            <span className="md:hidden font-sans text-xs text-muted-foreground whitespace-nowrap">
+                                {abbreviateMonth(item.label)}
                             </span>
                         </Link>
                     ))}
