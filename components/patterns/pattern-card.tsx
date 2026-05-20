@@ -8,6 +8,7 @@ import {
     PATTERN_TYPES,
 } from "@/lib/constants/pattern-types";
 import type { WeeklyInsightPattern } from "@/types";
+import { FoggyBlurOverlay } from "../shared/foggy-blur-overlay";
 
 interface PatternCardProps {
     pattern: WeeklyInsightPattern;
@@ -55,7 +56,7 @@ const PatternCard = ({
             <Link
                 href={`/patterns/${pattern.id}`}
                 onClick={handleView}
-                className="flex flex-col gap-2 p-5 flex-1 min-w-0"
+                className="relative flex flex-col gap-2 p-5 flex-1 min-w-0 overflow-hidden"
             >
                 <div className="flex items-center gap-2 flex-nowrap overflow-x-auto [&::-webkit-scrollbar]:hidden md:flex-wrap">
                     <span
@@ -72,11 +73,12 @@ const PatternCard = ({
                 <h3 className="font-serif text-xl md:text-2xl italic text-muted-foreground leading-snug line-clamp-2">
                     {pattern.title}
                 </h3>
-                <p
-                    className={`text-sm text-muted-foreground leading-relaxed ${isPreview ? "line-clamp-2" : "line-clamp-2 md:line-clamp-4"}`}
-                >
-                    {pattern.description}
-                </p>
+                <div className="flex-1 min-h-0">
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                        {pattern.description}
+                    </p>
+                </div>
+                <FoggyBlurOverlay />
             </Link>
         </div>
     );
