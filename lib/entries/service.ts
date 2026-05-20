@@ -3,7 +3,6 @@ import { z } from "zod";
 import { generateEmbedding } from "@/lib/ai/embeddings";
 import { checkEntryRateLimit } from "@/lib/rate-limit";
 import { canUserWriteEntry } from "@/lib/subscriptions/entitlements";
-import { checkAndTriggerProgress } from "@/lib/triggers/check-progress-trigger";
 import { findUserProgress } from "@/lib/users/repo";
 import type {
     CreateEntryPayload,
@@ -60,7 +59,7 @@ export const createEntry = async (
     ]);
 
     if (!rateLimit.allowed) {
-        return { error: rateLimit.reason ?? "Rate limit exceeded" };
+        return { error: "rate_limit" };
     }
 
     if (!canWrite) {
@@ -86,18 +85,14 @@ export const createEntry = async (
     });
 
     if (insertError || !entry) {
+        console.error("insertEntry failed:", {
+            code: insertError?.code,
+            message: insertError?.message,
+        });
         return { error: "Failed to create entry" };
     }
 
     await generateAndAttachEmbedding(supabase, entry.id, payload.content);
-
-    void checkAndTriggerProgress(userId).then((result) => {
-        if (result.data?.triggered) {
-            console.log(
-                `[Progress] Auto-triggered insight for user ${userId}: ${result.data.reason}`,
-            );
-        }
-    });
 
     return { data: entry };
 };
