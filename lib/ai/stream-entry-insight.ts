@@ -1,4 +1,5 @@
 import { anthropic } from "@ai-sdk/anthropic";
+import * as Sentry from "@sentry/nextjs";
 import { Output, smoothStream, streamText } from "ai";
 import { type InsightObject, insightSchema } from "@/lib/schemas/entry-insight";
 import { loadEntryTaskPrompt, loadSystemPrompt } from "./prompts";
@@ -13,21 +14,6 @@ interface StreamEntryInsightOptions {
     onFinish?: (event: { text: string }) => Promise<void> | void;
 }
 
-/**
- * Stream a structured entry insight using Claude Haiku.
- *
- * Uses streamText + Output.object() instead of streamObject so the model
- * outputs plain JSON text token-by-token (not via tool calls, which Anthropic
- * buffers until complete). This lets useObject on the client receive partial
- * string values and update the UI progressively.
- *
- * smoothStream slows token delivery to word-by-word so fast Haiku responses
- * look like natural typing rather than appearing all at once.
- *
- * @param entryContent - The journal entry text to analyze
- * @param options - Optional previous insight context and onFinish callback
- * @returns StreamTextResult — call .toTextStreamResponse() in the route handler
- */
 export const streamEntryInsight = async (
     entryContent: string,
     options?: StreamEntryInsightOptions,
@@ -69,5 +55,19 @@ export const streamEntryInsight = async (
             },
         ],
         onFinish: options?.onFinish,
+        onError: (event) => {
+            Sentry.withScope((scope) => {
+                scope.setTag("feature", "ai.entry-insight");
+                scope.setFingerprint(["ai-failure", "entry-insight"]);
+                scope.setContext("ai", {
+                    model: options?.reflectionContext
+                        ? "claude-sonnet-4-6"
+                        : "claude-haiku-4-5",
+                    hasReflectionContext: !!options?.reflectionContext,
+                });
+                Sentry.captureException(event.error);
+            });
+            console.error("streamEntryInsight error:", event.error);
+        },
     });
 };

@@ -72,11 +72,11 @@ const PatternCard = ({
                 <h3 className="font-serif text-xl md:text-2xl italic text-muted-foreground leading-snug line-clamp-2">
                     {pattern.title}
                 </h3>
-                <p
-                    className={`text-sm text-muted-foreground leading-relaxed ${isPreview ? "line-clamp-2" : "line-clamp-2 md:line-clamp-4"}`}
-                >
-                    {pattern.description}
-                </p>
+                <div className="flex-1 min-h-0">
+                    <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
+                        {pattern.description}
+                    </p>
+                </div>
             </Link>
         </div>
     );

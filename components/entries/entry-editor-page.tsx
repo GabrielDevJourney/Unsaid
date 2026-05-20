@@ -193,7 +193,7 @@ export const EntryEditorPage = ({
                 </div>
             </PageHeader>
 
-            <div className="flex flex-1 items-start justify-center overflow-hidden p-6">
+            <div className="flex flex-1 justify-center overflow-hidden p-4 md:p-6">
                 <div className="h-full w-full md:w-[70%]">
                     <EntryEditor
                         entryId={resolvedEntryId}

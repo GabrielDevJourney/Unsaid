@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import * as Sentry from "@sentry/nextjs";
 import type { NextRequest } from "next/server";
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { z } from "zod";
 import {
     createEntry,
@@ -9,6 +9,7 @@ import {
 } from "@/lib/entries/service";
 import { EntryCreateSchema, PaginationSchema } from "@/lib/schemas/entry";
 import { createSupabaseServer } from "@/lib/supabase/server";
+import { checkAndTriggerProgress } from "@/lib/triggers/check-progress-trigger";
 import { isServiceError } from "@/types";
 
 /**
@@ -47,8 +48,30 @@ export const POST = async (req: NextRequest) => {
                     : result.error === "rate_limit"
                       ? 429
                       : 500;
+            if (status === 500) {
+                console.error(
+                    "[POST /api/entries] service error:",
+                    result.error,
+                );
+                Sentry.withScope((scope) => {
+                    scope.setTag("feature", "entries.create");
+                    scope.setExtra("serviceError", result.error);
+                    Sentry.captureException(
+                        new Error("createEntry returned unexpected error"),
+                    );
+                });
+            }
             return NextResponse.json({ error: result.error }, { status });
         }
+
+        after(async () => {
+            const triggerResult = await checkAndTriggerProgress(userId);
+            if (triggerResult.data?.triggered) {
+                console.log(
+                    `[Progress] Auto-triggered insight for user ${userId}: ${triggerResult.data.reason}`,
+                );
+            }
+        });
 
         return NextResponse.json({ data: result.data }, { status: 201 });
     } catch (error) {

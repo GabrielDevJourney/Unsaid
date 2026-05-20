@@ -57,17 +57,20 @@ const UpgradePricingSection = () => {
                         </p>
                     </div>
                 </div>
-                <Button
-                    variant="sunrise"
-                    className="w-full max-w-md font-bold"
-                    onClick={handleCheckout}
-                    disabled={loading}
-                >
-                    {loading ? "Loading..." : "Continue with Pro"}
-                </Button>
-                <p className="text-sm text-muted-foreground">
-                    Cancel anytime. Your entries are always yours.
-                </p>
+                <div className="flex flex-col gap-2 w-full items-center">
+                    <Button
+                        variant="sunrise"
+                        size="cta"
+                        className="h-10 w-full max-w-md font-bold bg-[radial-gradient(circle_at_75%_350%,rgba(247,107,21,0.8)_0%,rgba(255,115,1,0.5)_30%,transparent_60%)]"
+                        onClick={handleCheckout}
+                        disabled={loading}
+                    >
+                        {loading ? "Loading..." : "Continue with Pro"}
+                    </Button>
+                    <p className="text-sm text-muted-foreground">
+                        Cancel anytime. Your entries are always yours.
+                    </p>
+                </div>
             </div>
         </>
     );

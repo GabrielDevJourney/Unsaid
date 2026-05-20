@@ -66,6 +66,7 @@
     --accent-foreground: oklch(0.205 0 0);
     --destructive: oklch(63.7% 0.237 25.331);
     --border: #e5e5e5;
+    --scrollbar: #d0d0d0;
     --input: oklch(0.922 0 0);
     --ring: oklch(0.708 0 0);
     --chart-1: oklch(0.646 0.222 41.116);
@@ -116,15 +117,30 @@
     --sidebar-accent-foreground: oklch(0.985 0 0);
     --sidebar-border: oklch(1 0 0 / 10%);
     --sidebar-ring: oklch(0.556 0 0);
+    --scrollbar: oklch(0.35 0 0);
 }
 
 @layer base {
     * {
         @apply border-border outline-ring/50;
+        scrollbar-color: var(--scrollbar) transparent;
+        scrollbar-width: thin;
     }
     body {
         @apply bg-background text-foreground font-sans;
     }
+}
+
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: var(--scrollbar);
+    border-radius: var(--radius-sm);
 }
 
 ::selection {

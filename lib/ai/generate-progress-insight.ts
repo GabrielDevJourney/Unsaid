@@ -1,4 +1,5 @@
 import { anthropic } from "@ai-sdk/anthropic";
+import * as Sentry from "@sentry/nextjs";
 import { generateObject } from "ai";
 import {
     type EntryForProgress,
@@ -9,7 +10,7 @@ import {
 import { loadProgressTaskPrompt, loadSystemPrompt } from "./prompts";
 
 export interface EntryInsightContext {
-    entryIndex: number; // 0-based, matches position in recentEntries array
+    entryIndex: number;
     summary: string;
     tags: string[];
 }
@@ -28,10 +29,6 @@ interface GenerateProgressInsightParams {
     personaContext?: string;
 }
 
-/**
- * Format recent entries for the prompt.
- * Entry 1 = most recent. Includes insight summary + tags if available.
- */
 const formatRecentEntries = (
     entries: EntryForProgress[],
     insights: EntryInsightContext[],
@@ -56,9 +53,6 @@ const formatRecentEntries = (
         .join("\n\n");
 };
 
-/**
- * Format related past entries for the prompt.
- */
 const formatRelatedPastEntries = (entries: RelatedPastEntry[]): string => {
     if (entries.length === 0) {
         return "No related past entries found.";
@@ -77,9 +71,6 @@ const formatRelatedPastEntries = (entries: RelatedPastEntry[]): string => {
         .join("\n\n");
 };
 
-/**
- * Format weekly patterns for the prompt.
- */
 const formatWeeklyPatterns = (patterns: WeeklyPatternContext[]): string => {
     if (patterns.length === 0) return "";
 
@@ -89,10 +80,6 @@ const formatWeeklyPatterns = (patterns: WeeklyPatternContext[]): string => {
     return `\n\nRecent patterns identified across entries (use as additional context):\n${lines}`;
 };
 
-/**
- * Generate a structured progress insight using Claude Sonnet.
- * Returns a validated ProgressInsightAIOutput object or null on failure.
- */
 export const generateProgressInsight = async (
     params: GenerateProgressInsightParams,
 ): Promise<ProgressInsightAIOutput | null> => {
@@ -141,6 +128,15 @@ ${formattedPast}${formattedPatterns}`;
 
         return object;
     } catch (error) {
+        Sentry.withScope((scope) => {
+            scope.setTag("feature", "ai.progress-insight");
+            scope.setFingerprint(["ai-failure", "progress-insight"]);
+            scope.setContext("ai", {
+                entryCount: recentEntries.length,
+                model: "claude-sonnet-4-6",
+            });
+            Sentry.captureException(error);
+        });
         console.error("Failed to generate progress insight:", error);
         return null;
     }

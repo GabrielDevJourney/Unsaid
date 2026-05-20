@@ -1,4 +1,5 @@
 import { anthropic } from "@ai-sdk/anthropic";
+import * as Sentry from "@sentry/nextjs";
 import { generateText } from "ai";
 import type { Pattern } from "@/lib/schemas/weekly-insight";
 import { WeeklyInsightResponseSchema } from "@/lib/schemas/weekly-insight";
@@ -11,10 +12,6 @@ interface EntryForAnalysis {
     createdAt: string;
 }
 
-/**
- * Format entries for the prompt.
- * Format: [entry_id, day] content
- */
 const formatEntriesForPrompt = (entries: EntryForAnalysis[]): string => {
     return entries
         .map((entry) => {
@@ -25,13 +22,6 @@ const formatEntriesForPrompt = (entries: EntryForAnalysis[]): string => {
         .join("\n\n");
 };
 
-/**
- * Generate weekly insight patterns using Claude Sonnet.
- * Returns validated array of patterns (insight cards).
- *
- * @param entries - Entries from the past week to analyze
- * @returns Array of validated patterns, or empty array on failure
- */
 export const generateWeeklyInsight = async (
     entries: EntryForAnalysis[],
     personaContext?: string,
@@ -61,7 +51,6 @@ export const generateWeeklyInsight = async (
             ],
         });
 
-        // Strip markdown code fences if presented (AI sometimes wraps JSON)
         const jsonText = text
             .replace(/^```(?:json)?\s*\n?/i, "")
             .replace(/\n?```\s*$/i, "")
@@ -73,13 +62,22 @@ export const generateWeeklyInsight = async (
         if (!validated.success) {
             console.error(
                 "Invalid AI response format:",
-                validated.error.issues,
+                validated.error.issues.map((i) => i.message),
             );
             return [];
         }
 
         return validated.data;
     } catch (error) {
+        Sentry.withScope((scope) => {
+            scope.setTag("feature", "ai.weekly-insight");
+            scope.setFingerprint(["ai-failure", "weekly-insight"]);
+            scope.setContext("ai", {
+                entryCount: entries.length,
+                model: "claude-sonnet-4-6",
+            });
+            Sentry.captureException(error);
+        });
         console.error("Failed to generate weekly insight:", error);
         return [];
     }

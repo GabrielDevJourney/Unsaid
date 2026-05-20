@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { generateUpdatedPersonaSummary } from "@/lib/ai/generate-persona-summary";
 import { buildPersonaContext } from "@/lib/ai/persona-context";
 import { PROGRESS_TRIGGER_INTERVAL } from "@/lib/constants";
@@ -11,10 +12,6 @@ import {
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
 import type { ServiceResult } from "@/types";
 
-/**
- * Extract the headline from progress insight content.
- * Handles both new JSON format and old text format.
- */
 const extractHeadline = (content: string): string => {
     try {
         const parsed = JSON.parse(content) as unknown;
@@ -27,7 +24,6 @@ const extractHeadline = (content: string): string => {
             return (parsed as Record<string, string>).headline;
         }
     } catch {
-        // Old text format fallback
         const headlineMatch = content.match(/THE HEADLINE[:\s]*\n+([^\n]+)/i);
         if (headlineMatch?.[1]) {
             return headlineMatch[1].replace(/^[#*>\s]+/, "").trim();
@@ -36,24 +32,12 @@ const extractHeadline = (content: string): string => {
     return "Your progress insight is ready";
 };
 
-/**
- * Result of checking the progress trigger.
- */
 export interface ProgressTriggerResult {
     triggered: boolean;
     progressInsightId?: string;
     reason: string;
 }
 
-/**
- * Check if a progress insight should be generated and create one if needed.
- *
- * Called after entry creation to check if the user has hit a milestone.
- * Runs asynchronously - errors are logged but don't block entry creation.
- *
- * @param userId - The user's ID
- * @returns Result indicating whether insight was generated
- */
 export const checkAndTriggerProgress = async (
     userId: string,
 ): Promise<ServiceResult<ProgressTriggerResult>> => {
@@ -159,8 +143,8 @@ export const checkAndTriggerProgress = async (
                 console.error("Progress email error:", emailError);
             }
 
-            // Fire-and-forget: update persona summary with progress evidence
             if (persona?.summary) {
+                // fire-and-forget: persona update must not block the trigger response
                 void updatePersonaSummaryFromProgress(
                     supabase,
                     userId,
@@ -179,6 +163,12 @@ export const checkAndTriggerProgress = async (
             },
         };
     } catch (error) {
+        Sentry.withScope((scope) => {
+            scope.setTag("feature", "trigger.progress");
+            scope.setFingerprint(["trigger-failure", "progress"]);
+            scope.setContext("trigger", { userId });
+            Sentry.captureException(error);
+        });
         console.error("Progress trigger check failed:", error);
         return {
             data: {
@@ -212,10 +202,6 @@ const updatePersonaSummaryFromProgress = async (
     }
 };
 
-/**
- * Check progress trigger without generating.
- * Useful for UI to show "15 entries until next insight".
- */
 export const getProgressStatus = async (
     userId: string,
 ): Promise<

@@ -14,6 +14,11 @@ export const EntryCreateSchema = z.object({
         .max(MAX_ENTRY_LENGTH, {
             message: `Entry must be at most ${MAX_ENTRY_LENGTH} characters`,
         }),
+    sourceType: z
+        .enum(["onboarding", "pattern", "progress"])
+        .nullable()
+        .optional(),
+    sourceId: z.string().uuid().nullable().optional(),
 });
 
 export type EntryCreateInput = z.infer<typeof EntryCreateSchema>;
