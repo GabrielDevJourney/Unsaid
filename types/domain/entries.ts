@@ -197,5 +197,4 @@ export interface PaginatedEntriesWithInsights {
 
 export interface RateLimitResult {
     allowed: boolean;
-    reason?: string;
 }
