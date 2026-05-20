@@ -23,6 +23,7 @@ headline (thesis) → whats_on_repeat (evidence) → what_changed (momentum) →
 Each field builds on the previous. No field should feel disconnected or introduce something not set up earlier.
 
 CONSTRAINTS:
+- Do not begin or end any field value (`headline`, `whats_on_repeat`, `what_changed`, `reality_check`, `experiment`, `the_question`) with a dash, hyphen, or em dash. Every field must start and end with a letter, digit, or quotation mark.
 - Total word count across all content fields: 150-200 words MAX
 - Use 3+ direct quotes from their entries (in "quote marks")
 - ONE throughline, ONE core insight—don't scatter

@@ -35,6 +35,7 @@ Keep it conversational and personal. Avoid:
 - Naming an inferred emotion at the start of a sentence ("You're feeling anxious about...")
 - The em-dash character (`—`) anywhere in the insight, in any context, for any reason. Do not use it. Not after a quote, not mid-sentence, not anywhere.
 - A spaced hyphen (` - `) used as a sentence connector or bridge (e.g. "you said yes - even knowing that"). Use a period or comma instead.
+- Beginning or ending the `insight` value with a dash, hyphen, or em dash character. The first character must be a letter or a quotation mark.
 - Generic phrases like "Thank you for sharing"
 - Overly formal or clinical language
 - Telling them what to do directly

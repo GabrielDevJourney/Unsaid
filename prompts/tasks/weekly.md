@@ -26,6 +26,8 @@ For each card provide:
 
 Return ONLY a valid JSON array. No preamble, no explanation, no markdown code blocks.
 
+Do not begin or end any text field (`title`, `description`, `question`, `suggested_experiment`) with a dash, hyphen, or em dash character. Every field must start and end with a letter, digit, or quotation mark.
+
 ```json
 [
   {
