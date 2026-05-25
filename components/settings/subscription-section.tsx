@@ -3,7 +3,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { TRIAL_DAYS } from "@/lib/constants";
+import { FREE_TRIAL_ENTRIES } from "@/lib/constants";
 import { DATE_DISPLAY_LONG, formatDate } from "@/lib/date-utils";
 import { formatPrice } from "@/lib/format-utils";
 import type { SubscriptionStatusType } from "@/lib/schemas/subscription";
@@ -73,8 +73,8 @@ const SubscriptionSection = ({ subscription }: SubscriptionSectionProps) => {
         planName,
         priceInCents,
         currentPeriodEnd,
-        trialEndsAt,
-        trialDaysRemaining,
+        trialEntriesUsed,
+        trialEntriesLimit,
         customerPortalUrl,
     } = subscription;
 
@@ -86,18 +86,13 @@ const SubscriptionSection = ({ subscription }: SubscriptionSectionProps) => {
     const billingLabel = currentPeriodEnd ? "Next billing" : "Expires";
     const displayNextBilling = currentPeriodEnd
         ? formatDate(currentPeriodEnd, DATE_DISPLAY_LONG)
-        : trialEndsAt
-          ? formatDate(trialEndsAt, DATE_DISPLAY_LONG)
-          : "—";
+        : "—";
 
-    const filledCount =
-        isTrial && trialDaysRemaining !== null
-            ? TRIAL_DAYS - trialDaysRemaining
-            : 0;
-
-    const trialDots = Array.from({ length: TRIAL_DAYS }, (_, i) => ({
+    const limit = trialEntriesLimit ?? FREE_TRIAL_ENTRIES;
+    const used = trialEntriesUsed ?? 0;
+    const trialDots = Array.from({ length: limit }, (_, i) => ({
         id: `trial-dot-${i}`,
-        filled: i < filledCount,
+        filled: i < used,
     }));
 
     return (
@@ -118,15 +113,15 @@ const SubscriptionSection = ({ subscription }: SubscriptionSectionProps) => {
 
             <Separator />
 
-            {isTrial && trialDaysRemaining !== null && (
+            {isTrial && trialEntriesUsed !== null && (
                 <div className="overflow-hidden rounded-lg border border-neutral-300 w-1/2">
                     <div className="flex items-center justify-between px-4 py-3">
                         <div className="flex flex-col gap-1">
                             <p className="text-xs text-muted-foreground">
-                                Days remaining
+                                Entries used
                             </p>
                             <p className="text-sm font-bold text-neutral-500">
-                                {trialDaysRemaining}
+                                {used} of {limit}
                             </p>
                         </div>
                         <div className="flex items-center gap-1.5">

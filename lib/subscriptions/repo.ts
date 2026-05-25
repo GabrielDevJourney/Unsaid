@@ -1,22 +1,16 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { TRIAL_DAYS } from "@/lib/constants";
 import type { SubscriptionStatusType } from "@/lib/schemas/subscription";
 import type { Json } from "@/types/database";
 
 export const createSubscription = async (
     supabase: SupabaseClient,
     userId: string,
-    trialDays: number = TRIAL_DAYS,
 ) => {
-    const trialEndsAt = new Date();
-    trialEndsAt.setDate(trialEndsAt.getDate() + trialDays);
-
     return supabase
         .from("subscriptions")
         .insert({
             user_id: userId,
             status: "trial",
-            trial_ends_at: trialEndsAt.toISOString(),
         })
         .select()
         .single();
@@ -128,33 +122,4 @@ export const findPaymentEventByLemonId = async (
         .select("id")
         .eq("lemon_event_id", lemonEventId)
         .maybeSingle();
-};
-
-export const findExpiringTrials = async (
-    supabase: SupabaseClient,
-    daysUntilExpiry: number,
-) => {
-    const targetDate = new Date();
-    targetDate.setDate(targetDate.getDate() + daysUntilExpiry);
-
-    const startOfDay = new Date(targetDate);
-    startOfDay.setHours(0, 0, 0, 0);
-
-    const endOfDay = new Date(targetDate);
-    endOfDay.setHours(23, 59, 59, 999);
-
-    return supabase
-        .from("subscriptions")
-        .select("user_id, trial_ends_at")
-        .eq("status", "trial")
-        .gte("trial_ends_at", startOfDay.toISOString())
-        .lte("trial_ends_at", endOfDay.toISOString());
-};
-
-export const findExpiredTrials = async (supabase: SupabaseClient) => {
-    return supabase
-        .from("subscriptions")
-        .select("user_id")
-        .eq("status", "trial")
-        .lt("trial_ends_at", new Date().toISOString());
 };

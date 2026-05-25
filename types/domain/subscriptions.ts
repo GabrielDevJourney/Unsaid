@@ -28,8 +28,6 @@ export interface SubscriptionAccess {
     canViewEntries: boolean;
     canExportData: boolean;
     status: SubscriptionStatusType;
-    trialDaysRemaining: number | null;
-    isTrialExpired: boolean;
 }
 
 // 5. Lemon Squeezy Webhook Types

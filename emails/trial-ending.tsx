@@ -16,7 +16,7 @@ import {
 
 interface TrialEndingEmailProps {
     userName: string;
-    daysRemaining: number;
+    entriesRemaining: number;
     entriesWritten: number;
     patternsFound?: number;
     insightsReceived: number;
@@ -27,15 +27,15 @@ interface TrialEndingEmailProps {
 
 const TrialEndingEmail = ({
     userName: _userName = "there",
-    daysRemaining = 3,
-    entriesWritten = 15,
+    entriesRemaining = 3,
+    entriesWritten = 12,
     patternsFound = 3,
     insightsReceived = 19,
     upgradeUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://app.byunsaid.com"}/settings`,
     recipientEmail = "you@example.com",
     unsubscribeUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://app.byunsaid.com"}/settings#notifications`,
 }: TrialEndingEmailProps) => {
-    const previewText = `${daysRemaining} day${daysRemaining === 1 ? "" : "s"} left in your trial.`;
+    const previewText = `${entriesRemaining} free ${entriesRemaining === 1 ? "entry" : "entries"} left.`;
 
     return (
         <Html>
@@ -49,7 +49,7 @@ const TrialEndingEmail = ({
                 >
                     <EmailInnerCard>
                         <EmailHero
-                            title={`${daysRemaining} day${daysRemaining === 1 ? "" : "s"} left`}
+                            title={`${entriesRemaining} ${entriesRemaining === 1 ? "entry" : "entries"} left`}
                             description={
                                 <>
                                     Everything you&apos;ve built stays with you.{" "}

@@ -130,6 +130,7 @@ const ensureTestUser = async (email: string) => {
     const { error: userError } = await supabase.from("users").insert({
         user_id: userId,
         email,
+        username: userId,
     });
 
     if (userError) {
@@ -137,14 +138,9 @@ const ensureTestUser = async (email: string) => {
         process.exit(1);
     }
 
-    // Create trial subscription expiring in 3 days (to trigger trial reminder)
-    const trialEndsAt = new Date();
-    trialEndsAt.setDate(trialEndsAt.getDate() + 3);
-
     const { error: subError } = await supabase.from("subscriptions").insert({
         user_id: userId,
         status: "trial",
-        trial_ends_at: trialEndsAt.toISOString(),
     });
 
     if (subError) {

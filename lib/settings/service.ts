@@ -1,5 +1,7 @@
 import { currentUser } from "@clerk/nextjs/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { FREE_TRIAL_ENTRIES } from "@/lib/constants";
+import { countEntriesByUserId } from "@/lib/entries/repo";
 import type { SubscriptionStatusType } from "@/lib/schemas/subscription";
 import { findSubscriptionByUserId } from "@/lib/subscriptions/repo";
 import {
@@ -20,8 +22,8 @@ export interface SettingsSubscription {
     planName: string | null;
     priceInCents: number | null;
     currentPeriodEnd: string | null;
-    trialEndsAt: string | null;
-    trialDaysRemaining: number | null;
+    trialEntriesUsed: number | null;
+    trialEntriesLimit: number | null;
     customerPortalUrl: string | null;
 }
 
@@ -50,12 +52,12 @@ export const getSettingsPageData = async (
         ]);
 
     const status = sub?.status ?? "trial";
-    const trialEndsAt = sub?.trial_ends_at ?? null;
-    const trialDaysRemaining = (() => {
-        if (status !== "trial" || !trialEndsAt) return null;
-        const diffMs = new Date(trialEndsAt).getTime() - Date.now();
-        return Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
-    })();
+
+    let trialEntriesUsed: number | null = null;
+    if (status === "trial") {
+        const { count } = await countEntriesByUserId(supabase, user.id);
+        trialEntriesUsed = count;
+    }
 
     return {
         user: {
@@ -69,8 +71,8 @@ export const getSettingsPageData = async (
             planName: sub?.plan_name ?? null,
             priceInCents: sub?.price_in_cents ?? null,
             currentPeriodEnd: sub?.current_period_end ?? null,
-            trialEndsAt,
-            trialDaysRemaining,
+            trialEntriesUsed,
+            trialEntriesLimit: status === "trial" ? FREE_TRIAL_ENTRIES : null,
             customerPortalUrl: sub?.customer_portal_url ?? null,
         },
         notifications: notifPrefs ?? {

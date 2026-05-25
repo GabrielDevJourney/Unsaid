@@ -10,6 +10,7 @@ import {
 import { EntryCreateSchema, PaginationSchema } from "@/lib/schemas/entry";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { checkAndTriggerProgress } from "@/lib/triggers/check-progress-trigger";
+import { checkAndTriggerTrialNudge } from "@/lib/triggers/check-trial-nudge";
 import { isServiceError } from "@/types";
 
 /**
@@ -65,10 +66,19 @@ export const POST = async (req: NextRequest) => {
         }
 
         after(async () => {
-            const triggerResult = await checkAndTriggerProgress(userId);
-            if (triggerResult.data?.triggered) {
+            const [progressResult, nudgeResult] = await Promise.all([
+                checkAndTriggerProgress(userId),
+                checkAndTriggerTrialNudge(userId),
+            ]);
+
+            if (progressResult.data?.triggered) {
                 console.log(
-                    `[Progress] Auto-triggered insight for user ${userId}: ${triggerResult.data.reason}`,
+                    `[Progress] Auto-triggered insight for user ${userId}: ${progressResult.data.reason}`,
+                );
+            }
+            if (nudgeResult.data?.triggered) {
+                console.log(
+                    `[Trial] Nudge sent for user ${userId}: ${nudgeResult.data.reason}`,
                 );
             }
         });

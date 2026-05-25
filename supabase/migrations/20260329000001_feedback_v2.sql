@@ -12,7 +12,8 @@ VALUES (
     true,
     10485760,
     ARRAY['image/png', 'image/jpeg', 'image/webp']
-);
+)
+ON CONFLICT (id) DO NOTHING;
 
 CREATE POLICY "Authenticated users can upload feedback media"
 ON storage.objects FOR INSERT

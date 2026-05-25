@@ -488,7 +488,6 @@ export type Database = {
                     plan_name: string | null;
                     price_in_cents: number | null;
                     status: string;
-                    trial_ends_at: string | null;
                     updated_at: string;
                     user_id: string;
                 };
@@ -504,7 +503,6 @@ export type Database = {
                     plan_name?: string | null;
                     price_in_cents?: number | null;
                     status?: string;
-                    trial_ends_at?: string | null;
                     updated_at?: string;
                     user_id: string;
                 };
@@ -520,7 +518,6 @@ export type Database = {
                     plan_name?: string | null;
                     price_in_cents?: number | null;
                     status?: string;
-                    trial_ends_at?: string | null;
                     updated_at?: string;
                     user_id?: string;
                 };

@@ -90,7 +90,7 @@ export const sendEmail = async ({
 export const sendTrialEndingEmail = async (
     to: string,
     userName: string,
-    daysRemaining: number,
+    entriesRemaining: number,
     stats: {
         entriesWritten: number;
         patternsFound: number;
@@ -101,11 +101,11 @@ export const sendTrialEndingEmail = async (
 
     return sendEmail({
         to,
-        subject: `Your trial ends in ${daysRemaining} day${daysRemaining === 1 ? "" : "s"}`,
+        subject: `${entriesRemaining} free ${entriesRemaining === 1 ? "entry" : "entries"} left`,
         templateName: "trial-ending",
         react: TrialEndingEmail({
             userName,
-            daysRemaining,
+            entriesRemaining,
             entriesWritten: stats.entriesWritten,
             patternsFound: stats.patternsFound,
             insightsReceived: stats.insightsReceived,
