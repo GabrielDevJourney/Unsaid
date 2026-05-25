@@ -151,12 +151,12 @@
 /* Clerk auth overrides — unlayered so they beat @layer clerk */
 .cl-cardBox {
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0);
-    width: 450px;
+    width: min(450px, calc(100vw - 3rem));
 }
 #sign-up .cl-cardBox {
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     border: 1px solid var(--border);
-    width: 480px;
+    width: min(480px, calc(100vw - 3rem));
 }
 
 .cl-headerTitle {

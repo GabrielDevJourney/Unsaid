@@ -6,9 +6,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const SignInPage = () => {
     return (
-        <div className="flex min-h-svh">
+        <div className="flex h-svh bg-primary-foreground">
             {/* Left — form */}
-            <div className="flex flex-1 flex-col items-center justify-center bg-primary-foreground px-8">
+            <div className="flex flex-1 flex-col items-center justify-center bg-primary-foreground px-6 sm:px-8">
                 <div className="mb-8 flex items-center gap-2">
                     <Image
                         src="/logo-white-bg.svg"
@@ -78,11 +78,15 @@ const SignInPage = () => {
                 </ClerkLoaded>
             </div>
 
-            {/* Right — illustration placeholder */}
-            <div className="hidden flex-1 items-center justify-center bg-neutral-800 lg:flex">
-                <div className="flex h-40 w-40 items-center justify-center rounded-full bg-neutral-600">
-                    <span className="text-4xl text-neutral-400">&#x1F5BC;</span>
-                </div>
+            {/* Right — illustration (desktop only) */}
+            <div className="relative hidden lg:block lg:flex-1 h-full">
+                <Image
+                    src="/sign-in-illustration.webp"
+                    alt=""
+                    fill
+                    className="object-cover"
+                    priority
+                />
             </div>
         </div>
     );
