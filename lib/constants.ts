@@ -1,5 +1,6 @@
-// Trial configuration
-export const TRIAL_DAYS = 7;
+// Free trial entry limit and nudge threshold (3 entries before the wall)
+export const FREE_TRIAL_ENTRIES = 15;
+export const TRIAL_ENTRY_NUDGE = 12;
 
 // Progress insights - generate every N entries
 export const PROGRESS_TRIGGER_INTERVAL = 15;

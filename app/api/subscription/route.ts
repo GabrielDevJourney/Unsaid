@@ -33,7 +33,6 @@ export const GET = async () => {
         return NextResponse.json({
             data: {
                 status: subscription.status,
-                trialEndsAt: subscription.trial_ends_at,
                 currentPeriodEnd: subscription.current_period_end,
                 canceledAt: subscription.canceled_at,
                 access: accessStatus,

@@ -1,5 +1,4 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { TRIAL_DAYS } from "@/lib/constants";
 import {
     isSubscriptionEvent,
     type LemonWebhookInput,
@@ -12,13 +11,10 @@ import type { SubscriptionRow } from "@/types/domain/subscriptions";
 import {
     createPaymentEvent,
     createSubscription,
-    findExpiredTrials,
-    findExpiringTrials,
     findPaymentEventByLemonId,
     findSubscriptionByUserId,
     findUserByEmail,
     updateSubscriptionFromWebhook,
-    updateSubscriptionStatus,
 } from "./repo";
 
 /** Maps LS variant_name to price in cents. */
@@ -30,13 +26,8 @@ const PLAN_PRICE_MAP: Record<string, number> = {
 export const createTrialSubscription = async (
     supabase: SupabaseClient,
     userId: string,
-    trialDays: number = TRIAL_DAYS,
 ): Promise<ServiceResult<SubscriptionRow>> => {
-    const { data, error } = await createSubscription(
-        supabase,
-        userId,
-        trialDays,
-    );
+    const { data, error } = await createSubscription(supabase, userId);
 
     // Handle duplicate (idempotent for webhook retries)
     if (error?.code === "23505") {
@@ -219,46 +210,4 @@ export const cancelLemonSubscription = async (
     }
 
     return { data: null };
-};
-
-export const getExpiringTrials = async (
-    supabase: SupabaseClient,
-    daysUntilExpiry: number,
-): Promise<
-    ServiceResult<{ user_id: string; trial_ends_at: string | null }[]>
-> => {
-    const { data, error } = await findExpiringTrials(supabase, daysUntilExpiry);
-
-    if (error) {
-        console.error("Failed to fetch expiring trials:", error);
-        return { error: "Failed to fetch expiring trials" };
-    }
-
-    return { data: data ?? [] };
-};
-
-export const expireTrials = async (
-    supabase: SupabaseClient,
-): Promise<ServiceResult<{ count: number }>> => {
-    const { data: expiredTrials, error } = await findExpiredTrials(supabase);
-
-    if (error) {
-        console.error("Failed to find expired trials:", error);
-        throw error;
-    }
-
-    const userIds = (expiredTrials ?? []).map(
-        (s: { user_id: string }) => s.user_id,
-    );
-
-    if (userIds.length === 0) {
-        return { data: { count: 0 } };
-    }
-
-    for (const userId of userIds) {
-        await updateSubscriptionStatus(supabase, userId, "expired");
-        await updateUserSubscriptionStatus(supabase, userId, "expired");
-    }
-
-    return { data: { count: userIds.length } };
 };
