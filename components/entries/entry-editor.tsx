@@ -293,6 +293,7 @@ export const EntryEditor = ({
 
                 {/* Streaming insight — visible only while generating */}
                 <InsightDisplay
+                    key={insights.length}
                     ref={insightRef}
                     entryId={entryId}
                     onInsightComplete={handleInsightComplete}
