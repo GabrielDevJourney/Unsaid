@@ -29,12 +29,17 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
 
     const { userId } = await auth();
 
-    // Not signed in → redirect dashboard routes to sign-in, pass everything else through
+    // Not signed in → redirect dashboard routes and root to sign-in, pass everything else through
     if (!userId) {
-        if (isDashboardRoute(req)) {
+        if (isDashboardRoute(req) || pathname === "/") {
             return NextResponse.redirect(new URL("/sign-in", req.url));
         }
         return NextResponse.next();
+    }
+
+    // Signed in at root → go to dashboard
+    if (pathname === "/") {
+        return NextResponse.redirect(new URL("/home", req.url));
     }
 
     const supabase = await createSupabaseMiddleware();
