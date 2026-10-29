@@ -2,6 +2,7 @@ import { anthropic } from "@ai-sdk/anthropic";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { generateObject } from "ai";
 import { z } from "zod";
+import { HAIKU_MODEL } from "@/lib/ai/models";
 import { loadPrompt, loadSystemPrompt } from "@/lib/ai/prompts";
 import type { InsightTagType } from "@/lib/constants/insight-tag-types";
 import { findEntryWithInsightById } from "@/lib/entries/repo";
@@ -129,7 +130,7 @@ export const generateOnboardingPreview = async (
     const promptBase = `${taskPrompt}\n\n---\n\nEntry:\n${payload.content}\n\n---\n\nInsight already generated:\n${payload.insight}\n\nTags: ${payload.tags.join(", ")}`;
 
     const sharedArgs = {
-        model: anthropic("claude-haiku-4-5"),
+        model: anthropic(HAIKU_MODEL),
         system: systemPrompt,
     };
 

@@ -7,6 +7,7 @@ import {
     ProgressInsightAIOutputSchema,
     type RelatedPastEntry,
 } from "@/lib/schemas/progress-insight";
+import { SONNET_MODEL, SONNET_PROVIDER_OPTIONS } from "./models";
 import { loadProgressTaskPrompt, loadSystemPrompt } from "./prompts";
 
 export interface EntryInsightContext {
@@ -120,7 +121,8 @@ ${formattedPast}${formattedPatterns}`;
 
     try {
         const { object } = await generateObject({
-            model: anthropic("claude-sonnet-4-6"),
+            model: anthropic(SONNET_MODEL),
+            providerOptions: SONNET_PROVIDER_OPTIONS,
             schema: ProgressInsightAIOutputSchema,
             system: `${systemPrompt}${personaBlock}`,
             messages: [{ role: "user", content: userPrompt }],
@@ -133,7 +135,7 @@ ${formattedPast}${formattedPatterns}`;
             scope.setFingerprint(["ai-failure", "progress-insight"]);
             scope.setContext("ai", {
                 entryCount: recentEntries.length,
-                model: "claude-sonnet-4-6",
+                model: SONNET_MODEL,
             });
             Sentry.captureException(error);
         });

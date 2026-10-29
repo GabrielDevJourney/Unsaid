@@ -1,5 +1,6 @@
 import { anthropic } from "@ai-sdk/anthropic";
 import { generateText } from "ai";
+import { HAIKU_MODEL } from "./models";
 import { loadEntryThemeTaskPrompt, loadSystemPrompt } from "./prompts";
 
 interface EntryForTheme {
@@ -43,7 +44,7 @@ export const generateEntryThemePrompt = async (
 
     try {
         const { text } = await generateText({
-            model: anthropic("claude-haiku-4-5"),
+            model: anthropic(HAIKU_MODEL),
             system: systemPrompt,
             messages: [
                 {

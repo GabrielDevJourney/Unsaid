@@ -2,6 +2,7 @@ import { anthropic } from "@ai-sdk/anthropic";
 import * as Sentry from "@sentry/nextjs";
 import { Output, smoothStream, streamText } from "ai";
 import { type InsightObject, insightSchema } from "@/lib/schemas/entry-insight";
+import { HAIKU_MODEL, SONNET_MODEL, SONNET_PROVIDER_OPTIONS } from "./models";
 import { loadEntryTaskPrompt, loadSystemPrompt } from "./prompts";
 
 export { insightSchema, type InsightObject };
@@ -37,11 +38,14 @@ export const streamEntryInsight = async (
         : "";
 
     const model = options?.reflectionContext
-        ? anthropic("claude-sonnet-4-6")
-        : anthropic("claude-haiku-4-5");
+        ? anthropic(SONNET_MODEL)
+        : anthropic(HAIKU_MODEL);
 
     return streamText({
         model,
+        providerOptions: options?.reflectionContext
+            ? SONNET_PROVIDER_OPTIONS
+            : undefined,
         experimental_output: Output.object({ schema: insightSchema }),
         experimental_transform: smoothStream({
             chunking: "word",
@@ -61,8 +65,8 @@ export const streamEntryInsight = async (
                 scope.setFingerprint(["ai-failure", "entry-insight"]);
                 scope.setContext("ai", {
                     model: options?.reflectionContext
-                        ? "claude-sonnet-4-6"
-                        : "claude-haiku-4-5",
+                        ? SONNET_MODEL
+                        : HAIKU_MODEL,
                     hasReflectionContext: !!options?.reflectionContext,
                 });
                 Sentry.captureException(event.error);

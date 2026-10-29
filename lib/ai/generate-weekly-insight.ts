@@ -4,6 +4,7 @@ import { generateText } from "ai";
 import type { Pattern } from "@/lib/schemas/weekly-insight";
 import { WeeklyInsightResponseSchema } from "@/lib/schemas/weekly-insight";
 import { generatePatternTypesPromptSection } from "../constants/pattern-types";
+import { SONNET_MODEL, SONNET_PROVIDER_OPTIONS } from "./models";
 import { loadSystemPrompt, loadWeeklyTaskPrompt } from "./prompts";
 
 interface EntryForAnalysis {
@@ -41,7 +42,8 @@ export const generateWeeklyInsight = async (
 
     try {
         const { text } = await generateText({
-            model: anthropic("claude-sonnet-4-6"),
+            model: anthropic(SONNET_MODEL),
+            providerOptions: SONNET_PROVIDER_OPTIONS,
             system: `${systemPrompt}${personaBlock}`,
             messages: [
                 {
@@ -74,7 +76,7 @@ export const generateWeeklyInsight = async (
             scope.setFingerprint(["ai-failure", "weekly-insight"]);
             scope.setContext("ai", {
                 entryCount: entries.length,
-                model: "claude-sonnet-4-6",
+                model: SONNET_MODEL,
             });
             Sentry.captureException(error);
         });

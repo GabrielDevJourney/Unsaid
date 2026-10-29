@@ -1,5 +1,6 @@
 import { anthropic } from "@ai-sdk/anthropic";
 import { generateText } from "ai";
+import { HAIKU_MODEL, SONNET_MODEL, SONNET_PROVIDER_OPTIONS } from "./models";
 import { loadPrompt, loadSystemPrompt } from "./prompts";
 
 interface InitialSummaryParams {
@@ -40,7 +41,7 @@ ${params.firstInsight}`;
 
     try {
         const { text } = await generateText({
-            model: anthropic("claude-haiku-4-5"),
+            model: anthropic(HAIKU_MODEL),
             system: systemPrompt,
             messages: [{ role: "user", content: prompt }],
         });
@@ -100,7 +101,8 @@ ${entriesSection}${patternsSection}${progressSection}`;
 
     try {
         const { text } = await generateText({
-            model: anthropic("claude-sonnet-4-6"),
+            model: anthropic(SONNET_MODEL),
+            providerOptions: SONNET_PROVIDER_OPTIONS,
             system: systemPrompt,
             messages: [{ role: "user", content: prompt }],
         });
