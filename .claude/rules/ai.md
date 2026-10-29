@@ -4,13 +4,15 @@
 
 All AI logic lives in `lib/ai/`. Prompts live in `prompts/`. Schemas live in `lib/schemas/`. Never inline prompts in code.
 
+Model IDs and Sonnet effort live in `lib/ai/models.ts` (`HAIKU_MODEL`, `SONNET_MODEL`, `SONNET_PROVIDER_OPTIONS`) — never hardcode a model string. Requires `@ai-sdk/anthropic` >= 2.0.110 (older versions don't know the 5.5 models and send forced `tool_choice`, which Sonnet 5.5 rejects).
+
 ---
 
 ### Tier 1 — Entry Insight (Immediate)
 
 - **File:** `lib/ai/stream-entry-insight.ts`
 - **Function:** `streamEntryInsight(entryContent, options?)`
-- **Model:** `claude-haiku-4-5` (default) / `claude-sonnet-4-6` (when `reflectionContext` present)
+- **Model:** `claude-haiku-5-5` (default) / `claude-sonnet-5-5` (when `reflectionContext` present)
 - **Trigger:** After every entry save, via `app/api/entry-insights/`
 - **Output schema:** `lib/schemas/entry-insight.ts` — `{ insight: string, tags: enum[] (max 3) }`
 - **Streaming:** `streamText` + `experimental_output: Output.object({ schema })` + `experimental_transform: smoothStream({ chunking: 'word', delayInMs: 20 })`
@@ -21,7 +23,7 @@ All AI logic lives in `lib/ai/`. Prompts live in `prompts/`. Schemas live in `li
 
 - **File:** `lib/ai/generate-weekly-insight.ts`
 - **Function:** `generateWeeklyInsight(entries: EntryForAnalysis[]): Promise<Pattern[]>`
-- **Model:** `claude-sonnet-4-6`
+- **Model:** `claude-sonnet-5-5`
 - **Trigger:** Sunday 9pm cron → `app/api/cron/weekly-insights/` → `processWeeklyInsightsForAllUsers()`
 - **Minimum entries:** 2 (constant: `MIN_ENTRIES_FOR_WEEKLY_INSIGHT` in `lib/constants.ts`)
 - **Output schema:** `lib/schemas/weekly-insight.ts` — `Pattern[]` (title, pattern_type, description, evidence[], question?, suggested_experiment?)
@@ -31,7 +33,7 @@ All AI logic lives in `lib/ai/`. Prompts live in `prompts/`. Schemas live in `li
 
 - **File:** `lib/ai/generate-progress-insight.ts`
 - **Function:** `generateProgressInsight(params: GenerateProgressInsightParams): Promise<ProgressInsightAIOutput | null>`
-- **Model:** `claude-sonnet-4-6`
+- **Model:** `claude-sonnet-5-5`
 - **Trigger:** Every 15 entries (`PROGRESS_TRIGGER_INTERVAL` in `lib/constants.ts`) via `lib/triggers/check-progress-trigger.ts` → called from `createEntry()` in service
 - **Input:** `{ recentEntries, relatedPastEntries?, entryInsights?, weeklyPatterns?, userName? }`
 - **Output schema:** `lib/schemas/progress-insight.ts` — `{ headline, whats_on_repeat, what_changed, reality_check, experiment, the_question, key_entry_numbers[] }`

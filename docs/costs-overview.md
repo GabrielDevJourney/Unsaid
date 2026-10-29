@@ -39,8 +39,8 @@ TOTAL AI COST (avg user) = ~$0.52/month
 
 **Model pricing used:**
 ```markdown
-claude-haiku-4-5:        $1.00 / MTok input  |  $5.00 / MTok output
-claude-sonnet-4-6:       $3.00 / MTok input  | $15.00 / MTok output
+claude-haiku-5-5:        $0.10 / MTok input  |  $0.50 / MTok output  (prompts <=100K; ~30% more tokens than 4.5)
+claude-sonnet-5-5:       $2.00 / MTok input  | $10.00 / MTok output  (effort=medium, thinking billed as output)
 text-embedding-3-small:  $0.02 / MTok input
 ```
 

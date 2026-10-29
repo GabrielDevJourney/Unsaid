@@ -668,9 +668,9 @@ MIN_ENTRIES_FOR_WEEKLY_INSIGHT = 2
 
 | Tier | Model | Cost |
 |------|-------|------|
-| Tier 1 | claude-haiku-4-5 | ~$0.001/entry |
-| Tier 2 | claude-sonnet-4-5 | ~$0.08/week |
-| Tier 3 | claude-sonnet-4-5 | ~$0.20/15 entries |
+| Tier 1 | claude-haiku-5-5 | ~$0.001/entry |
+| Tier 2 | claude-sonnet-5-5 | ~$0.08/week |
+| Tier 3 | claude-sonnet-5-5 | ~$0.20/15 entries |
 | Embeddings | text-embedding-3-small | ~$0.00005/entry |
 
 ### Key Files

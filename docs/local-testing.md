@@ -205,8 +205,8 @@ ngrok generates a new URL each restart (free plan). Update:
 
 | Aspect | Local | Production |
 |--------|-------|------------|
-| Webhook URL | ngrok tunnel | `byunsaid.com` |
+| Webhook URL | ngrok tunnel | Vercel production URL (`NEXT_PUBLIC_APP_URL`) |
 | Database | Local/dev Supabase | Production Supabase |
-| Clerk | Development instance | Production instance |
+| Clerk | Development instance | Development instance (vercel.app can't host a Clerk prod instance) |
 | Lemon Squeezy | Test mode | Live mode (after activation) |
 | Env vars | `.env.local` | Vercel env vars |

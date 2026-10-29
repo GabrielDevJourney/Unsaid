@@ -108,7 +108,7 @@ components/home/home-view.tsx             ← Client: filters, search, infinite 
 | Anthropic | Claude Haiku/Sonnet for insights | `lib/ai/` via Vercel AI SDK |
 | OpenAI | text-embedding-3-small | `lib/ai/embeddings.ts` |
 | Lemon Squeezy | Payments, subscriptions | `app/api/webhooks/lemon-squeezy/` |
-| Resend | Transactional email | `lib/email/service.ts` |
+| Resend | Transactional email (no-op unless `EMAIL_ENABLED=true`; URLs/contact from `lib/site.ts`) | `lib/email/service.ts` |
 | PostHog | Analytics | client-side via provider |
 | Sentry | Error tracking | auto-instrumented + manual captures |
 | Vercel | Hosting, cron scheduling | `vercel.json` for cron config |
