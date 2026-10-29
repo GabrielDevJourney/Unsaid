@@ -1,9 +1,8 @@
 import type { ReactElement } from "react";
 import { Resend } from "resend";
 import type { PatternTypeCode } from "@/lib/constants/pattern-types";
+import { APP_URL, CONTACT_EMAIL, EMAIL_ENABLED, EMAIL_FROM } from "@/lib/site";
 
-const FROM_EMAIL = "Unsaid <hello@emails.byunsaid.com>";
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.byunsaid.com";
 const NOTIFICATION_SETTINGS_URL = `${APP_URL}/settings#notifications`;
 
 interface SendEmailParams {
@@ -42,11 +41,18 @@ export const sendEmail = async ({
     react,
     templateName,
 }: SendEmailParams): Promise<{ success: boolean; error?: string }> => {
+    if (!EMAIL_ENABLED) {
+        console.info("Email skipped (EMAIL_ENABLED is not true):", {
+            templateName,
+        });
+        return { success: true };
+    }
+
     try {
         const resend = getResend();
 
         const { data, error } = await resend.emails.send({
-            from: FROM_EMAIL,
+            from: EMAIL_FROM,
             to,
             subject,
             react,
@@ -247,7 +253,7 @@ export const sendWaitlistConfirmationEmail = async (
         react: WaitlistConfirmationEmail({
             email: to,
             waitlistPosition,
-            unsubscribeUrl: "mailto:hello@byunsaid.com?subject=Unsubscribe",
+            unsubscribeUrl: `mailto:${CONTACT_EMAIL}?subject=Unsubscribe`,
         }),
     });
 };

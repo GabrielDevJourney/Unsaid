@@ -24,6 +24,7 @@ import {
     previewPatternTitleStyle,
 } from "@/emails/components/email-ui";
 import type { PatternTypeCode } from "@/lib/constants/pattern-types";
+import { APP_URL } from "@/lib/site";
 
 interface WeeklyPatternPreview {
     title: string;
@@ -63,10 +64,10 @@ const WeeklyPatternsEmail = ({
     entryCount = 15,
     insightsCount = 19,
     patterns = defaultPatterns,
-    patternsIconUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://app.byunsaid.com"}/emails/patterns-header-dot-not.png`,
-    viewUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://app.byunsaid.com"}/patterns`,
+    patternsIconUrl = `${APP_URL}/emails/patterns-header-dot-not.png`,
+    viewUrl = `${APP_URL}/patterns`,
     recipientEmail = "you@example.com",
-    unsubscribeUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://app.byunsaid.com"}/settings#notifications`,
+    unsubscribeUrl = `${APP_URL}/settings#notifications`,
 }: WeeklyPatternsEmailProps) => {
     const previewText = `${patternCount} pattern${patternCount === 1 ? "" : "s"} surfaced this week.`;
 

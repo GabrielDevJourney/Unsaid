@@ -1,6 +1,7 @@
 import { Head } from "@react-email/components";
+import { APP_URL } from "@/lib/site";
 
-const SATOSHI_URL = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://app.byunsaid.com"}/fonts/Satoshi-Variable.woff2`;
+const SATOSHI_URL = `${APP_URL}/fonts/Satoshi-Variable.woff2`;
 const LIBRE_BASKERVILLE_URL =
     "https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap";
 

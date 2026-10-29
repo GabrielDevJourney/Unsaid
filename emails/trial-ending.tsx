@@ -13,6 +13,7 @@ import {
     heroBodyStyle,
     PrimaryCta,
 } from "@/emails/components/email-ui";
+import { APP_URL } from "@/lib/site";
 
 interface TrialEndingEmailProps {
     userName: string;
@@ -31,9 +32,9 @@ const TrialEndingEmail = ({
     entriesWritten = 12,
     patternsFound = 3,
     insightsReceived = 19,
-    upgradeUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://app.byunsaid.com"}/settings`,
+    upgradeUrl = `${APP_URL}/settings`,
     recipientEmail = "you@example.com",
-    unsubscribeUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://app.byunsaid.com"}/settings#notifications`,
+    unsubscribeUrl = `${APP_URL}/settings#notifications`,
 }: TrialEndingEmailProps) => {
     const previewText = `${entriesRemaining} free ${entriesRemaining === 1 ? "entry" : "entries"} left.`;
 

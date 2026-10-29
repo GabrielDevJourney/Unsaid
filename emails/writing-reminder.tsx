@@ -21,6 +21,7 @@ import {
     sectionDividerStyle,
     sectionLabelStyle,
 } from "@/emails/components/email-ui";
+import { APP_URL } from "@/lib/site";
 
 interface WritingReminderEmailProps {
     userName: string;
@@ -33,9 +34,9 @@ interface WritingReminderEmailProps {
 const WritingReminderEmail = ({
     userName = "there",
     daysSinceLastEntry = null,
-    writeUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.byunsaid.com",
+    writeUrl = APP_URL,
     recipientEmail = "you@example.com",
-    unsubscribeUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://app.byunsaid.com"}/settings#notifications`,
+    unsubscribeUrl = `${APP_URL}/settings#notifications`,
 }: WritingReminderEmailProps) => {
     const previewText =
         daysSinceLastEntry === null

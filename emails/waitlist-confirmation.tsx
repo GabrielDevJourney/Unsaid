@@ -22,6 +22,7 @@ import {
     sectionDividerStyle,
     WaitlistBadge,
 } from "@/emails/components/email-ui";
+import { APP_URL, CONTACT_EMAIL } from "@/lib/site";
 
 interface WaitlistConfirmationEmailProps {
     email?: string;
@@ -33,8 +34,8 @@ interface WaitlistConfirmationEmailProps {
 const WaitlistConfirmationEmail = ({
     email = "you@example.com",
     waitlistPosition = 247,
-    unsubscribeUrl = "mailto:hello@byunsaid.com?subject=Unsubscribe",
-    laptopImageUrl = `${process.env.EMAIL_ASSETS_BASE_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? "https://app.byunsaid.com"}/emails/laptop-image.png`,
+    unsubscribeUrl = `mailto:${CONTACT_EMAIL}?subject=Unsubscribe`,
+    laptopImageUrl = `${process.env.EMAIL_ASSETS_BASE_URL ?? APP_URL}/emails/laptop-image.png`,
 }: WaitlistConfirmationEmailProps) => {
     return (
         <Html>

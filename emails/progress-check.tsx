@@ -24,6 +24,7 @@ import {
     PrimaryCta,
     ProgressBar,
 } from "@/emails/components/email-ui";
+import { APP_URL } from "@/lib/site";
 
 interface ProgressCheckEmailProps {
     userName: string;
@@ -49,10 +50,10 @@ const ProgressCheckEmail = ({
     nextMilestone = 30,
     progressLabel = "15/30",
     fillPct = 50,
-    viewUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://app.byunsaid.com"}/progress`,
-    activityIconUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://app.byunsaid.com"}/emails/progress-header-dot-not.png`,
+    viewUrl = `${APP_URL}/progress`,
+    activityIconUrl = `${APP_URL}/emails/progress-header-dot-not.png`,
     recipientEmail = "you@example.com",
-    unsubscribeUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://app.byunsaid.com"}/settings#notifications`,
+    unsubscribeUrl = `${APP_URL}/settings#notifications`,
 }: ProgressCheckEmailProps) => {
     const previewText = `${entryCount} entries in. Your progress check is ready.`;
 

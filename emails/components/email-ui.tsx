@@ -15,8 +15,9 @@ import {
     type PatternTypeCode,
 } from "@/lib/constants/pattern-types";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.byunsaid.com";
-const MARKETING_URL = "https://byunsaid.com";
+import { APP_URL } from "@/lib/site";
+
+const MARKETING_URL = APP_URL;
 const ASSETS_BASE_URL = process.env.EMAIL_ASSETS_BASE_URL ?? APP_URL;
 const INSTAGRAM_URL = `https://www.instagram.com/by.unsaid/`;
 const LINKEDIN_URL = `https://www.linkedin.com/company/byunsaid`;

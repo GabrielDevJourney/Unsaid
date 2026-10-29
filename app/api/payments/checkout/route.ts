@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { APP_URL } from "@/lib/site";
 
 /**
  * Generate Lemon Squeezy checkout URL with user tracking.
@@ -34,12 +35,7 @@ export const POST = async () => {
         );
         checkoutUrl.searchParams.set("checkout[custom][user_id]", userId);
 
-        if (process.env.NODE_ENV === "development") {
-            checkoutUrl.searchParams.set(
-                "checkout[redirect_url]",
-                "http://localhost:3000",
-            );
-        }
+        checkoutUrl.searchParams.set("checkout[redirect_url]", APP_URL);
 
         return NextResponse.json({ data: { url: checkoutUrl.toString() } });
     } catch (error) {

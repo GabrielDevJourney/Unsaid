@@ -59,7 +59,7 @@ export const REVIEW_PRESET_OPTIONS: Array<{
 
 export const DELIVERABILITY_CHECKLIST = [
     "Check inbox placement in Gmail: inbox, promotions, spam, or bin.",
-    "Confirm all images load from byunsaid.com or emails.byunsaid.com.",
+    "Confirm all images load from the app domain (APP_URL / EMAIL_ASSETS_BASE_URL).",
     "Confirm CTA links use the production domain instead of ngrok.",
     "Check Resend preview for layout drift and missing assets.",
     "Compare Gmail rendering against Resend preview for icon and font issues.",

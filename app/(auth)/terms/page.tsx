@@ -1,7 +1,8 @@
 import PolicyLayout from "@/components/legal/policy-layout";
+import { CONTACT_EMAIL } from "@/lib/site";
 
 const LEGAL_ENTITY_NAME = "Gabriel Pereira, trading as Unsaid";
-const LEGAL_EMAIL = "legal@byunsaid.com";
+const LEGAL_EMAIL = CONTACT_EMAIL;
 
 const TermsPage = () => {
     return (
